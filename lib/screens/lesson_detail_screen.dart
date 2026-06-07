@@ -44,6 +44,22 @@ class LessonDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Hero(
+            tag: 'lesson_img_${lesson.id}',
+            child: lesson.imageUrl != null && lesson.imageUrl!.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      lesson.imageUrl!,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          if (lesson.imageUrl != null && lesson.imageUrl!.isNotEmpty)
+            const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

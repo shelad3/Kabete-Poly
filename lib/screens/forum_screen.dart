@@ -6,6 +6,7 @@ import '../services/forum_service.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
 import 'package:intl/intl.dart';
+import '../widgets/shimmer_loading.dart';
 
 class ForumScreen extends StatefulWidget {
   const ForumScreen({super.key});
@@ -44,6 +45,7 @@ class _ForumScreenState extends State<ForumScreen> {
         id: '',
         classId: classProvider.currentClass,
         channelId: _selectedChannelId!,
+        senderId: context.read<AuthProvider>().currentUserId,
         senderName: user.fullName,
         senderAvatarUrl: user.profilePhotoUrl,
         text: text,
@@ -152,6 +154,10 @@ class _ForumScreenState extends State<ForumScreen> {
           return StreamBuilder<List<ForumChannel>>(
             stream: _forumService.getChannelsStream(currentClass),
             builder: (context, channelSnapshot) {
+              if (channelSnapshot.connectionState == ConnectionState.waiting) {
+                return const ShimmerForumMessages();
+              }
+
               final channels = channelSnapshot.data ?? [];
               if (_selectedChannelId == null && channels.isNotEmpty) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -222,7 +228,7 @@ class _ForumScreenState extends State<ForumScreen> {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const ShimmerForumMessages();
         }
 
         final messages = snapshot.data ?? [];
@@ -246,6 +252,7 @@ class _ForumScreenState extends State<ForumScreen> {
 
   Widget _buildMessageBubble(ChatMessage msg) {
     final currentUser = context.read<AuthProvider>().currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     bool isMe = currentUser != null && msg.senderName == currentUser.fullName;
 
     return Padding(
@@ -273,7 +280,7 @@ class _ForumScreenState extends State<ForumScreen> {
                     maxWidth: MediaQuery.of(context).size.width * 0.7),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isMe ? Theme.of(context).primaryColor : Colors.grey[200],
+                  color: isMe ? Theme.of(context).primaryColor : (isDark ? const Color(0xFF2A2A3E) : Colors.grey[200]),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -283,7 +290,7 @@ class _ForumScreenState extends State<ForumScreen> {
                 ),
                 child: Text(
                   msg.text,
-                  style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+                  style: TextStyle(color: isMe ? Colors.white : (isDark ? Colors.white70 : Colors.black87)),
                 ),
               ),
               const SizedBox(height: 4),
@@ -319,12 +326,13 @@ class _ForumScreenState extends State<ForumScreen> {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))
+          BoxShadow(color: isDark ? Colors.white10 : Colors.black12, blurRadius: 4, offset: const Offset(0, -2))
         ],
       ),
       child: SafeArea(
@@ -342,7 +350,7 @@ class _ForumScreenState extends State<ForumScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: isDark ? const Color(0xFF2A2A3E) : Colors.grey[100],
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../models/class_notification.dart';
 import '../../services/firestore_service.dart';
 import '../notification_screen.dart';
-import 'admin_timetable_manager_screen.dart';
+import '../explore_screen.dart';
+import 'manage_auth_codes_screen.dart';
+import 'manage_students_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -61,23 +63,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             _buildStatsRow(context),
             const SizedBox(height: 24),
             _buildActionCard(
-              context,
-              Icons.table_chart,
-              'Manage Official Timetable',
-              'Visually build class schedules',
-              Colors.orange,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AdminTimetableManagerScreen()),
-                );
-              },
+              context, Icons.people, 'Manage Students', '$_totalStudents registered students', Colors.blue,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageStudentsScreen())),
             ),
-            const SizedBox(height: 24),
-            const Text('Super Overview', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            _buildActionCard(context, Icons.people, 'Manage Students', '$_totalStudents registered students', Colors.blue),
-            _buildActionCard(context, Icons.library_books, 'Manage Lessons', '$_totalLessons lessons archived', Colors.orange),
+            _buildActionCard(context, Icons.library_books, 'Manage Lessons', '$_totalLessons lessons archived', Colors.orange,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExploreScreen())),
+            ),
+            _buildActionCard(context, Icons.vpn_key, 'Auth Codes', 'Generate registration keys', Colors.purple,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageAuthCodesScreen())),
+            ),
             _buildActionCard(context, Icons.gavel, 'Forum Moderation', '$_flaggedMessages flagged messages', Colors.red),
             _buildActionCard(
               context, 

@@ -4,6 +4,7 @@ import '../models/class_notification.dart';
 import '../services/firestore_service.dart';
 import '../services/class_provider.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/shimmer_loading.dart';
 
 class NotificationScreen extends StatelessWidget {
   NotificationScreen({super.key});
@@ -27,7 +28,7 @@ class NotificationScreen extends StatelessWidget {
               }
               
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const ShimmerNotificationList();
               }
 
               final notifications = snapshot.data ?? [];
@@ -107,10 +108,10 @@ class NotificationScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    notify.message,
-                    style: TextStyle(color: Colors.grey[700], height: 1.4),
-                  ),
+                    Text(
+                      notify.message,
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4),
+                    ),
                 ],
               ),
             ),

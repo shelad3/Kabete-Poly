@@ -1,63 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../services/auth_code_service.dart';
 import 'registration_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
-
-  final Map<String, String> _rolePasswords = const {
-    'Leader': 'LEAD2026',
-    'Teacher': 'TEACHER1',
-    'Official': 'ADMIN001',
-  };
 
   void _handleRoleSelection(BuildContext context, String role) {
     if (role == 'Student') {
       _navigateToRegistration(context, role);
       return;
     }
-
-    // Elevated Roles Require Password
     final passwordController = TextEditingController();
-    
+    final service = AuthCodeService();
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Enter $role Access Key'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('This role requires an 8-character security key to register.'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Security Key',
-                  border: OutlineInputBorder(),
-                ),
+        bool isLoading = false;
+        return StatefulBuilder(
+          builder: (context, setDState) {
+            return AlertDialog(
+              title: Text('Enter $role Access Key'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('This role requires a security key to register.'),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Security Key',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (passwordController.text == _rolePasswords[role]) {
-                  Navigator.pop(context); // Close dialog
-                  _navigateToRegistration(context, role);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Invalid Security Key!'), backgroundColor: Colors.red),
-                  );
-                }
-              },
-              child: const Text('Verify'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setDState(() => isLoading = true);
+                          final verifiedRole = await service.verifyCode(passwordController.text);
+                          if (verifiedRole != null && verifiedRole == role) {
+                            await service.markCodeUsed(passwordController.text, role);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              _navigateToRegistration(context, role);
+                            }
+                          } else {
+                            setDState(() => isLoading = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Invalid or expired Security Key!'), backgroundColor: Colors.red),
+                              );
+                            }
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Verify'),
+                ),
+              ],
+            );
+          },
         );
       }
     );
@@ -100,6 +111,58 @@ class RoleSelectionScreen extends StatelessWidget {
             _buildRoleButton(context, 'Teacher', Icons.menu_book, 'Post lessons and manage schedule'),
             const SizedBox(height: 16),
             _buildRoleButton(context, 'Official', Icons.admin_panel_settings, 'Global administrative access'),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue[700], size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Authentication code needed for elevated roles',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.blue[700]),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final uri = Uri.parse('mailto:sheldonramu8@gmail.com?subject=Access%20Key%20Request&body=Role:%0ARegistration%20Number:');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    }
+                  },
+                  child: Text.rich(
+                    TextSpan(
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      children: [
+                        const TextSpan(text: 'Contact '),
+                        TextSpan(
+                          text: 'sheldonramu8@gmail.com',
+                          style: TextStyle(
+                            color: Colors.blue[700],
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const TextSpan(text: ' with your role and registration number to receive your access key.'),
+                      ],
+                    ),
+                  ),
+                ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

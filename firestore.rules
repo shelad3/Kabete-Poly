@@ -2,93 +2,97 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // ---------------------------------------------------- //
     // Helper Functions
-    // Check if the user is authenticated
+    // ---------------------------------------------------- //
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Check if the authenticated user is the owner of the document based on userId
+
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    // Lookup the user's role from the users collection
-    // Note: Use get() which counts as 1 read per evaluation
     function getUserRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
-    // Role verification functions
     function isAdmin() {
       return isAuthenticated() && getUserRole() == 'Official';
     }
 
-    function isTeacher() {
+    function isTeacherOrAbove() {
       return isAuthenticated() && (getUserRole() == 'Teacher' || getUserRole() == 'Official');
     }
 
-    function isLeader() {
-      return isAuthenticated() && (getUserRole() == 'Leader' || getUserRole() == 'Official');
+    function isLeaderOrAbove() {
+      return isAuthenticated() && (getUserRole() == 'Leader' || getUserRole() == 'Teacher' || getUserRole() == 'Official');
     }
 
     // ---------------------------------------------------- //
-    // Rules per Collection
-    // ---------------------------------------------------- //
-
     // Users Collection
-    // Anyone authenticated can read user profiles (needed for directory/forums)
-    // Users can only create or update their own profile document
-    // Only Officials can delete profiles
+    // ---------------------------------------------------- //
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated() && isOwner(userId);
       allow delete: if isAdmin();
     }
 
+    // ---------------------------------------------------- //
     // Messages / Forum Collection
-    // Authenticated users can read and create messages
-    // Users can update/delete their own messages; Officials can delete any message
+    // ---------------------------------------------------- //
     match /messages/{messageId} {
       allow read, create: if isAuthenticated();
-      allow update: if isAuthenticated() && isOwner(resource.data.senderId);
-      allow delete: if isAuthenticated() && (isOwner(resource.data.senderId) || isAdmin());
+      allow update: if isAuthenticated() && resource.data.senderId == request.auth.uid;
+      allow delete: if isAuthenticated() && (resource.data.senderId == request.auth.uid || isAdmin());
     }
 
-    // Classes / Cohorts Collection
-    // Authenticated users can read classes
-    // Authenticated users can create or update (because students join cohorts automatically)
-    // Only Officials can delete classes
-    match /classes/{classId} {
-      allow read, create, update: if isAuthenticated();
+    // ---------------------------------------------------- //
+    // Forum Channels
+    // ---------------------------------------------------- //
+    match /forum_channels/{channelId} {
+      allow read: if isAuthenticated();
+      allow create: if isLeaderOrAbove();
+      allow update: if isTeacherOrAbove();
       allow delete: if isAdmin();
     }
 
+    // ---------------------------------------------------- //
+    // Classes / Cohorts Collection
+    // ---------------------------------------------------- //
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isLeaderOrAbove();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
     // Lessons Collection
-    // Authenticated users can read lessons
-    // Only Teachers and Officials can create, update, or delete lessons
+    // ---------------------------------------------------- //
     match /lessons/{lessonId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isTeacher();
+      allow create, update, delete: if isTeacherOrAbove();
     }
 
+    // ---------------------------------------------------- //
     // Schedules Collection
-    // Authenticated users can read schedules
-    // Only Teachers and Officials can create, update, or delete schedule items
+    // ---------------------------------------------------- //
     match /schedules/{scheduleId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isTeacher();
+      allow create, update, delete: if isTeacherOrAbove();
     }
 
+    // ---------------------------------------------------- //
     // Notifications Collection
-    // Authenticated users can read notifications
-    // Only Teachers and Officials can create, update, or delete notifications
+    // ---------------------------------------------------- //
     match /notifications/{notificationId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isTeacher();
+      allow create, update, delete: if isTeacherOrAbove();
     }
     
-    // Default fallback: deny everything else
+    // ---------------------------------------------------- //
+    // Default: deny everything else
+    // ---------------------------------------------------- //
     match /{document=**} {
       allow read, write: if false;
     }

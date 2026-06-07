@@ -6,6 +6,7 @@ import '../models/schedule_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import '../widgets/app_drawer.dart';
+import '../widgets/shimmer_loading.dart';
 import 'notification_screen.dart';
 import 'tabs/mandatory_timetable_tab.dart'; // Import the new tab
 
@@ -94,7 +95,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             }
 
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const ShimmerScheduleList();
             }
 
             final schedule = snapshot.data ?? [];
@@ -167,11 +168,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   Widget _buildScheduleCard(ScheduleItem item) {
     final progress = item.getProgress(_now);
     final isCurrent = progress > 0 && progress < 1;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isCurrent ? item.color.withValues(alpha: 0.1) : Colors.white,
+        color: isCurrent ? item.color.withValues(alpha: 0.1) : (isDark ? const Color(0xFF2A2A3E) : Colors.white),
         borderRadius: BorderRadius.circular(20),
         border: isCurrent ? Border.all(color: item.color, width: 2) : null,
         boxShadow: [

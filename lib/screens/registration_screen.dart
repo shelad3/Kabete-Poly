@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/auth_provider.dart';
@@ -33,8 +34,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   
   // Cohort Selection from Timetable
   String? _selectedCohort;
-  final _customCohortController = TextEditingController();
-  bool _useCustomCohort = false;
+  bool _cohortMissing = false;
 
   bool _isLoading = false;
   File? _profileImage;
@@ -151,10 +151,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const SizedBox(height: 16),
               ],
               
-              if (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ...[
+               if (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ...[
                 DropdownButtonFormField<String>(
-                  key: ValueKey(_useCustomCohort),
-                  initialValue: _useCustomCohort ? null : _selectedCohort,
+                  initialValue: _selectedCohort,
                   decoration: const InputDecoration(
                     labelText: 'Select Your Class Cohort *',
                     border: OutlineInputBorder(),
@@ -167,51 +166,73 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       return DropdownMenuItem(value: code, child: Text(code, style: const TextStyle(fontSize: 14)));
                     }),
                     const DropdownMenuItem(
-                      value: '__custom__',
-                      child: Text('Other (specify below)', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+                      value: '__missing__',
+                      child: Text('My class is not listed',
+                          style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange)),
                     ),
                   ],
                   onChanged: (val) {
                     setState(() {
-                      if (val == '__custom__') {
-                        _useCustomCohort = true;
+                      if (val == '__missing__') {
                         _selectedCohort = null;
+                        _cohortMissing = true;
                       } else {
-                        _useCustomCohort = false;
                         _selectedCohort = val;
+                        _cohortMissing = false;
                       }
                     });
                   },
                   validator: (val) {
-                    if (!_useCustomCohort && val == null) return 'Please select your class cohort';
+                    if (val == null) return 'Please select your class cohort';
                     return null;
                   },
                 ),
-                if (_useCustomCohort) ...[
+                if (_cohortMissing) ...[
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _customCohortController,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter Your Class Cohort Code *',
-                      hintText: 'e.g., EET 600 M24',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.edit),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                     ),
-                    textCapitalization: TextCapitalization.characters,
-                    inputFormatters: [
-                      TextInputFormatter.withFunction(
-                        (oldValue, newValue) => newValue.copyWith(text: newValue.text.toUpperCase()),
-                      ),
-                    ],
-                    validator: (val) {
-                      if (_useCustomCohort && (val == null || val.trim().isEmpty)) {
-                        return 'Please enter your class cohort';
-                      }
-                      return null;
-                    },
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.orange[700], size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              final uri = Uri.parse('mailto:sheldonramu8@gmail.com?subject=Missing%20Cohort%20Request&body=Cohort%20Code:%0ADepartment:%0ACourse:');
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri);
+                              }
+                            },
+                            child: Text.rich(
+                              TextSpan(
+                                style: TextStyle(fontSize: 13, color: Colors.orange[900]),
+                                children: [
+                                  const TextSpan(text: 'Missing a class? Email '),
+                                  TextSpan(
+                                    text: 'sheldonramu8@gmail.com',
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      decoration: TextDecoration.underline,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const TextSpan(
+                                      text: ' with your cohort code and department details to have it added.'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-                const SizedBox(height: 16),
               ],
               
               if (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ...[
@@ -266,11 +287,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       // Use selected cohort from timetable dropdown
       List<String> enrolled = [];
       if (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') {
-        final cohortCode = _useCustomCohort
-            ? _customCohortController.text.trim().toUpperCase()
-            : _selectedCohort;
-        if (cohortCode != null && cohortCode.isNotEmpty) {
-          enrolled.add(cohortCode);
+        if (_selectedCohort != null && _selectedCohort!.isNotEmpty) {
+          enrolled.add(_selectedCohort!);
         }
       }
 

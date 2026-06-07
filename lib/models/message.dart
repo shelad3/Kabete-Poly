@@ -2,6 +2,7 @@ class ChatMessage {
   final String id;
   final String classId;
   final String channelId; // Links to ForumChannel
+  final String senderId; // Firebase Auth UID for rule enforcement
   final String senderName;
   final String senderAvatarUrl;
   final String text;
@@ -13,6 +14,7 @@ class ChatMessage {
     required this.id,
     required this.classId,
     this.channelId = 'public-chat',
+    this.senderId = '',
     required this.senderName,
     required this.senderAvatarUrl,
     required this.text,
@@ -26,6 +28,7 @@ class ChatMessage {
       id: documentId,
       classId: json['classId'] ?? 'General',
       channelId: json['channelId'] ?? 'public-chat',
+      senderId: json['senderId'] ?? '',
       senderName: json['senderName'] ?? 'Unknown',
       senderAvatarUrl: json['senderAvatarUrl'] ?? '',
       text: json['text'] ?? '',
@@ -43,6 +46,7 @@ class ChatMessage {
     return {
       'classId': classId,
       'channelId': channelId,
+      'senderId': senderId,
       'senderName': senderName,
       'senderAvatarUrl': senderAvatarUrl,
       'text': text,

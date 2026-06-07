@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'notification_service.dart';
 
 class UpdateService {
   static const String _githubApiUrl =
       "https://api.github.com/repos/shelad3/Kabete-Poly/releases/latest";
+
+  static const String _fileName = 'kabete_poly_update.apk';
 
   static Future<void> checkForUpdates(BuildContext context,
       {bool showNoUpdateMsg = false}) async {
@@ -89,6 +92,8 @@ class UpdateService {
   static void _showUpdateDialog(
       BuildContext context, String newVersion, String url, String releaseNotes) {
     bool downloading = false;
+    bool downloadComplete = false;
+    bool installing = false;
     double progress = 0;
 
     showDialog(
@@ -97,87 +102,138 @@ class UpdateService {
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Row(
-                children: const [
-                  Icon(Icons.system_update_alt, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text('Update Available!'),
+            return PopScope(
+              canPop: !downloading,
+              child: AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(
+                      installing
+                          ? Icons.download_done
+                          : downloadComplete
+                              ? Icons.check_circle
+                              : Icons.system_update_alt,
+                      color: installing || downloadComplete
+                          ? Colors.green
+                          : Colors.blue,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      installing
+                          ? 'Installing...'
+                          : downloadComplete
+                              ? 'Download Complete'
+                              : 'Update Available!',
+                    ),
+                  ],
+                ),
+                content: installing
+                    ? const Text('Launching the package installer...')
+                    : downloadComplete
+                        ? const Text(
+                            'The update file has been downloaded. '
+                            'The installer will open to complete the installation.')
+                        : downloading
+                            ? Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('Downloading update...'),
+                                  const SizedBox(height: 16),
+                                  LinearProgressIndicator(
+                                      value: progress > 0 ? progress : null),
+                                  const SizedBox(height: 8),
+                                  Text('${(progress * 100).toStringAsFixed(0)}%'),
+                                ],
+                              )
+                            : SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Version $newVersion is now available.',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    if (releaseNotes.isNotEmpty) ...[
+                                      const SizedBox(height: 12),
+                                      const Text('What\'s new:',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 4),
+                                      Text(releaseNotes),
+                                    ],
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                        'Please update to get the latest features and fixes.'),
+                                  ],
+                                ),
+                              ),
+                actions: [
+                  if (installing)
+                    const SizedBox.shrink()
+                  else if (downloadComplete)
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white),
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                      },
+                      child: const Text('Close'),
+                    )
+                  else ...[
+                    TextButton(
+                      onPressed: downloading
+                          ? null
+                          : () => Navigator.of(dialogContext).pop(),
+                      child: const Text('Later',
+                          style: TextStyle(color: Colors.grey)),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white),
+                      onPressed: downloading
+                          ? null
+                          : () async {
+                              setDialogState(() => downloading = true);
+                              try {
+                                final filePath =
+                                    await _downloadApk(url, (p) {
+                                  setDialogState(() => progress = p);
+                                });
+                                if (filePath != null) {
+                                  setDialogState(() {
+                                    downloading = false;
+                                    downloadComplete = true;
+                                  });
+                                  setDialogState(() => installing = true);
+                                  await _installApk(filePath);
+                                  if (context.mounted) {
+                                    Navigator.of(dialogContext).pop();
+                                  }
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  setDialogState(() {
+                                    downloading = false;
+                                    downloadComplete = false;
+                                    installing = false;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Download failed: ${e.toString().replaceAll("Exception: ", "")}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      child: Text(downloading ? 'Downloading...' : 'Update Now'),
+                    ),
+                  ],
                 ],
               ),
-              content: downloading
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Downloading update...'),
-                        const SizedBox(height: 16),
-                        LinearProgressIndicator(
-                            value: progress > 0 ? progress : null),
-                        const SizedBox(height: 8),
-                        Text('${(progress * 100).toStringAsFixed(0)}%'),
-                      ],
-                    )
-                  : SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Version $newVersion is now available.',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          if (releaseNotes.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            const Text('What\'s new:',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            Text(releaseNotes),
-                          ],
-                          const SizedBox(height: 12),
-                          const Text(
-                              'Please update to get the latest features and fixes.'),
-                        ],
-                      ),
-                    ),
-              actions: [
-                TextButton(
-                  onPressed: downloading
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Later',
-                      style: TextStyle(color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white),
-                  onPressed: downloading
-                      ? null
-                      : () async {
-                          setDialogState(() => downloading = true);
-                          try {
-                            final filePath =
-                                await _downloadApk(url, (p) {
-                              setDialogState(() => progress = p);
-                            });
-                            if (filePath != null && context.mounted) {
-                              Navigator.of(dialogContext).pop();
-                              await _installApk(filePath);
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              setDialogState(() => downloading = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Download failed: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                  child: Text(downloading ? 'Downloading...' : 'Update Now'),
-                ),
-              ],
             );
           },
         );
@@ -194,8 +250,7 @@ class UpdateService {
 
       final contentLength = response.contentLength;
       final dir = Directory.systemTemp;
-      final fileName = 'kabete_poly_update.apk';
-      final file = File('${dir.path}/$fileName');
+      final file = File('${dir.path}/$_fileName');
 
       if (file.existsSync()) {
         await file.delete();
@@ -203,12 +258,24 @@ class UpdateService {
 
       final sink = file.openWrite();
       int bytesDownloaded = 0;
+      int lastNotifiedProgress = -1;
 
       await for (final chunk in response.stream) {
         sink.add(chunk);
         bytesDownloaded += chunk.length;
         if (contentLength != null && contentLength > 0) {
-          onProgress(bytesDownloaded / contentLength);
+          final pct = bytesDownloaded / contentLength;
+          onProgress(pct);
+
+          // Update notification every 5%
+          final pctInt = (pct * 100).toInt();
+          if (pctInt - lastNotifiedProgress >= 5 || pctInt == 100) {
+            lastNotifiedProgress = pctInt;
+            NotificationService().showDownloadProgressNotification(
+              id: 9999,
+              progress: pctInt,
+            );
+          }
         }
       }
 
@@ -220,6 +287,10 @@ class UpdateService {
   }
 
   static Future<void> _installApk(String filePath) async {
+    // Cancel progress notification and show completion notification
+    await NotificationService().cancelDownloadNotification();
+    await NotificationService().showDownloadCompleteNotification(filePath);
+
     final result = await OpenFilex.open(filePath);
     if (result.type != ResultType.done) {
       throw Exception('Installation failed: ${result.message}');

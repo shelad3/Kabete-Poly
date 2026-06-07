@@ -3961,6 +3961,67 @@ class TimetableData {
         },
       ],
     },
+    'ICT/600/M26': {
+      'Monday': [
+        {
+          'time': '0800-1000 hrs',
+          'unit': 'Computer Essentials',
+          'room': '',
+          'lecturer': '',
+          'color': 4282339765,
+        },
+        {
+          'time': '1200-1400 hrs',
+          'unit': 'Computer Essentials',
+          'room': '',
+          'lecturer': '',
+          'color': 4280391411,
+        },
+      ],
+      'Tuesday': [
+        {
+          'time': '0800-1000 hrs',
+          'unit': 'Computer Operations',
+          'room': '',
+          'lecturer': '',
+          'color': 4282339765,
+        },
+        {
+          'time': '1000-1200 hrs',
+          'unit': 'Computer Operations',
+          'room': '',
+          'lecturer': '',
+          'color': 4280391411,
+        },
+      ],
+      'Wednesday': [
+        {
+          'time': '1400-1600 hrs',
+          'unit': 'Computer Operations',
+          'room': '',
+          'lecturer': '',
+          'color': 4282339765,
+        },
+      ],
+      'Thursday': [
+        {
+          'time': '1000-1200 hrs',
+          'unit': 'Computer Essentials',
+          'room': '',
+          'lecturer': '',
+          'color': 4282339765,
+        },
+      ],
+      'Friday': [
+        {
+          'time': '1000-1200 hrs',
+          'unit': 'Computer Essentials',
+          'room': '',
+          'lecturer': '',
+          'color': 4282339765,
+        },
+      ],
+    },
   };
 
   /// Returns the parsed timetable for a specific cohort.

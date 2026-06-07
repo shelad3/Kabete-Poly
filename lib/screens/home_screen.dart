@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
-import '../services/tutorial_service.dart';
 import '../services/update_service.dart';
+import 'onboarding_screen.dart';
 import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
 import 'explore_screen.dart';
@@ -11,6 +11,7 @@ import 'schedule_screen.dart';
 import 'forum_screen.dart';
 import 'notification_screen.dart';
 import 'settings_screen.dart';
+import 'quiz/quiz_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,7 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  final TutorialService _tutorialService = TutorialService();
+  late final PageController _pageController;
 
   final List<Widget> _screens = [
     const ExploreScreen(),
@@ -34,48 +35,62 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
       final classProvider = context.read<ClassProvider>();
       final user = authProvider.currentUser;
-      final bool canAddContent = user != null && (user.isTeacher || user.isLeader);
 
       // Sync ClassProvider with user's enrolled classes
       if (user != null && user.enrolledClasses.isNotEmpty) {
         classProvider.setFromEnrolled(user.enrolledClasses);
       }
 
-      _tutorialService.showTutorialIfFirstLaunch(context, canAddContent: canAddContent);
+      OnboardingScreen.hasSeen().then((seen) {
+        if (!seen && mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          );
+        }
+      });
     });
-    
+
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) UpdateService.checkForUpdates(context);
     });
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (i) => setState(() => _currentIndex = i),
+        children: _screens,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey,
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Explore'),
-          // Track the schedule tab
-          BottomNavigationBarItem(
-            icon: Icon(key: TutorialService.scheduleTabKey, Icons.calendar_month_outlined), 
-            label: 'Schedule'
-          ),
+          const BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: 'Schedule'),
           const BottomNavigationBarItem(icon: Icon(Icons.forum_outlined), label: 'Forum'),
-          // Track the notifications tab
-          BottomNavigationBarItem(
-            icon: Icon(key: TutorialService.notificationIconKey, Icons.notifications_none_outlined), 
-            label: 'Alerts'
-          ),
+          const BottomNavigationBarItem(icon: Icon(Icons.notifications_none_outlined), label: 'Alerts'),
           const BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
         ],
       ),
@@ -84,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
           final user = auth.currentUser;
           if (user != null && (user.isTeacher || user.isLeader)) {
             return FloatingActionButton.extended(
-              key: TutorialService.omniFabKey, // Track the FAB
               onPressed: () => _showOmniFabMenu(context),
               icon: const Icon(Icons.add),
               label: const Text('Add Content'),
@@ -151,6 +165,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const ScheduleUpcomingScreen(isPractical: true)),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const CircleAvatar(backgroundColor: Colors.teal, child: Icon(Icons.quiz, color: Colors.white)),
+                  title: const Text('Create Quiz'),
+                  subtitle: const Text('Build multiple-choice assessments'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const QuizListScreen()),
                     );
                   },
                 ),

@@ -14,6 +14,7 @@ class AuthProvider extends ChangeNotifier {
 
   UserProfile? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
+  String get currentUserId => _auth.currentUser?.uid ?? '';
 
   AuthProvider() {
     // Listen to Firebase Auth state changes automatically
