@@ -1,0 +1,34 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the file is an image and under 5MB
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') 
+             && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Profile Images
+    // Any authenticated user can view profile pictures.
+    // Authenticated users can upload proper image files under 5MB
+    // Since names use regNo instead of uid, we allow authenticated uploads of images.
+    match /profiles/{imageId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidImage();
+      allow delete: if false; // Prevention from deleting profiles from the client.
+    }
+
+    // General image uploads (e.g., from AddLessonScreen or Forum)
+    match /{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidImage();
+      // Restrict deletes directly from the app
+      allow delete: if false; 
+    }
+  }
+}
