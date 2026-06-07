@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/class_notification.dart';
+import '../../models/ticket.dart';
+import '../../services/auth_provider.dart';
 import '../../services/firestore_service.dart';
 import '../notification_screen.dart';
 import '../explore_screen.dart';
 import 'manage_auth_codes_screen.dart';
 import 'manage_students_screen.dart';
+import 'manage_tickets_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -17,7 +21,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   int _totalStudents = 0;
   int _totalLessons = 0;
-  int _flaggedMessages = 0; // Future dynamic query
+  int _openTickets = 0;
   bool _isLoadingStats = true;
 
   @override
@@ -32,7 +36,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       setState(() {
         _totalStudents = stats['students'] ?? 0;
         _totalLessons = stats['lessons'] ?? 0;
-        _flaggedMessages = 0; // Replace when forum stats are tracked
+        _openTickets = 0;
         _isLoadingStats = false;
       });
     }
@@ -62,8 +66,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             _buildStatsRow(context),
             const SizedBox(height: 24),
-            _buildActionCard(
-              context, Icons.people, 'Manage Students', '$_totalStudents registered students', Colors.blue,
+            _buildActionCard(context, Icons.people, 'Manage Students', '$_totalStudents registered students', Colors.blue,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageStudentsScreen())),
             ),
             _buildActionCard(context, Icons.library_books, 'Manage Lessons', '$_totalLessons lessons archived', Colors.orange,
@@ -72,14 +75,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             _buildActionCard(context, Icons.vpn_key, 'Auth Codes', 'Generate registration keys', Colors.purple,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageAuthCodesScreen())),
             ),
-            _buildActionCard(context, Icons.gavel, 'Forum Moderation', '$_flaggedMessages flagged messages', Colors.red),
-            _buildActionCard(
-              context, 
-              Icons.campaign, 
-              'Global Announcements', 
-              'Send push notifications', 
-              Colors.green,
+            _buildActionCard(context, Icons.confirmation_number, 'Manage Tickets', 'Help requests, errors, feedback', Colors.teal,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
+            ),
+            _buildActionCard(context, Icons.gavel, 'Forum Moderation', '$_openTickets flagged messages', Colors.red),
+            _buildActionCard(context, Icons.campaign, 'Announcements', 'Send push notifications', Colors.green,
               onTap: () => _showAnnouncementDialog(context),
+            ),
+            _buildActionCard(context, Icons.notifications_active, 'Send Alert', 'Target user, class, or all', Colors.indigo,
+              onTap: () => _showAlertDialog(context),
             ),
           ],
         ),
@@ -94,7 +98,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         child: CircularProgressIndicator(),
       ));
     }
-    
     return Row(
       children: [
         Expanded(child: _buildStatItem(context, 'Total Students', '$_totalStudents', Colors.blue)),
@@ -191,7 +194,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (titleController.text.trim().isEmpty || messageController.text.trim().isEmpty) return;
-                    
                     final notification = ClassNotification(
                       id: '',
                       classId: targetClass,
@@ -200,16 +202,122 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       type: selectedType,
                       timestamp: DateTime.now(),
                     );
-
                     await _firestoreService.sendNotification(notification);
                     if (context.mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Announcement successfully broadcasted!')),
+                        const SnackBar(content: Text('Announcement broadcasted!')),
                       );
                     }
                   },
                   child: const Text('Broadcast'),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
+  void _showAlertDialog(BuildContext context) {
+    final titleCtrl = TextEditingController();
+    final messageCtrl = TextEditingController();
+    final userIdCtrl = TextEditingController();
+    String targetType = 'all';
+    String alertType = 'info';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Send Alert'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleCtrl,
+                      decoration: const InputDecoration(labelText: 'Alert Title', border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: messageCtrl,
+                      maxLines: 3,
+                      decoration: const InputDecoration(labelText: 'Message', border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: alertType,
+                      decoration: const InputDecoration(labelText: 'Alert Type', border: OutlineInputBorder()),
+                      items: const [
+                        DropdownMenuItem(value: 'info', child: Text('Information')),
+                        DropdownMenuItem(value: 'warning', child: Text('Warning')),
+                        DropdownMenuItem(value: 'class_update', child: Text('Class Update')),
+                      ],
+                      onChanged: (v) => setState(() => alertType = v!),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: targetType,
+                      decoration: const InputDecoration(labelText: 'Send To', border: OutlineInputBorder()),
+                      items: const [
+                        DropdownMenuItem(value: 'all', child: Text('All Users')),
+                        DropdownMenuItem(value: 'user', child: Text('Specific User')),
+                      ],
+                      onChanged: (v) => setState(() => targetType = v!),
+                    ),
+                    if (targetType == 'user') ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: userIdCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'User ID',
+                          border: OutlineInputBorder(),
+                          hintText: 'Enter the Firebase user UID',
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (titleCtrl.text.trim().isEmpty || messageCtrl.text.trim().isEmpty) return;
+                    if (targetType == 'user' && userIdCtrl.text.trim().isEmpty) return;
+                    try {
+                      final sender = context.read<AuthProvider>().currentUser;
+                      final alert = Alert(
+                        id: '',
+                        title: titleCtrl.text.trim(),
+                        message: messageCtrl.text.trim(),
+                        type: alertType,
+                        targetType: targetType,
+                        targetId: targetType == 'user' ? userIdCtrl.text.trim() : null,
+                        senderId: context.read<AuthProvider>().currentUserId,
+                        senderName: sender?.fullName ?? 'Admin',
+                        timestamp: DateTime.now(),
+                      );
+                      await _firestoreService.sendAlert(alert);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Alert sent!'), backgroundColor: Colors.green),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Send Alert'),
                 ),
               ],
             );

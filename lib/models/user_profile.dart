@@ -8,6 +8,7 @@ class UserProfile {
   final String role; // 'Student', 'Leader', 'Teacher', 'Official'
   final String? designation; // e.g. 'Prefect', 'HOD'
   final List<String> enrolledClasses;
+  final int classChangeCount;
 
   UserProfile({
     required this.registrationNumber,
@@ -19,6 +20,7 @@ class UserProfile {
     this.role = 'Student',
     this.designation,
     this.enrolledClasses = const [],
+    this.classChangeCount = 0,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class UserProfile {
       role: json['role'] ?? 'Student',
       designation: json['designation'],
       enrolledClasses: List<String>.from(json['enrolledClasses'] ?? []),
+      classChangeCount: json['classChangeCount'] ?? 0,
     );
   }
 
@@ -46,8 +49,12 @@ class UserProfile {
       'role': role,
       'designation': designation,
       'enrolledClasses': enrolledClasses,
+      'classChangeCount': classChangeCount,
     };
   }
+
+  bool get canChangeClass => classChangeCount < 2;
+  int get classChangesRemaining => 2 - classChangeCount;
 
   // Helper getters
   bool get isAdmin => role == 'Official';

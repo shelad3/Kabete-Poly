@@ -8,6 +8,9 @@ import '../services/firestore_service.dart';
 import '../widgets/app_drawer.dart';
 import '../theme/theme_provider.dart';
 import 'faculty_directory_screen.dart';
+import 'help_screen.dart';
+import 'error_report_screen.dart';
+import 'feedback_screen.dart';
 import '../services/update_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -117,7 +120,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   '${user?.enrolledClasses.length ?? 0} classes',
                   style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
-                onTap: () => _showEnrolledClasses(context, user?.enrolledClasses ?? []),
+                onTap: () => _showClassManagement(context, user),
               ),
             ]),
             _buildSettingsSection(context, 'Appearance', [
@@ -161,7 +164,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: _clearCache,
               ),
               ListTile(
-                leading: const Icon(Icons.system_update_alt, color: Colors.blueAccent),
+                leading: const Icon(Icons.support_agent_outlined, color: Colors.indigo),
+                title: const Text('Help & Support', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpScreen())),
+              ),
+              ListTile(
+                leading: const Icon(Icons.bug_report_outlined, color: Colors.redAccent),
+                title: const Text('Report an Error', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ErrorReportScreen())),
+              ),
+              ListTile(
+                leading: const Icon(Icons.feedback_outlined, color: Colors.amber),
+                title: const Text('Send Feedback', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
+              ),
+              ListTile(
+                leading: Icon(Icons.system_update_alt, color: Colors.blueAccent),
                 title: const Text('Check for Updates', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
                 trailing: const Icon(Icons.refresh, size: 18, color: Colors.blueAccent),
                 onTap: () {
@@ -212,26 +233,282 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showEnrolledClasses(BuildContext context, List<String> classes) {
+  void _showClassManagement(BuildContext context, user) {
+    if (user == null) return;
+    final canChange = user.canChangeClass;
+    final remaining = user.classChangesRemaining;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.class_, size: 20),
+              const SizedBox(width: 8),
+              Text(canChange ? 'Manage Classes' : 'Class Enrollment'),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Current Classes:', style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                if (user.enrolledClasses.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: Text('No classes enrolled.', style: TextStyle(color: Colors.grey)),
+                  )
+                else
+                  ...user.enrolledClasses.map<Widget>((c) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                    child: Row(children: [
+                      const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Text(c),
+                    ]),
+                  )),
+                const SizedBox(height: 16),
+                if (canChange) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, size: 16, color: Colors.blue[700]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'You can change your class $remaining more time(s).',
+                            style: TextStyle(fontSize: 13, color: Colors.blue[800]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showClassSelector(context, user);
+                      },
+                      icon: const Icon(Icons.swap_horiz, size: 18),
+                      label: const Text('Change Class'),
+                    ),
+                  ),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.warning_amber, size: 16, color: Colors.orange[700]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Class change limit reached.',
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.orange[800]),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Submit a help request to request a class change.',
+                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showClassChangeRequest(context, user);
+                      },
+                      icon: const Icon(Icons.help_outline, size: 18),
+                      label: const Text('Request Class Change via Help'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+        ),
+      ),
+    );
+  }
+
+  void _showClassSelector(BuildContext context, user) {
+    final classes = [
+      'EE-2412 G1 (May-Aug 2026)',
+      'EE-2412 G2 (May-Aug 2026)',
+      'ICTD-2412 G1 (May-Aug 2026)',
+      'ICTD-2412 G2 (May-Aug 2026)',
+      'ICTD-2412 G3 (May-Aug 2026)',
+      'ICTM-2412 G1 (May-Aug 2026)',
+      'ICTM-2412 G2 (May-Aug 2026)',
+    ];
+    String? selected;
+    TextEditingController customCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDState) => AlertDialog(
+          title: const Text('Select New Class'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Choose your new class:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...classes.map((c) => RadioListTile<String>(
+                      title: Text(c, style: const TextStyle(fontSize: 13)),
+                      value: c,
+                      groupValue: selected,
+                      onChanged: (v) {
+                        setDState(() {
+                          selected = v;
+                          customCtrl.clear();
+                        });
+                      },
+                      dense: true,
+                    )),
+                  ],
+                ),
+              ),
+              const Divider(),
+              TextField(
+                controller: customCtrl,
+                decoration: const InputDecoration(labelText: 'Or type a class name', border: OutlineInputBorder()),
+                onChanged: (v) {
+                  if (v.isNotEmpty) setDState(() => selected = null);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                final newClass = selected ?? customCtrl.text.trim();
+                if (newClass.isEmpty) return;
+                try {
+                  final uid = context.read<AuthProvider>().currentUserId;
+                  final firestore = FirestoreService();
+                  await firestore.updateUserProfile(uid, {
+                    'enrolledClasses': [newClass],
+                    'classChangeCount': (user.classChangeCount ?? 0) + 1,
+                  });
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Class changed to $newClass'), backgroundColor: Colors.green),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showClassChangeRequest(BuildContext context, user) {
+    final titleCtrl = TextEditingController();
+    final messageCtrl = TextEditingController();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Enrolled Classes'),
-        content: classes.isEmpty
-            ? const Text('No classes enrolled.')
-            : SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: classes.length,
-                  itemBuilder: (_, i) => ListTile(
-                    leading: const Icon(Icons.class_),
-                    title: Text(classes[i]),
-                    dense: true,
-                  ),
-                ),
+        title: const Text('Request Class Change'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'You have used all your free class changes. Submit a request and an admin will assist you.',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
               ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+              const SizedBox(height: 12),
+              TextField(
+                controller: titleCtrl,
+                decoration: const InputDecoration(labelText: 'Desired Class', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: messageCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Reason (optional)', border: OutlineInputBorder()),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final cls = titleCtrl.text.trim();
+              if (cls.isEmpty) return;
+              try {
+                final auth = context.read<AuthProvider>();
+                await FirestoreService().submitClassChangeRequest(
+                  auth.currentUserId,
+                  user?.fullName ?? '',
+                  user?.email ?? '',
+                  cls,
+                  messageCtrl.text.trim(),
+                );
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Request submitted. Admin will review it.'), backgroundColor: Colors.green),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            child: const Text('Submit Request'),
+          ),
+        ],
       ),
     );
   }

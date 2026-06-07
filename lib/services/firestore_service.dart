@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/lesson.dart';
 import '../models/schedule_item.dart';
 import '../models/class_notification.dart';
+import '../models/ticket.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -125,5 +126,120 @@ class FirestoreService {
 
   Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
     await _firestore.collection('users').doc(uid).update(data);
+  }
+
+  // --- Tickets ---
+
+  Future<String> submitHelpRequest(HelpRequest request) async {
+    final doc = await _firestore.collection('help_requests').add(request.toJson());
+    return doc.id;
+  }
+
+  Stream<List<HelpRequest>> getHelpRequestsStream({String? status}) {
+    Query q = _firestore.collection('help_requests').orderBy('timestamp', descending: true);
+    if (status != null) q = q.where('status', isEqualTo: status);
+    return q.snapshots().map((s) => s.docs.map((d) => HelpRequest.fromJson(d.data() as Map<String, dynamic>, d.id)).toList());
+  }
+
+  Future<void> resolveHelpRequest(String id, String resolvedBy) async {
+    await _firestore.collection('help_requests').doc(id).update({
+      'status': 'resolved',
+      'resolvedBy': resolvedBy,
+      'resolvedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // --- Error Reports ---
+
+  Future<String> submitErrorReport(ErrorReport report) async {
+    final doc = await _firestore.collection('error_reports').add(report.toJson());
+    return doc.id;
+  }
+
+  Stream<List<ErrorReport>> getErrorReportsStream({String? status}) {
+    Query q = _firestore.collection('error_reports').orderBy('timestamp', descending: true);
+    if (status != null) q = q.where('status', isEqualTo: status);
+    return q.snapshots().map((s) => s.docs.map((d) => ErrorReport.fromJson(d.data() as Map<String, dynamic>, d.id)).toList());
+  }
+
+  Future<void> updateErrorReportStatus(String id, String status) async {
+    await _firestore.collection('error_reports').doc(id).update({'status': status});
+  }
+
+  // --- Feedback ---
+
+  Future<String> submitFeedback(AppFeedback feedback) async {
+    final doc = await _firestore.collection('feedback').add(feedback.toJson());
+    return doc.id;
+  }
+
+  Stream<List<AppFeedback>> getFeedbackStream() {
+    return _firestore.collection('feedback').orderBy('timestamp', descending: true).snapshots()
+        .map((s) => s.docs.map((d) => AppFeedback.fromJson(d.data(), d.id)).toList());
+  }
+
+  Future<void> markFeedbackRead(String id) async {
+    await _firestore.collection('feedback').doc(id).update({'status': 'read'});
+  }
+
+  // --- Alerts ---
+
+  Future<String> sendAlert(Alert alert) async {
+    final doc = await _firestore.collection('alerts').add(alert.toJson());
+    return doc.id;
+  }
+
+  Stream<List<Alert>> getAlertsForUser(String userId, List<String> enrolledClasses) {
+    // Get alerts targeted at: all, this user, or any of their classes
+    return _firestore
+        .collection('alerts')
+        .where('targetType', whereIn: ['all', 'user', 'class'])
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((s) => s.docs.map((d) {
+          final a = Alert.fromJson(d.data(), d.id);
+          return a;
+        }).toList());
+  }
+
+  Stream<List<Alert>> getAllAlertsStream() {
+    return _firestore.collection('alerts').orderBy('timestamp', descending: true).snapshots()
+        .map((s) => s.docs.map((d) => Alert.fromJson(d.data(), d.id)).toList());
+  }
+
+  Future<void> markAlertRead(String alertId, String userId) async {
+    await _firestore.collection('alerts').doc(alertId).update({
+      'readBy': FieldValue.arrayUnion([userId]),
+    });
+  }
+
+  // --- Class Change Requests (after limit reached) ---
+
+  Future<String> submitClassChangeRequest(String userId, String userName, String userEmail, String desiredClass, String reason) async {
+    final doc = await _firestore.collection('class_change_requests').add({
+      'userId': userId,
+      'userName': userName,
+      'userEmail': userEmail,
+      'desiredClass': desiredClass,
+      'reason': reason,
+      'timestamp': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+    return doc.id;
+  }
+
+  Stream<QuerySnapshot> getClassChangeRequestsStream() {
+    return _firestore.collection('class_change_requests')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
+  Future<void> approveClassChangeRequest(String requestId, String userId, String newClass) async {
+    final batch = _firestore.batch();
+    batch.update(_firestore.collection('class_change_requests').doc(requestId), {'status': 'approved'});
+    batch.update(_firestore.collection('users').doc(userId), {
+      'enrolledClasses': [newClass],
+    });
+    await batch.commit();
   }
 }
