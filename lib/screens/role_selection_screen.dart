@@ -7,15 +7,15 @@ import 'dart:async';
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
-  void _handleRoleSelection(BuildContext context, String role) {
+  void _handleRoleSelection(BuildContext screenContext, String role) {
     if (role == 'Student') {
-      _navigateToRegistration(context, role);
+      _navigateToRegistration(screenContext, role);
       return;
     }
     final passwordController = TextEditingController();
     final service = AuthCodeService();
     showDialog(
-      context: context,
+      context: screenContext,
       builder: (context) {
         bool isLoading = false;
         return StatefulBuilder(
@@ -52,9 +52,8 @@ class RoleSelectionScreen extends StatelessWidget {
                             if (verifiedRole != null && verifiedRole == role) {
                               await service.markCodeUsed(passwordController.text, role);
                               if (context.mounted) {
-                                // Show success, then navigate
                                 Navigator.pop(context);
-                                _showVerifiedDialog(context, role);
+                                _showVerifiedDialog(screenContext, role);
                               }
                             } else {
                               setDState(() => isLoading = false);
@@ -94,9 +93,9 @@ class RoleSelectionScreen extends StatelessWidget {
     );
   }
 
-  void _showVerifiedDialog(BuildContext context, String role) {
+  void _showVerifiedDialog(BuildContext screenContext, String role) {
     showDialog(
-      context: context,
+      context: screenContext,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         content: Column(
@@ -125,9 +124,10 @@ class RoleSelectionScreen extends StatelessWidget {
     );
     // Navigate after a brief pause so user sees the success
     Future.delayed(const Duration(seconds: 1), () {
-      if (context.mounted) {
-        Navigator.pop(context); // close verified dialog
-        _navigateToRegistration(context, role);
+      if (screenContext.mounted) {
+        // Pop the dialog (uses root navigator since showDialog uses it)
+        Navigator.of(screenContext, rootNavigator: true).pop();
+        _navigateToRegistration(screenContext, role);
       }
     });
   }

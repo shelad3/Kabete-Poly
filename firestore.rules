@@ -100,8 +100,8 @@ service cloud.firestore {
       allow create: if isAdmin();
       allow delete: if isAdmin();
       // Allow anyone (including unauthenticated) to mark a code as used
-      // The update must only touch isUsed/usedBy fields
-      allow update: if request.resource.data.keys.hasOnly(['isUsed', 'usedBy']);
+      // Only the isUsed/usedBy fields may change — all other fields must stay
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isUsed', 'usedBy']);
     }
 
     // ---------------------------------------------------- //
