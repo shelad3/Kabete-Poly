@@ -46,18 +46,27 @@ class RoleSelectionScreen extends StatelessWidget {
                       ? null
                       : () async {
                           setDState(() => isLoading = true);
-                          final verifiedRole = await service.verifyCode(passwordController.text);
-                          if (verifiedRole != null && verifiedRole == role) {
-                            await service.markCodeUsed(passwordController.text, role);
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              _navigateToRegistration(context, role);
+                          try {
+                            final verifiedRole = await service.verifyCode(passwordController.text);
+                            if (verifiedRole != null && verifiedRole == role) {
+                              await service.markCodeUsed(passwordController.text, role);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                _navigateToRegistration(context, role);
+                              }
+                            } else {
+                              setDState(() => isLoading = false);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid or expired Security Key!'), backgroundColor: Colors.red),
+                                );
+                              }
                             }
-                          } else {
+                          } catch (e) {
                             setDState(() => isLoading = false);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Invalid or expired Security Key!'), backgroundColor: Colors.red),
+                                SnackBar(content: Text('Error: ${e.toString().replaceAll("Exception: ", "")}'), backgroundColor: Colors.red),
                               );
                             }
                           }
