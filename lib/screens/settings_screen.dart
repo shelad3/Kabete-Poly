@@ -1,16 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../services/auth_provider.dart';
+import '../services/firestore_service.dart';
 import '../widgets/app_drawer.dart';
+import '../theme/theme_provider.dart';
 import 'faculty_directory_screen.dart';
 import '../services/update_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  String _appVersion = '';
+  final _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() => _appVersion = '${info.version}+${info.buildNumber}');
+    }
+  }
+
+  Future<void> _pickAndUploadPhoto() async {
+    final file = await _picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
+    if (file == null) return;
+    // For now just show that we selected a file
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Photo selected. Profile photo upload coming soon.'), backgroundColor: Colors.blue),
+      );
+    }
+  }
+
+  Future<void> _clearCache() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear Cache?'),
+        content: const Text('This will remove temporary files and cached images. Your data will not be affected.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final cacheDir = Directory.systemTemp;
+      int count = 0;
+      if (cacheDir.existsSync()) {
+        for (final f in cacheDir.listSync()) {
+          if (f is File) {
+            await f.delete();
+            count++;
+          }
+        }
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cleared $count temporary files'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cache clear error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
+    final themeNotifier = context.watch<ThemeNotifier>();
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -27,16 +107,58 @@ class SettingsScreen extends StatelessWidget {
             _buildSettingsSection(context, 'Account Details', [
               _buildSettingItem(context, Icons.email_outlined, 'Email', user?.email ?? '-'),
               _buildSettingItem(context, Icons.phone_android_outlined, 'Mobile', user?.mobileNumber ?? '-'),
-              _buildSettingItem(context, Icons.admin_panel_settings_outlined, 'Global Role', user?.role ?? 'User'),
+              _buildSettingItem(context, Icons.admin_panel_settings_outlined, 'Role', user?.role ?? 'User'),
               if (user?.role == 'Student' || user?.role == 'Leader')
-                _buildSettingItem(context, Icons.house_outlined, 'Hostel Status', user?.isHostelResident == true ? 'Hostel Resident' : 'Day Scholar'),
+                _buildSettingItem(context, Icons.house_outlined, 'Hostel', user?.isHostelResident == true ? 'Resident' : 'Day Scholar'),
+              ListTile(
+                leading: const Icon(Icons.class_, color: Colors.grey),
+                title: const Text('Enrolled Classes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: Text(
+                  '${user?.enrolledClasses.length ?? 0} classes',
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+                onTap: () => _showEnrolledClasses(context, user?.enrolledClasses ?? []),
+              ),
+            ]),
+            _buildSettingsSection(context, 'Appearance', [
+              ListTile(
+                leading: const Icon(Icons.palette_outlined, color: Colors.purple),
+                title: const Text('Theme', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: SegmentedButton<ThemeMode>(
+                  segments: const [
+                    ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.brightness_auto, size: 18), label: Text('System', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode, size: 18), label: Text('Light', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode, size: 18), label: Text('Dark', style: TextStyle(fontSize: 12))),
+                  ],
+                  selected: {themeNotifier.themeMode},
+                  onSelectionChanged: (s) => themeNotifier.setThemeMode(s.first),
+                ),
+              ),
             ]),
             _buildSettingsSection(context, 'App Preferences', [
+              ListTile(
+                leading: Icon(Icons.edit_outlined, color: Colors.teal),
+                title: const Text('Edit Profile', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                onTap: () => _showEditProfile(context, user),
+              ),
               ListTile(
                 leading: Icon(Icons.lock_reset, color: Theme.of(context).primaryColor),
                 title: const Text('Change Password', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
                 trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
                 onTap: () => _showPasswordResetDialog(context, user?.email),
+              ),
+              ListTile(
+                leading: const Icon(Icons.notifications_outlined, color: Colors.cyan),
+                title: const Text('Notification Preferences', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                onTap: () => _showNotificationPrefs(context),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep_outlined, color: Colors.orange),
+                title: const Text('Clear Cache', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                onTap: _clearCache,
               ),
               ListTile(
                 leading: const Icon(Icons.system_update_alt, color: Colors.blueAccent),
@@ -64,7 +186,7 @@ class SettingsScreen extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.info_outline, color: Colors.grey),
                 title: const Text('About Kabete Poly App', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                trailing: Text(_appVersion, style: const TextStyle(color: Colors.grey, fontSize: 13)),
                 onTap: () => _showAboutDialog(context),
               ),
             ]),
@@ -86,6 +208,150 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 48),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEnrolledClasses(BuildContext context, List<String> classes) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Enrolled Classes'),
+        content: classes.isEmpty
+            ? const Text('No classes enrolled.')
+            : SizedBox(
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: classes.length,
+                  itemBuilder: (_, i) => ListTile(
+                    leading: const Icon(Icons.class_),
+                    title: Text(classes[i]),
+                    dense: true,
+                  ),
+                ),
+              ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+      ),
+    );
+  }
+
+  void _showEditProfile(BuildContext context, dynamic user) {
+    if (user == null) return;
+    final nameCtrl = TextEditingController(text: user.fullName);
+    final phoneCtrl = TextEditingController(text: user.mobileNumber);
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDState) => AlertDialog(
+          title: const Text('Edit Profile'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () => _pickAndUploadPhoto(),
+                  child: CircleAvatar(
+                    radius: 48,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage: user.profilePhotoUrl.isNotEmpty
+                        ? NetworkImage(user.profilePhotoUrl)
+                        : null,
+                    child: user.profilePhotoUrl.isEmpty
+                        ? const Icon(Icons.camera_alt, size: 32, color: Colors.grey)
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: const InputDecoration(labelText: 'Mobile Number', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.phone,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) return;
+                try {
+                  final uid = context.read<AuthProvider>().currentUserId;
+                  final firestore = FirestoreService();
+                  await firestore.updateUserProfile(uid, {
+                    'fullName': nameCtrl.text.trim(),
+                    'mobileNumber': phoneCtrl.text.trim(),
+                  });
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Profile updated'), backgroundColor: Colors.green),
+                    );
+                  }
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Update failed: $e'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationPrefs(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Notification Preferences'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Manage what notifications you receive:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('New Lessons'),
+              subtitle: const Text('When a teacher posts new material'),
+              value: true,
+              onChanged: (v) {},
+              dense: true,
+            ),
+            SwitchListTile(
+              title: const Text('Schedule Reminders'),
+              subtitle: const Text('30 min before class starts'),
+              value: true,
+              onChanged: (v) {},
+              dense: true,
+            ),
+            SwitchListTile(
+              title: const Text('Forum Messages'),
+              subtitle: const Text('New posts in your channels'),
+              value: true,
+              onChanged: (v) {},
+              dense: true,
+            ),
+            SwitchListTile(
+              title: const Text('Announcements'),
+              subtitle: const Text('Important class announcements'),
+              value: true,
+              onChanged: (v) {},
+              dense: true,
+            ),
+          ],
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done'))],
       ),
     );
   }
@@ -114,20 +380,23 @@ class SettingsScreen extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                      ),
-                      child: CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.white24,
-                        backgroundImage: user?.profilePhotoUrl.isNotEmpty == true 
-                          ? NetworkImage(user!.profilePhotoUrl) 
-                          : null,
-                        child: user?.profilePhotoUrl.isEmpty == true 
-                          ? const Icon(Icons.person, size: 40, color: Colors.white) 
-                          : null,
+                    GestureDetector(
+                      onTap: _pickAndUploadPhoto,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white24,
+                          backgroundImage: user?.profilePhotoUrl.isNotEmpty == true 
+                            ? NetworkImage(user!.profilePhotoUrl) 
+                            : null,
+                          child: user?.profilePhotoUrl.isEmpty == true 
+                            ? const Icon(Icons.person, size: 40, color: Colors.white) 
+                            : null,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -226,13 +495,7 @@ class SettingsScreen extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: Colors.grey[700]),
       title: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(value, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-          const SizedBox(width: 8),
-        ],
-      ),
+      trailing: Text(value, style: const TextStyle(color: Colors.grey, fontSize: 14)),
     );
   }
 
@@ -281,15 +544,15 @@ class SettingsScreen extends StatelessWidget {
             Text('About Kabete Poly'),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Version: 1.0.1+2', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text('Kabete Poly App provides students and faculty with scheduling, document sharing, and real-time alerts.'),
-            SizedBox(height: 10),
-            Text('Built with Flutter & Firebase.', style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey)),
+            Text('Version: $_appVersion', style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            const Text('Kabete Poly App provides students and faculty with scheduling, document sharing, and real-time alerts.'),
+            const SizedBox(height: 10),
+            const Text('Built with Flutter & Firebase.', style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey)),
           ],
         ),
         actions: [

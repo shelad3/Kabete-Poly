@@ -122,4 +122,8 @@ class FirestoreService {
       return {'students': 0, 'lessons': 0};
     }
   }
+
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
+    await _firestore.collection('users').doc(uid).update(data);
+  }
 }
