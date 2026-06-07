@@ -266,6 +266,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       items: const [
                         DropdownMenuItem(value: 'all', child: Text('All Users')),
                         DropdownMenuItem(value: 'user', child: Text('Specific User')),
+                        DropdownMenuItem(value: 'regNo', child: Text('Registration Number')),
                       ],
                       onChanged: (v) => setState(() => targetType = v!),
                     ),
@@ -280,6 +281,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                     ],
+                    if (targetType == 'regNo') ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: userIdCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Registration Number',
+                          border: OutlineInputBorder(),
+                          hintText: 'e.g. C101/01/2024',
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -288,7 +300,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (titleCtrl.text.trim().isEmpty || messageCtrl.text.trim().isEmpty) return;
-                    if (targetType == 'user' && userIdCtrl.text.trim().isEmpty) return;
+                    if ((targetType == 'user' || targetType == 'regNo') && userIdCtrl.text.trim().isEmpty) return;
                     try {
                       final sender = context.read<AuthProvider>().currentUser;
                       final alert = Alert(
@@ -297,7 +309,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         message: messageCtrl.text.trim(),
                         type: alertType,
                         targetType: targetType,
-                        targetId: targetType == 'user' ? userIdCtrl.text.trim() : null,
+                        targetId: targetType == 'user' || targetType == 'regNo' ? userIdCtrl.text.trim() : null,
                         senderId: context.read<AuthProvider>().currentUserId,
                         senderName: sender?.fullName ?? 'Admin',
                         timestamp: DateTime.now(),

@@ -12,6 +12,7 @@ import 'help_screen.dart';
 import 'error_report_screen.dart';
 import 'feedback_screen.dart';
 import '../services/update_service.dart';
+import '../utils/timetable_data.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -360,15 +361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showClassSelector(BuildContext context, user) {
-    final classes = [
-      'EE-2412 G1 (May-Aug 2026)',
-      'EE-2412 G2 (May-Aug 2026)',
-      'ICTD-2412 G1 (May-Aug 2026)',
-      'ICTD-2412 G2 (May-Aug 2026)',
-      'ICTD-2412 G3 (May-Aug 2026)',
-      'ICTM-2412 G1 (May-Aug 2026)',
-      'ICTM-2412 G2 (May-Aug 2026)',
-    ];
+    final classes = TimetableData.allCohortCodes;
     String? selected;
     TextEditingController customCtrl = TextEditingController();
 

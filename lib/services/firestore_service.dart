@@ -189,17 +189,22 @@ class FirestoreService {
     return doc.id;
   }
 
-  Stream<List<Alert>> getAlertsForUser(String userId, List<String> enrolledClasses) {
-    // Get alerts targeted at: all, this user, or any of their classes
+  Stream<List<Alert>> getAlertsForUser(String userId, String regNo, List<String> enrolledClasses) {
+    // Get alerts targeted at: all, this user, this regNo, or any of their classes
     return _firestore
         .collection('alerts')
-        .where('targetType', whereIn: ['all', 'user', 'class'])
+        .where('targetType', whereIn: ['all', 'user', 'class', 'regNo'])
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((s) => s.docs.map((d) {
-          final a = Alert.fromJson(d.data(), d.id);
-          return a;
-        }).toList());
+        .map((s) => s.docs
+          .map((d) => Alert.fromJson(d.data(), d.id))
+          .where((a) =>
+            a.targetType == 'all' ||
+            (a.targetType == 'user' && a.targetId == userId) ||
+            (a.targetType == 'regNo' && regNo.isNotEmpty && a.targetId == regNo) ||
+            (a.targetType == 'class' && enrolledClasses.contains(a.targetId))
+          )
+          .toList());
   }
 
   Stream<List<Alert>> getAllAlertsStream() {

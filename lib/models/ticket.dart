@@ -152,7 +152,7 @@ class Alert {
   final String title;
   final String message;
   final String type; // info, warning, class_update
-  final String targetType; // all, class, user
+  final String targetType; // all, class, user, regNo
   final String? targetId;
   final String senderId;
   final String senderName;
