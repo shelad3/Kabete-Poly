@@ -46,6 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
         classProvider.setFromEnrolled(user.enrolledClasses);
       }
 
+      // Auto-check for updates on startup
+      UpdateService.checkForUpdates(context);
+
       OnboardingScreen.hasSeen().then((seen) {
         if (!seen && mounted) {
           Navigator.of(context).push(

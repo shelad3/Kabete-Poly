@@ -19,6 +19,13 @@ class _ForumScreenState extends State<ForumScreen> {
   final ForumService _forumService = ForumService();
   final _textController = TextEditingController();
   String? _selectedChannelId;
+  bool _showChannelList = true;
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
 
   Future<void> _sendMessage() async {
     if (_textController.text.trim().isEmpty) return;
@@ -130,12 +137,6 @@ class _ForumScreenState extends State<ForumScreen> {
   }
 
   @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
@@ -143,7 +144,13 @@ class _ForumScreenState extends State<ForumScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Class Forum'),
+        title: Text(_showChannelList ? 'Channels' : 'Forum'),
+        leading: _showChannelList
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => setState(() => _showChannelList = true),
+              ),
         actions: [
           if (canCreateChannel)
             IconButton(
@@ -164,63 +171,104 @@ class _ForumScreenState extends State<ForumScreen> {
               }
 
               final channels = channelSnapshot.data ?? [];
-              if (_selectedChannelId == null && channels.isNotEmpty) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    setState(() => _selectedChannelId = channels.first.id);
-                  }
-                });
-              }
 
-              return Column(
-                children: [
-                  if (channels.isNotEmpty)
-                    SizedBox(
-                      height: 56,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        children: channels.map((ch) {
-                          final isSelected = _selectedChannelId == ch.id;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                            child: ChoiceChip(
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    ch.isAnnouncement ? Icons.campaign : Icons.chat,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(ch.name),
-                                ],
-                              ),
-                              selected: isSelected,
-                              onSelected: (val) {
-                                if (val) setState(() => _selectedChannelId = ch.id);
-                              },
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  if (_selectedChannelId != null)
-                    Expanded(
-                      child: _buildMessages(_selectedChannelId!, currentClass, user),
-                    )
-                  else
-                    const Expanded(
-                      child: Center(child: Text('No channels available.')),
-                    ),
-                  if (_selectedChannelId != null)
-                    _buildInputArea(channels, user),
-                ],
-              );
+              if (_showChannelList) {
+                return _buildChannelList(channels, user);
+              } else {
+                return _buildChannelView(channels, currentClass, user);
+              }
             },
           );
         },
       ),
+    );
+  }
+
+  Widget _buildChannelList(List<ForumChannel> channels, dynamic user) {
+    if (channels.isEmpty) {
+      return const Center(child: Text('No channels yet. Create one to get started!'));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: channels.length,
+      itemBuilder: (context, index) {
+        final ch = channels[index];
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: ch.isAnnouncement
+                  ? Colors.orange.withValues(alpha: 0.1)
+                  : Colors.blue.withValues(alpha: 0.1),
+              child: Icon(
+                ch.isAnnouncement ? Icons.campaign : Icons.chat,
+                color: ch.isAnnouncement ? Colors.orange : Colors.blue,
+              ),
+            ),
+            title: Text(ch.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(
+              ch.isAnnouncement ? 'Announcements' : 'Open discussion',
+              style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.grey[600]),
+            ),
+            trailing: const Icon(Icons.chevron_right, size: 18),
+            onTap: () {
+              setState(() {
+                _selectedChannelId = ch.id;
+                _showChannelList = false;
+              });
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildChannelView(List<ForumChannel> channels, String currentClass, dynamic user) {
+    if (_selectedChannelId == null && channels.isNotEmpty) {
+      _selectedChannelId = channels.first.id;
+    }
+    if (_selectedChannelId == null) {
+      return const Center(child: Text('No channels available.'));
+    }
+    return Column(
+      children: [
+        if (channels.length > 1)
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              children: channels.map((ch) {
+                final isSelected = _selectedChannelId == ch.id;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  child: ChoiceChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          ch.isAnnouncement ? Icons.campaign : Icons.chat,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(ch.name, style: const TextStyle(fontSize: 13)),
+                      ],
+                    ),
+                    selected: isSelected,
+                    onSelected: (val) {
+                      if (val) setState(() => _selectedChannelId = ch.id);
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        Expanded(
+          child: _buildMessages(_selectedChannelId!, currentClass, user),
+        ),
+        _buildInputArea(channels, user),
+      ],
     );
   }
 

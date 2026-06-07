@@ -95,6 +95,7 @@ class UpdateService {
     bool downloadComplete = false;
     bool installing = false;
     double progress = 0;
+    String installStatus = 'Opening package installer...';
 
     showDialog(
       context: context,
@@ -128,7 +129,7 @@ class UpdateService {
                   ],
                 ),
                 content: installing
-                    ? const Text('Launching the package installer...')
+                    ? Text(installStatus)
                     : downloadComplete
                         ? const Text(
                             'The update file has been downloaded. '
@@ -206,11 +207,17 @@ class UpdateService {
                                     downloading = false;
                                     downloadComplete = true;
                                   });
-                                  setDialogState(() => installing = true);
-                                  await _installApk(filePath);
-                                  if (context.mounted) {
-                                    Navigator.of(dialogContext).pop();
-                                  }
+                                  setDialogState(() {
+                                    installing = true;
+                                    downloadComplete = false;
+                                  });
+                                  await _installApk(filePath, (s) {
+                                    setDialogState(() => installStatus = s);
+                                  });
+                                  setDialogState(() {
+                                    installing = false;
+                                    downloadComplete = true;
+                                  });
                                 }
                               } catch (e) {
                                 if (context.mounted) {
@@ -286,14 +293,17 @@ class UpdateService {
     }
   }
 
-  static Future<void> _installApk(String filePath) async {
-    // Cancel progress notification and show completion notification
-    await NotificationService().cancelDownloadNotification();
+  static Future<void> _installApk(String filePath, void Function(String) onStatus) async {
+    onStatus('Opening package installer...');
+    // Cancel progress notification
+    await NotificationService().cancelDownloadNotification(ids: [9999]);
+    // Show completion notification for retry if installer fails
     await NotificationService().showDownloadCompleteNotification(filePath);
 
     final result = await OpenFilex.open(filePath);
     if (result.type != ResultType.done) {
-      throw Exception('Installation failed: ${result.message}');
+      onStatus('Installer failed, tap notification to retry');
+      debugPrint('OpenFilex failed: ${result.message}');
     }
   }
 }

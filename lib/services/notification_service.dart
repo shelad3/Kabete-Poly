@@ -101,10 +101,16 @@ class NotificationService {
     );
   }
 
-  /// Cancel a download notification
-  Future<void> cancelDownloadNotification() async {
-    await _flutterLocalNotificationsPlugin.cancel(id: 9999);
-    await _flutterLocalNotificationsPlugin.cancel(id: 9998);
+  /// Cancel download notifications. Pass specific [ids] or cancel all.
+  Future<void> cancelDownloadNotification({List<int>? ids}) async {
+    if (ids != null) {
+      for (final id in ids) {
+        await _flutterLocalNotificationsPlugin.cancel(id: id);
+      }
+    } else {
+      await _flutterLocalNotificationsPlugin.cancel(id: 9999);
+      await _flutterLocalNotificationsPlugin.cancel(id: 9998);
+    }
   }
 
   /// Request permissions on Android 13+
