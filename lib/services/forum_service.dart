@@ -4,6 +4,7 @@ import '../models/forum_channel.dart';
 
 class ForumService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Set<String> _defaultsAttempted = {};
 
   // --- Channels ---
 
@@ -17,8 +18,8 @@ class ForumService {
           (doc) => ForumChannel.fromJson(doc.data(), doc.id)).toList();
       channels.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-      // If no channels exist yet, trigger creation of defaults
-      if (channels.isEmpty) {
+      // If no channels exist yet, trigger creation of defaults (once per class)
+      if (channels.isEmpty && _defaultsAttempted.add(classId)) {
         _ensureDefaultChannels(classId);
       }
       return channels;

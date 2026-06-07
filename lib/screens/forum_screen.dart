@@ -121,6 +121,11 @@ class _ForumScreenState extends State<ForumScreen> {
         createdAt: DateTime.now(),
       );
       await _forumService.createChannel(channel);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Channel created')),
+        );
+      }
     }
   }
 

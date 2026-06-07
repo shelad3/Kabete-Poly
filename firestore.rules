@@ -91,6 +91,16 @@ service cloud.firestore {
     }
     
     // ---------------------------------------------------- //
+    // Auth Codes Collection
+    // ---------------------------------------------------- //
+    match /auth_codes/{codeId} {
+      // Allow unauthenticated read so verifyCode() works during registration
+      allow read: if true;
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
     // Default: deny everything else
     // ---------------------------------------------------- //
     match /{document=**} {
