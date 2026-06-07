@@ -138,10 +138,6 @@ class _ForumScreenState extends State<ForumScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final user = auth.currentUser;
-    final canCreateChannel = user != null && (user.isTeacher || user.isLeader || user.isAdmin);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_showChannelList ? 'Channels' : 'Forum'),
@@ -152,35 +148,42 @@ class _ForumScreenState extends State<ForumScreen> {
                 onPressed: () => setState(() => _showChannelList = true),
               ),
         actions: [
-          if (canCreateChannel)
-            IconButton(
+          Builder(builder: (ctx) {
+            final user = ctx.read<AuthProvider>().currentUser;
+            final canCreate = user != null && (user.isTeacher || user.isLeader || user.isAdmin);
+            if (!canCreate) return const SizedBox.shrink();
+            return IconButton(
               icon: const Icon(Icons.add_circle_outline),
               tooltip: 'New Channel',
               onPressed: _createChannel,
-            ),
+            );
+          }),
         ],
       ),
-      body: Consumer<ClassProvider>(
-        builder: (context, classProvider, _) {
-          final currentClass = classProvider.currentClass;
-          return StreamBuilder<List<ForumChannel>>(
-            stream: _forumService.getChannelsStream(currentClass),
-            builder: (context, channelSnapshot) {
-              if (channelSnapshot.connectionState == ConnectionState.waiting) {
-                return const ShimmerForumMessages();
-              }
-
-              final channels = channelSnapshot.data ?? [];
-
-              if (_showChannelList) {
-                return _buildChannelList(channels, user);
-              } else {
-                return _buildChannelView(channels, currentClass, user);
-              }
-            },
-          );
+      body: Selector<ClassProvider, String>(
+        selector: (_, cp) => cp.currentClass,
+        builder: (_, currentClass, __) {
+          return _buildCurrentView(currentClass);
         },
       ),
+    );
+  }
+
+  Widget _buildCurrentView(String currentClass) {
+    return StreamBuilder<List<ForumChannel>>(
+      stream: _forumService.getChannelsStream(currentClass),
+      builder: (context, channelSnapshot) {
+        if (channelSnapshot.connectionState == ConnectionState.waiting) {
+          return const ShimmerForumMessages();
+        }
+        final channels = channelSnapshot.data ?? [];
+        final user = context.read<AuthProvider>().currentUser;
+        if (_showChannelList) {
+          return _buildChannelList(channels, user);
+        } else {
+          return _buildChannelView(channels, currentClass, user);
+        }
+      },
     );
   }
 

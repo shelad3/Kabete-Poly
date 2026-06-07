@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_code_service.dart';
 import 'registration_screen.dart';
+import 'dart:async';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -51,8 +52,9 @@ class RoleSelectionScreen extends StatelessWidget {
                             if (verifiedRole != null && verifiedRole == role) {
                               await service.markCodeUsed(passwordController.text, role);
                               if (context.mounted) {
+                                // Show success, then navigate
                                 Navigator.pop(context);
-                                _navigateToRegistration(context, role);
+                                _showVerifiedDialog(context, role);
                               }
                             } else {
                               setDState(() => isLoading = false);
@@ -90,6 +92,44 @@ class RoleSelectionScreen extends StatelessWidget {
         builder: (_) => RegistrationScreen(selectedRole: role),
       ),
     );
+  }
+
+  void _showVerifiedDialog(BuildContext context, String role) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            const Icon(Icons.check_circle, color: Colors.green, size: 64),
+            const SizedBox(height: 16),
+            const Text(
+              'Access Key Verified!',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your $role key is valid. Redirecting to registration...',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+    // Navigate after a brief pause so user sees the success
+    Future.delayed(const Duration(seconds: 1), () {
+      if (context.mounted) {
+        Navigator.pop(context); // close verified dialog
+        _navigateToRegistration(context, role);
+      }
+    });
   }
 
   @override
