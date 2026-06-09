@@ -76,6 +76,9 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+                if (snap.hasError) {
+                  return Center(child: Text('Error loading codes: ${snap.error}'));
+                }
                 final codes = snap.data ?? [];
                 if (codes.isEmpty) {
                   return const Center(child: Text('No codes generated yet'));

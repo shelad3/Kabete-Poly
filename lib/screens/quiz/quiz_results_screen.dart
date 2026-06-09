@@ -40,6 +40,9 @@ class QuizResultsScreen extends StatelessWidget {
           if (snap.connectionState == ConnectionState.waiting) {
             return const ShimmerNotificationList();
           }
+          if (snap.hasError) {
+            return Center(child: Text('Error loading results: ${snap.error}'));
+          }
 
           final submissions = snap.data ?? [];
 

@@ -114,13 +114,17 @@ class FirestoreService {
     try {
       final studentsSnap = await _firestore.collection('users').where('role', isEqualTo: 'Student').count().get();
       final lessonsSnap = await _firestore.collection('lessons').count().get();
+      final helpRequestsSnap = await _firestore.collection('help_requests').where('status', isEqualTo: 'pending').count().get();
+      final classChangeSnap = await _firestore.collection('class_change_requests').where('status', isEqualTo: 'pending').count().get();
+      final errorReportsSnap = await _firestore.collection('error_reports').where('status', isEqualTo: 'pending').count().get();
       
       return {
         'students': studentsSnap.count ?? 0,
         'lessons': lessonsSnap.count ?? 0,
+        'tickets': (helpRequestsSnap.count ?? 0) + (classChangeSnap.count ?? 0) + (errorReportsSnap.count ?? 0),
       };
     } catch (e) {
-      return {'students': 0, 'lessons': 0};
+      return {'students': 0, 'lessons': 0, 'tickets': 0};
     }
   }
 

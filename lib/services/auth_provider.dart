@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_profile.dart';
+import 'push_notification_service.dart';
+import 'analytics_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -11,21 +13,23 @@ class AuthProvider extends ChangeNotifier {
 
   UserProfile? _currentUser;
   bool _isAuthenticated = false;
+  bool _isLoading = true;
 
   UserProfile? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
+  bool get isLoading => _isLoading;
   String get currentUserId => _auth.currentUser?.uid ?? '';
 
   AuthProvider() {
-    // Listen to Firebase Auth state changes automatically
     _auth.authStateChanges().listen((User? user) async {
       if (user != null) {
         await _fetchUserProfile(user);
       } else {
         _currentUser = null;
         _isAuthenticated = false;
-        notifyListeners();
       }
+      _isLoading = false;
+      notifyListeners();
     });
   }
 
@@ -64,6 +68,7 @@ class AuthProvider extends ChangeNotifier {
         );
       }
       _isAuthenticated = true;
+      PushNotificationService().saveTokenToFirestore(user.uid);
       notifyListeners();
     } catch (e) {
       debugPrint("Error fetching user profile: $e");
@@ -85,6 +90,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> login(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      AnalyticsService().logLogin('email');
     } catch (e) {
       if (e is FirebaseAuthException) {
         throw Exception(e.message ?? 'Login failed');
@@ -105,6 +111,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       await _auth.signInWithCredential(credential);
+      AnalyticsService().logLogin('google');
       // _fetchUserProfile will handle creating doc if new
     } catch (e) {
       throw Exception('Google Sign-In failed: $e');
@@ -186,6 +193,7 @@ class AuthProvider extends ChangeNotifier {
         // 5. Reload profile from Firestore (race condition: auth listener may have
         //    loaded a fallback before Firestore write completed)
         await _fetchUserProfile(credential.user!);
+        AnalyticsService().logSignUp('email');
       } catch (e) {
         // Rollback Firebase Auth creation if any Firestore requirement fails
         await credential.user?.delete();
@@ -197,6 +205,13 @@ class AuthProvider extends ChangeNotifier {
         throw Exception(e.message ?? 'Registration failed');
       }
       rethrow;
+    }
+  }
+
+  Future<void> refreshUserProfile() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _fetchUserProfile(user);
     }
   }
 

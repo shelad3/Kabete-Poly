@@ -87,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey,
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Explore'),

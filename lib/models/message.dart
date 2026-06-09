@@ -34,7 +34,9 @@ class ChatMessage {
       text: json['text'] ?? '',
       imageUrl: json['imageUrl'],
       timestamp: json['timestamp'] != null 
-          ? DateTime.parse(json['timestamp']) 
+          ? (json['timestamp'] is String
+              ? DateTime.parse(json['timestamp'])
+              : (json['timestamp'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       reactions: (json['reactions'] as List<dynamic>?)
           ?.map((e) => ChatReaction.fromJson(e as Map<String, dynamic>))

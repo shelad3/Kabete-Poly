@@ -25,7 +25,9 @@ class ClassNotification {
       message: json['message'] ?? '',
       type: json['type'] ?? 'general',
       timestamp: json['timestamp'] != null 
-          ? DateTime.parse(json['timestamp']) 
+          ? (json['timestamp'] is String
+              ? DateTime.parse(json['timestamp'])
+              : (json['timestamp'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
     );
   }

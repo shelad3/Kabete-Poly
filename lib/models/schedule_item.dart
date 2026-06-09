@@ -44,7 +44,11 @@ class ScheduleItem {
       endTime: json['endTime'] ?? '00:00',
       color: Color(json['colorValue'] ?? Colors.blue.toARGB32()),
       description: json['description'],
-      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
+      date: json['date'] != null
+          ? (json['date'] is String
+              ? DateTime.parse(json['date'])
+              : (json['date'] as dynamic).toDate() as DateTime)
+          : DateTime.now(),
       isDefault: json['isDefault'] ?? false,
       dayOfWeek: json['dayOfWeek'],
       attachmentUrl: json['attachmentUrl'],

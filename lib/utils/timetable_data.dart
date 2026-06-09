@@ -7852,7 +7852,430 @@ class TimetableData {
         },
       ],
     },
-  };
+    'AUT-400/J26': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'S. Vehicle Suspension Steering System', 'room': '', 'lecturer': 'Mureithi Andrew', 'color': 4282339765},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicles Diesel Engine', 'room': 'Workshop Auto 2', 'lecturer': 'Njiru Kelvin', 'color': 4280391411},
+        {'time': '1400-1600 hrs', 'unit': 'S. Vehicle Suspension Steering System', 'room': '', 'lecturer': 'Mureithi Andrew', 'color': 4294940672},
+      ],
+      'Thursday': [
+        {'time': '1400-1600 hrs', 'unit': 'Vehicles Diesel Engine', 'room': '', 'lecturer': 'Njiru Kelvin', 'color': 4287245282},
+      ],
+    },
+    'AUT-400/M26': {
+      'Monday': [
+        {'time': '1000-1200 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': '', 'lecturer': 'Trainer X', 'color': 4287453729},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': '', 'lecturer': 'Trainer X', 'color': 4285383507},
+      ],
+      'Wednesday': [
+        {'time': '1000-1200 hrs', 'unit': 'Consolata Service V. Braking', 'room': '', 'lecturer': '', 'color': 4286906191},
+        {'time': '1400-1600 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': 'Workshop Auto 2', 'lecturer': 'Trainer X', 'color': 4284228468},
+      ],
+      'Thursday': [
+        {'time': '1400-1600 hrs', 'unit': 'Consolata Service V. Braking', 'room': 'C9-B', 'lecturer': '', 'color': 4287783258},
+      ],
+      'Friday': [
+        {'time': '1000-1200 hrs', 'unit': 'Consolata Service V. Braking', 'room': 'Workshop C4C', 'lecturer': 'J. Muthini', 'color': 4281642701},
+      ],
+    },
+    'AUT-500/J26': {
+      'Monday': [
+        {'time': '1400-1600 hrs', 'unit': 'Vehicles Diesel Engine', 'room': 'Workshop Auto 1', 'lecturer': 'Njiru Kelvin', 'color': 4291973824},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'S. Vehicle Suspension Steering System', 'room': '', 'lecturer': 'Baraza / Dennis Munyao', 'color': 4288216787},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'S. Vehicle Suspension Steering System', 'room': 'Workshop Auto 2', 'lecturer': 'Baraza / Dennis Munyao', 'color': 4282339765},
+      ],
+      'Friday': [
+        {'time': '1200-1400 hrs', 'unit': 'Vehicles Diesel Engine', 'room': 'Workshop Auto 1', 'lecturer': 'Njiru Kelvin', 'color': 4280391411},
+      ],
+    },
+    'AUT-500/M25': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Workshop Technology', 'room': '', 'lecturer': 'Lamek Ndenjeshe', 'color': 4294940672},
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-C', 'lecturer': 'Judith', 'color': 4287245282},
+        {'time': '1600-1800 hrs', 'unit': 'Digital Literacy', 'room': '', 'lecturer': 'Seth', 'color': 4287453729},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Transmission System Maintenance', 'room': 'Workshop Auto 3', 'lecturer': 'Trainer Y', 'color': 4285383507},
+        {'time': '1400-1600 hrs', 'unit': 'Digital Literacy', 'room': '', 'lecturer': 'Seth', 'color': 4286906191},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Mechanical Principles', 'room': 'C12-C', 'lecturer': 'Oyamo Sharon', 'color': 4284228468},
+        {'time': '1200-1400 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'C12-D', 'lecturer': 'Kenlands', 'color': 4287783258},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Electrical and Electronics Principles 1', 'room': 'C12-C', 'lecturer': 'Mongire Julian', 'color': 4281642701},
+        {'time': '1400-1600 hrs', 'unit': 'Engineering Drawing', 'room': 'C2-Engine Room', 'lecturer': 'Trainer X', 'color': 4291973824},
+      ],
+    },
+    'AUT-500/M26': {
+      'Monday': [
+        {'time': '1000-1200 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': 'Workshop Auto 2', 'lecturer': 'Trainer Y', 'color': 4288216787},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Service V. Braking', 'room': '', 'lecturer': 'Muthini John', 'color': 4282339765},
+        {'time': '1400-1600 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': 'Workshop Auto 2', 'lecturer': 'Trainer Y', 'color': 4280391411},
+      ],
+      'Thursday': [
+        {'time': '1400-1600 hrs', 'unit': 'Service V. Braking', 'room': 'Workshop Auto 3', 'lecturer': 'Muthini John', 'color': 4294940672},
+      ],
+      'Friday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': 'Workshop Auto 2', 'lecturer': 'Trainer Y', 'color': 4287245282},
+      ],
+    },
+    'AUT-500/S25': {
+      'Monday': [
+        {'time': '1400-1600 hrs', 'unit': 'Technical Drawing', 'room': 'C7-A', 'lecturer': 'Dennis Munyao', 'color': 4287453729},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Auto Electrics and Electronics', 'room': 'C12-A', 'lecturer': 'Ephraim Katimanga', 'color': 4285383507},
+        {'time': '1000-1200 hrs', 'unit': 'Work Ethics', 'room': 'C12-C', 'lecturer': 'Protus Mugambi', 'color': 4286906191},
+        {'time': '1200-1400 hrs', 'unit': 'Applied Mathematics 1', 'room': 'C12-C', 'lecturer': 'Some', 'color': 4284228468},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Communication Skills', 'room': 'C10-B', 'lecturer': 'Joyce Kabura', 'color': 4287783258},
+      ],
+      'Thursday': [
+        {'time': '1000-1200 hrs', 'unit': 'Work Ethics', 'room': '', 'lecturer': 'Protus Mugambi', 'color': 4281642701},
+        {'time': '1200-1400 hrs', 'unit': 'Applied Mathematics 1', 'room': '', 'lecturer': 'Some', 'color': 4291973824},
+        {'time': '1400-1600 hrs', 'unit': 'Communication Skills', 'room': 'C10-B', 'lecturer': 'Joyce Kabura', 'color': 4288216787},
+      ],
+      'Friday': [
+        {'time': '1000-1200 hrs', 'unit': 'S. Vehicle Fuel System', 'room': 'Workshop Auto 3', 'lecturer': 'Trainer X', 'color': 4282339765},
+      ],
+    },
+    'AUT-600/J26': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicles Diesel Engine', 'room': 'Workshop Auto 1', 'lecturer': 'Baraza', 'color': 4280391411},
+        {'time': '1400-1600 hrs', 'unit': 'S. Vehicle Suspension Steering System', 'room': 'Workshop Auto 2', 'lecturer': 'Mureithi Andrew', 'color': 4294940672},
+      ],
+      'Tuesday': [
+        {'time': '1200-1400 hrs', 'unit': 'Vehicles Diesel Engine', 'room': 'Workshop Auto 1', 'lecturer': 'Baraza', 'color': 4287245282},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicles Diesel Engine', 'room': '', 'lecturer': 'Baraza', 'color': 4287453729},
+      ],
+      'Friday': [
+        {'time': '1200-1400 hrs', 'unit': 'S. Vehicle Suspension Steering System', 'room': 'Workshop Auto 2', 'lecturer': 'Mureithi Andrew', 'color': 4285383507},
+      ],
+    },
+    'AUT-600/M25': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-A', 'lecturer': 'Judith', 'color': 4286906191},
+        {'time': '1200-1400 hrs', 'unit': 'Digital Literacy', 'room': '', 'lecturer': 'Miyawa', 'color': 4284228468},
+        {'time': '1400-1600 hrs', 'unit': 'Principle of Applied Mechanics I', 'room': 'E1-D', 'lecturer': 'Ngetich Leonard', 'color': 4287783258},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'C12-C', 'lecturer': 'Some', 'color': 4281642701},
+        {'time': '1000-1200 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': '', 'lecturer': 'Judith', 'color': 4291973824},
+        {'time': '1400-1600 hrs', 'unit': 'Mechanical Principles', 'room': '', 'lecturer': 'Oyamo Sharon', 'color': 4288216787},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Engineering Drawing', 'room': 'C2-Engine Room', 'lecturer': 'Kefa Joash', 'color': 4282339765},
+        {'time': '1400-1600 hrs', 'unit': 'Transmission System Maintenance', 'room': 'C9-B', 'lecturer': 'Ephraim Katimanga', 'color': 4280391411},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Apply Engineering Mathematics', 'room': '', 'lecturer': 'Some', 'color': 4294940672},
+        {'time': '1200-1400 hrs', 'unit': 'Workshop Technology', 'room': '', 'lecturer': 'Lamek Ndenjeshe', 'color': 4287245282},
+        {'time': '1400-1600 hrs', 'unit': 'Electrical and Electronics Principles 1', 'room': 'C12-C', 'lecturer': 'Mongire Julian', 'color': 4287453729},
+      ],
+    },
+    'AUT-600/M26': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Service V. Braking', 'room': '', 'lecturer': 'Ngigi Samuel', 'color': 4285383507},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': '', 'lecturer': 'Maina Fredrick', 'color': 4286906191},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': 'Workshop Auto 2', 'lecturer': 'Maina Fredrick', 'color': 4284228468},
+        {'time': '1400-1600 hrs', 'unit': 'Service V. Braking', 'room': 'Workshop Auto 1', 'lecturer': 'Ngigi Samuel', 'color': 4287783258},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicle Petrol Engine Maintenance', 'room': '', 'lecturer': 'Maina Fredrick', 'color': 4281642701},
+      ],
+    },
+    'AUT-600/S24': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Fluid Mechanics', 'room': 'E2-B', 'lecturer': 'Ngetich Leonard', 'color': 4291973824},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Thermodynamics', 'room': 'E2-B', 'lecturer': 'Kilonzo John', 'color': 4288216787},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Vehicle Steering System', 'room': 'Workshop Auto 1', 'lecturer': 'Mureithi Andrew', 'color': 4282339765},
+        {'time': '1400-1600 hrs', 'unit': 'Vehicle Body Work', 'room': '', 'lecturer': 'Muthini John', 'color': 4280391411},
+      ],
+      'Thursday': [
+        {'time': '1400-1600 hrs', 'unit': 'S. Vehicle Electrical System', 'room': '', 'lecturer': 'Ephraim Katimanga', 'color': 4294940672},
+      ],
+      'Friday': [
+        {'time': '0800-1000 hrs', 'unit': 'Autocad', 'room': 'Autocad Lab C9A', 'lecturer': 'Orucho Hilux', 'color': 4287245282},
+      ],
+    },
+    'AUT-600/S25': {
+      'Monday': [
+        {'time': '1000-1200 hrs', 'unit': 'Communication Skills', 'room': 'C10-B', 'lecturer': 'Joyce Kabura', 'color': 4287453729},
+        {'time': '1200-1400 hrs', 'unit': 'S. Vehicle Electrical System', 'room': '', 'lecturer': 'N. Thuo / Denis Njumwa', 'color': 4285383507},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Work Ethics', 'room': 'C10-B', 'lecturer': 'Agnes Mwangi', 'color': 4286906191},
+        {'time': '1200-1400 hrs', 'unit': 'Applied Mathematics 1', 'room': 'C10-B', 'lecturer': 'Rita', 'color': 4284228468},
+        {'time': '1400-1600 hrs', 'unit': 'S. Vehicle Electrical System', 'room': 'C10-B', 'lecturer': 'N. Thuo / Denis Njumwa', 'color': 4287783258},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'S. Vehicle Fuel System', 'room': 'Workshop Auto 3', 'lecturer': 'Trainer X', 'color': 4281642701},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Work Ethics', 'room': 'C10-B', 'lecturer': 'Agnes Mwangi', 'color': 4291973824},
+        {'time': '1000-1200 hrs', 'unit': 'Applied Mathematics 1', 'room': 'C10-B', 'lecturer': 'Rita', 'color': 4288216787},
+        {'time': '1400-1600 hrs', 'unit': 'Technical Drawing', 'room': 'C10-B', 'lecturer': 'Trainer P', 'color': 4282339765},
+      ],
+    },
+    'PLT-600/M24': {
+      'Monday': [
+        {'time': '1400-1600 hrs', 'unit': 'Autocad', 'room': 'Autocad Lab C9A', 'lecturer': 'Mutisya Johmbosco', 'color': 4280391411},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Thermodynamics', 'room': 'E2-F', 'lecturer': 'Mutai Wesley', 'color': 4294940672},
+      ],
+      'Wednesday': [
+        {'time': '1600-1800 hrs', 'unit': 'Fluid Mechanics', 'room': 'E2-F', 'lecturer': 'Kilonzo John', 'color': 4287245282},
+      ],
+    },
+    'PLT-600/M25': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'E1-D', 'lecturer': 'Mriam', 'color': 4287453729},
+        {'time': '1000-1200 hrs', 'unit': 'Electrical and Electronics Principles 1', 'room': 'C9-B', 'lecturer': 'Mongire Julian', 'color': 4285383507},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Refrigeration & Air Conditioning', 'room': '', 'lecturer': 'Mutisya Johmbosco', 'color': 4286906191},
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-D', 'lecturer': 'Judith', 'color': 4284228468},
+      ],
+      'Wednesday': [
+        {'time': '1000-1200 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'E1-D', 'lecturer': 'Mriam', 'color': 4287783258},
+        {'time': '1400-1600 hrs', 'unit': 'Principle of Applied Mechanics I', 'room': 'E1-D', 'lecturer': 'Ngetich Leonard', 'color': 4281642701},
+        {'time': '1600-1800 hrs', 'unit': 'Workshop Technology', 'room': '', 'lecturer': 'Lamek Ndenjeshe', 'color': 4291973824},
+      ],
+      'Thursday': [
+        {'time': '1200-1400 hrs', 'unit': 'Technical Drawing', 'room': 'C7-A', 'lecturer': 'Wambua Alex', 'color': 4288216787},
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-D', 'lecturer': 'Judith', 'color': 4282339765},
+      ],
+    },
+    'PLT-600/M26': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Install Air Compressor', 'room': 'Workshop C4-B', 'lecturer': 'Kefa Joash', 'color': 4280391411},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Install Air Compressor', 'room': 'Workshop C4-B', 'lecturer': 'Kefa Joash', 'color': 4294940672},
+        {'time': '1400-1600 hrs', 'unit': 'Pump Installation', 'room': 'Workshop C4-B', 'lecturer': 'Mutai Wesley', 'color': 4287245282},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Pump Installation', 'room': 'Workshop C4-B', 'lecturer': 'Mutai Wesley', 'color': 4287453729},
+      ],
+    },
+    'PLT-600/S24': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Steam Line System', 'room': 'E2-F', 'lecturer': 'Mutai Wesley', 'color': 4285383507},
+        {'time': '1400-1600 hrs', 'unit': 'Mechanical Turbine', 'room': 'E2-F', 'lecturer': 'Mutai Wesley', 'color': 4286906191},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Fluid Mechanics', 'room': 'E1-D', 'lecturer': 'Oyamo Sharon', 'color': 4284228468},
+        {'time': '1400-1600 hrs', 'unit': 'Lifts and Escalators Maintenance', 'room': 'E1-D', 'lecturer': 'Kefa Joash', 'color': 4287783258},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Thermodynamics', 'room': 'E2-B', 'lecturer': 'Ngware Peter', 'color': 4281642701},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Autocad', 'room': 'Autocad Lab C9A', 'lecturer': 'Mutisya Johmbosco', 'color': 4291973824},
+      ],
+    },
+    'PLT-600/S25': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Digital Literacy', 'room': '', 'lecturer': 'Faith Jerono', 'color': 4288216787},
+        {'time': '1400-1600 hrs', 'unit': 'Applied Mathematics 1', 'room': 'E2-B', 'lecturer': 'Alex Maina', 'color': 4282339765},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Material Science', 'room': 'C2-C', 'lecturer': 'Kemunto Maureen', 'color': 4280391411},
+        {'time': '1200-1400 hrs', 'unit': 'Work Ethics', 'room': 'C2-C', 'lecturer': 'Agnes Mwangi', 'color': 4294940672},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Communication Skills', 'room': 'C12-A', 'lecturer': 'Joyce Kabura', 'color': 4287245282},
+        {'time': '1200-1400 hrs', 'unit': 'Digital Literacy', 'room': '', 'lecturer': 'Faith Jerono', 'color': 4287453729},
+        {'time': '1400-1600 hrs', 'unit': 'Technical Drawing', 'room': 'C7-A', 'lecturer': 'Wambua Alex', 'color': 4285383507},
+      ],
+      'Thursday': [
+        {'time': '1200-1400 hrs', 'unit': 'Work Ethics', 'room': 'C2-C', 'lecturer': 'Agnes Mwangi', 'color': 4286906191},
+        {'time': '1400-1600 hrs', 'unit': 'Material Handling', 'room': 'E2-F', 'lecturer': 'Mutisya Johmbosco', 'color': 4284228468},
+      ],
+      'Friday': [
+        {'time': '1000-1200 hrs', 'unit': 'Communication Skills', 'room': 'C12-A', 'lecturer': 'Joyce Kabura', 'color': 4287783258},
+      ],
+    },
+    'PRD-500/M25': {
+      'Monday': [
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-C', 'lecturer': 'Judith', 'color': 4281642701},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Grinding Operations', 'room': '', 'lecturer': 'Lamek Ndenjeshe', 'color': 4291973824},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Principle of Applied Mechanics I', 'room': 'C9-C', 'lecturer': 'Orucho Hilux', 'color': 4288216787},
+        {'time': '1200-1400 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'C12-D', 'lecturer': 'Kenlands', 'color': 4282339765},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Electrical and Electronics Principles 1', 'room': 'C12-C', 'lecturer': 'Mongire Julian', 'color': 4280391411},
+        {'time': '1400-1600 hrs', 'unit': 'Engineering Drawing', 'room': 'C2-Engine Room', 'lecturer': 'Trainer X', 'color': 4294940672},
+      ],
+      'Friday': [
+        {'time': '0800-1000 hrs', 'unit': 'Metrology', 'room': 'C2-C', 'lecturer': 'Muriithi Charles', 'color': 4287245282},
+      ],
+    },
+    'PRD-500/S25': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Material Science', 'room': 'C9-C', 'lecturer': 'Oyamo Sharon', 'color': 4287453729},
+      ],
+      'Tuesday': [
+        {'time': '1000-1200 hrs', 'unit': 'Applied Mathematics 1', 'room': 'C9-C', 'lecturer': 'Alex Maina', 'color': 4285383507},
+        {'time': '1200-1400 hrs', 'unit': 'Work Ethics', 'room': 'C12-C', 'lecturer': 'Protus Mugambi', 'color': 4286906191},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Digital Literacy', 'room': 'Autocad Lab C9A', 'lecturer': 'John Mark', 'color': 4284228468},
+        {'time': '1000-1200 hrs', 'unit': 'Communication Skills', 'room': 'C10-B', 'lecturer': 'Joyce Kabura', 'color': 4287783258},
+        {'time': '1400-1600 hrs', 'unit': 'Sheet Metal', 'room': '', 'lecturer': 'Kemunto Maureen', 'color': 4281642701},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Technical Drawing', 'room': 'C2-Engine Room', 'lecturer': 'Ngware Peter', 'color': 4291973824},
+        {'time': '1400-1600 hrs', 'unit': 'Work Ethics', 'room': '', 'lecturer': 'Protus Mugambi', 'color': 4288216787},
+        {'time': '1600-1800 hrs', 'unit': 'Digital Literacy', 'room': '', 'lecturer': 'John Mark', 'color': 4282339765},
+      ],
+      'Friday': [
+        {'time': '0800-1000 hrs', 'unit': 'Communication Skills', 'room': 'C10-B', 'lecturer': 'Joyce Kabura', 'color': 4280391411},
+      ],
+    },
+    'PRD-600/J26': {
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Milling Work', 'room': 'Workshop Block C2', 'lecturer': 'Gichoru Simon', 'color': 4294940672},
+        {'time': '1200-1400 hrs', 'unit': 'Lathe Work', 'room': 'Workshop China', 'lecturer': 'Kamanda Valerie', 'color': 4287245282},
+        {'time': '1400-1600 hrs', 'unit': 'Lathe Work', 'room': 'Workshop China', 'lecturer': 'Kamanda Valerie', 'color': 4287453729},
+      ],
+      'Thursday': [
+        {'time': '1400-1600 hrs', 'unit': 'Milling Work', 'room': 'Workshop Block C2', 'lecturer': 'Gichoru Simon', 'color': 4285383507},
+      ],
+    },
+    'PRD-600/M24': {
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Thermodynamics', 'room': 'C7-A', 'lecturer': 'Ngware Peter', 'color': 4286906191},
+        {'time': '1200-1400 hrs', 'unit': 'Autocad', 'room': 'Autocad Lab C9A', 'lecturer': 'Wambua Alex', 'color': 4284228468},
+      ],
+      'Wednesday': [
+        {'time': '1200-1400 hrs', 'unit': 'Metrology', 'room': 'C9-C', 'lecturer': 'Orucho Hilux', 'color': 4287783258},
+        {'time': '1600-1800 hrs', 'unit': 'Fluid Mechanics', 'room': 'E2-F', 'lecturer': 'Kilonzo John', 'color': 4281642701},
+      ],
+      'Thursday': [
+        {'time': '1000-1200 hrs', 'unit': 'Milling Work', 'room': 'Workshop Block C2', 'lecturer': 'Gichoru Simon', 'color': 4291973824},
+      ],
+    },
+    'PRD-600/M25': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'E1-D', 'lecturer': 'Mriam', 'color': 4288216787},
+        {'time': '1400-1600 hrs', 'unit': 'Grinding Operations', 'room': 'Workshop Block C2', 'lecturer': 'Kilonzo John', 'color': 4282339765},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Electrical and Electronics Principles 1', 'room': 'C2-Engine Room', 'lecturer': 'Mongire Julian', 'color': 4280391411},
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-D', 'lecturer': 'Judith', 'color': 4294940672},
+      ],
+      'Wednesday': [
+        {'time': '1000-1200 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'E1-D', 'lecturer': 'Mriam', 'color': 4287245282},
+        {'time': '1400-1600 hrs', 'unit': 'Principle of Applied Mechanics I', 'room': 'E1-D', 'lecturer': 'Ngetich Leonard', 'color': 4287453729},
+        {'time': '1600-1800 hrs', 'unit': 'Technical Drawing', 'room': 'C7-A', 'lecturer': 'Wambua Alex', 'color': 4285383507},
+      ],
+      'Thursday': [
+        {'time': '1200-1400 hrs', 'unit': 'Workshop Technology', 'room': 'C9-C', 'lecturer': 'Muriithi Charles', 'color': 4286906191},
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-D', 'lecturer': 'Judith', 'color': 4284228468},
+      ],
+    },
+    'PRD-600/M26': {
+      'Monday': [
+        {'time': '1400-1600 hrs', 'unit': 'Bench Work', 'room': 'Workshop C4A', 'lecturer': 'Kemunto Maureen', 'color': 4287783258},
+      ],
+      'Tuesday': [
+        {'time': '1200-1400 hrs', 'unit': 'Bench Work', 'room': 'Workshop C4A', 'lecturer': 'Kemunto Maureen', 'color': 4281642701},
+      ],
+      'Thursday': [
+        {'time': '1000-1200 hrs', 'unit': 'Perform Manual Metal Arc Welding', 'room': 'Workshop Block C1A', 'lecturer': 'Muriithi Charles', 'color': 4291973824},
+      ],
+      'Friday': [
+        {'time': '1400-1600 hrs', 'unit': 'Perform Manual Metal Arc Welding', 'room': 'Workshop Block C1A', 'lecturer': 'Muriithi Charles', 'color': 4288216787},
+      ],
+    },
+    'PRD-600/S24': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Autocad', 'room': 'Autocad Lab C9A', 'lecturer': 'Mutisya Johmbosco', 'color': 4282339765},
+        {'time': '1400-1600 hrs', 'unit': 'Foundry Work', 'room': 'C2-C', 'lecturer': 'Kamanda Valerie', 'color': 4280391411},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Fluid Mechanics', 'room': 'E1-D', 'lecturer': 'Oyamo Sharon', 'color': 4294940672},
+        {'time': '1400-1600 hrs', 'unit': 'Milling Work', 'room': 'Workshop Block C2', 'lecturer': 'Gichoru Simon', 'color': 4287245282},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Thermodynamics', 'room': 'E2-B', 'lecturer': 'Ngware Peter', 'color': 4287453729},
+        {'time': '1400-1600 hrs', 'unit': 'Grinding Operations', 'room': 'Workshop Block C2', 'lecturer': 'Kilonzo John', 'color': 4285383507},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Metrology', 'room': 'E2-B', 'lecturer': 'Orucho Hilux', 'color': 4286906191},
+      ],
+      'Friday': [
+        {'time': '0800-1000 hrs', 'unit': 'Numerical Machining', 'room': 'Workshop China', 'lecturer': 'Ngetich Leonard', 'color': 4284228468},
+      ],
+    },
+    'PRD-600/S25': {
+      'Monday': [
+        {'time': '0800-1000 hrs', 'unit': 'Sheet Metal', 'room': 'Workshop Block C1A', 'lecturer': 'Kemunto Maureen', 'color': 4287783258},
+        {'time': '1200-1400 hrs', 'unit': 'Digital Literacy', 'room': 'Autocad Lab C9A', 'lecturer': 'Seth', 'color': 4281642701},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Material Science', 'room': 'C2-C', 'lecturer': 'Kemunto Maureen', 'color': 4291973824},
+        {'time': '1200-1400 hrs', 'unit': 'Work Ethics', 'room': 'C2-C', 'lecturer': 'Agnes Mwangi', 'color': 4288216787},
+      ],
+      'Wednesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Communication Skills', 'room': 'C12-A', 'lecturer': 'Joyce Kabura', 'color': 4282339765},
+        {'time': '1000-1200 hrs', 'unit': 'Digital Literacy', 'room': 'Autocad Lab C9A', 'lecturer': 'Seth', 'color': 4280391411},
+      ],
+      'Thursday': [
+        {'time': '0800-1000 hrs', 'unit': 'Applied Mathematics 1', 'room': '', 'lecturer': 'Kenlands', 'color': 4294940672},
+        {'time': '1200-1400 hrs', 'unit': 'Work Ethics', 'room': 'C2-C', 'lecturer': 'Agnes Mwangi', 'color': 4287245282},
+      ],
+      'Friday': [
+        {'time': '1000-1200 hrs', 'unit': 'Communication Skills', 'room': 'C12-A', 'lecturer': 'Joyce Kabura', 'color': 4287453729},
+      ],
+    },
+    'WFB-600/M25': {
+      'Monday': [
+        {'time': '1000-1200 hrs', 'unit': 'Apply Engineering Mathematics', 'room': '', 'lecturer': 'George Machari', 'color': 4285383507},
+        {'time': '1200-1400 hrs', 'unit': 'Apply Engineering Mathematics', 'room': 'C9-C', 'lecturer': 'George Machari', 'color': 4286906191},
+        {'time': '1400-1600 hrs', 'unit': 'Principle of Applied Mechanics I', 'room': 'E1-D', 'lecturer': 'Ngetich Leonard', 'color': 4284228468},
+      ],
+      'Tuesday': [
+        {'time': '0800-1000 hrs', 'unit': 'Electrical and Electronics Principles 1', 'room': 'C2-Engine Room', 'lecturer': 'Mongire Julian', 'color': 4287783258},
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-D', 'lecturer': 'Judith', 'color': 4281642701},
+      ],
+      'Wednesday': [
+        {'time': '1400-1600 hrs', 'unit': 'Gas Metal Arc Welding', 'room': 'Workshop C3A', 'lecturer': 'Kamanda Valerie', 'color': 4291973824},
+        {'time': '1600-1800 hrs', 'unit': 'Technical Drawing', 'room': 'C7-A', 'lecturer': 'Wambua Alex', 'color': 4288216787},
+      ],
+      'Thursday': [
+        {'time': '1200-1400 hrs', 'unit': 'Workshop Technology', 'room': 'C9-C', 'lecturer': 'Muriithi Charles', 'color': 4282339765},
+        {'time': '1400-1600 hrs', 'unit': 'Apply Entrepreneurial Skills', 'room': 'C12-D', 'lecturer': 'Judith', 'color': 4280391411},
+      ],
+    },  };
 
   /// Returns the parsed timetable for a specific cohort.
   static Map<String, List<Map<String, dynamic>>> getTimetableForCohort(String cohort) {

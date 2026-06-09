@@ -47,7 +47,11 @@ class Lesson {
       report: json['report'] ?? '',
       nb1: json['nb1'] ?? '',
       nb2: json['nb2'] ?? '',
-      date: DateTime.parse(json['date']),
+      date: json['date'] != null
+          ? (json['date'] is String
+              ? DateTime.parse(json['date'])
+              : (json['date'] as dynamic).toDate() as DateTime)
+          : DateTime.now(),
       attachmentUrl: json['attachmentUrl'],
       attachmentName: json['attachmentName'],
     );

@@ -25,7 +25,9 @@ class ForumChannel {
       type: json['type'] ?? 'chat',
       createdBy: json['createdBy'] ?? '',
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? (json['createdAt'] is String
+              ? DateTime.parse(json['createdAt'])
+              : (json['createdAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
     );
   }

@@ -43,6 +43,9 @@ class QuizListScreen extends StatelessWidget {
               if (snap.connectionState == ConnectionState.waiting) {
                 return const ShimmerExploreList();
               }
+              if (snap.hasError) {
+                return Center(child: Text('Error loading quizzes: ${snap.error}'));
+              }
               final quizzes = snap.data ?? [];
               if (quizzes.isEmpty) {
                 return Center(

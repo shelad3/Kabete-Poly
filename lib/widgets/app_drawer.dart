@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
-import '../theme/theme_provider.dart';
 import '../screens/login_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -72,39 +71,6 @@ class AppDrawer extends StatelessWidget {
 
           const Divider(),
 
-          Consumer<ThemeNotifier>(
-            builder: (context, themeNotifier, _) {
-              final mode = themeNotifier.themeMode;
-              final icon = mode == ThemeMode.dark ? Icons.dark_mode : (mode == ThemeMode.light ? Icons.light_mode : Icons.brightness_auto);
-              final label = mode == ThemeMode.dark ? 'Dark' : (mode == ThemeMode.light ? 'Light' : 'System');
-              return ListTile(
-                leading: Icon(icon, color: Colors.grey[700]),
-                title: const Text('Theme'),
-                trailing: DropdownButton<String>(
-                  value: label,
-                  underline: const SizedBox(),
-                  items: const [
-                    DropdownMenuItem(value: 'System', child: Text('System')),
-                    DropdownMenuItem(value: 'Light', child: Text('Light')),
-                    DropdownMenuItem(value: 'Dark', child: Text('Dark')),
-                  ],
-                  onChanged: (val) {
-                    switch (val) {
-                      case 'Light':
-                        themeNotifier.setThemeMode(ThemeMode.light);
-                      case 'Dark':
-                        themeNotifier.setThemeMode(ThemeMode.dark);
-                      default:
-                        themeNotifier.setThemeMode(ThemeMode.system);
-                    }
-                  },
-                ),
-              );
-            },
-          ),
-
-          const Divider(),
-          
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Log Out', style: TextStyle(color: Colors.red)),

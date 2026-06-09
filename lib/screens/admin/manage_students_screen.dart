@@ -19,6 +19,9 @@ class ManageStudentsScreen extends StatelessWidget {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (snap.hasError) {
+            return Center(child: Text('Error loading users: ${snap.error}'));
+          }
           final users = snap.data?.docs ?? [];
           if (users.isEmpty) {
             return const Center(child: Text('No registered users'));

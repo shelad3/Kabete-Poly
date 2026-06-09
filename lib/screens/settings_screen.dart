@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../services/auth_provider.dart';
 import '../services/firestore_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/app_drawer.dart';
 import '../theme/theme_provider.dart';
 import 'faculty_directory_screen.dart';
@@ -24,6 +26,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _appVersion = '';
   final _picker = ImagePicker();
+  final _storageService = StorageService();
 
   @override
   void initState() {
@@ -41,11 +44,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _pickAndUploadPhoto() async {
     final file = await _picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
     if (file == null) return;
-    // For now just show that we selected a file
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Photo selected. Profile photo upload coming soon.'), backgroundColor: Colors.blue),
-      );
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
+      if (user == null) return;
+      final regNo = user.registrationNumber;
+      final path = 'profiles/img_${regNo}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final uploadedUrl = await _storageService.uploadImage(File(file.path), path);
+      if (uploadedUrl != null) {
+        final uid = authProvider.currentUserId;
+        await FirestoreService().updateUserProfile(uid, {'profilePhotoUrl': uploadedUrl});
+        await authProvider.refreshUserProfile();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile photo updated!'), backgroundColor: Colors.green),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -370,40 +391,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
           title: const Text('Select New Class'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Choose your new class:', style: TextStyle(fontSize: 14, color: Colors.grey)),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ...classes.map((c) => RadioListTile<String>(
-                      title: Text(c, style: const TextStyle(fontSize: 13)),
-                      value: c,
-                      groupValue: selected,
-                      onChanged: (v) {
-                        setDState(() {
-                          selected = v;
-                          customCtrl.clear();
-                        });
-                      },
-                      dense: true,
-                    )),
-                  ],
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Choose your new class:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  child: Scrollbar(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        ...classes.map((c) => RadioListTile<String>(
+                          title: Text(c, style: const TextStyle(fontSize: 13)),
+                          value: c,
+                          groupValue: selected,
+                          onChanged: (v) {
+                            setDState(() {
+                              selected = v;
+                              customCtrl.clear();
+                            });
+                          },
+                          dense: true,
+                        )),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              const Divider(),
-              TextField(
-                controller: customCtrl,
-                decoration: const InputDecoration(labelText: 'Or type a class name', border: OutlineInputBorder()),
-                onChanged: (v) {
-                  if (v.isNotEmpty) setDState(() => selected = null);
-                },
-              ),
-            ],
+                const Divider(),
+                TextField(
+                  controller: customCtrl,
+                  decoration: const InputDecoration(labelText: 'Or type a class name', border: OutlineInputBorder()),
+                  onChanged: (v) {
+                    if (v.isNotEmpty) setDState(() => selected = null);
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -418,6 +444,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'enrolledClasses': [newClass],
                     'classChangeCount': (user.classChangeCount ?? 0) + 1,
                   });
+                  await context.read<AuthProvider>().refreshUserProfile();
                   if (ctx.mounted) Navigator.pop(ctx);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -583,45 +610,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showNotificationPrefs(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Notification Preferences'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Manage what notifications you receive:', style: TextStyle(fontSize: 14, color: Colors.grey)),
-            const SizedBox(height: 16),
-            SwitchListTile(
-              title: const Text('New Lessons'),
-              subtitle: const Text('When a teacher posts new material'),
-              value: true,
-              onChanged: (v) {},
-              dense: true,
-            ),
-            SwitchListTile(
-              title: const Text('Schedule Reminders'),
-              subtitle: const Text('30 min before class starts'),
-              value: true,
-              onChanged: (v) {},
-              dense: true,
-            ),
-            SwitchListTile(
-              title: const Text('Forum Messages'),
-              subtitle: const Text('New posts in your channels'),
-              value: true,
-              onChanged: (v) {},
-              dense: true,
-            ),
-            SwitchListTile(
-              title: const Text('Announcements'),
-              subtitle: const Text('Important class announcements'),
-              value: true,
-              onChanged: (v) {},
-              dense: true,
-            ),
-          ],
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done'))],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDState) {
+          final prefs = SharedPreferences.getInstance();
+          return FutureBuilder<SharedPreferences>(
+            future: prefs,
+            builder: (context, snap) {
+              if (snap.hasError) {
+                return AlertDialog(content: Text('Error: ${snap.error}'));
+              }
+              final sp = snap.data;
+              if (sp == null) {
+                return const AlertDialog(content: CircularProgressIndicator());
+              }
+              bool lessonsOn = sp.getBool('notif_lessons') ?? true;
+              bool scheduleOn = sp.getBool('notif_schedule') ?? true;
+              bool forumOn = sp.getBool('notif_forum') ?? true;
+              bool announcementsOn = sp.getBool('notif_announcements') ?? true;
+              return AlertDialog(
+                title: const Text('Notification Preferences'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Manage what notifications you receive:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      title: const Text('New Lessons'),
+                      subtitle: const Text('When a teacher posts new material'),
+                      value: lessonsOn,
+                      onChanged: (v) {
+                        sp.setBool('notif_lessons', v);
+                        setDState(() {});
+                      },
+                      dense: true,
+                    ),
+                    SwitchListTile(
+                      title: const Text('Schedule Reminders'),
+                      subtitle: const Text('30 min before class starts'),
+                      value: scheduleOn,
+                      onChanged: (v) {
+                        sp.setBool('notif_schedule', v);
+                        setDState(() {});
+                      },
+                      dense: true,
+                    ),
+                    SwitchListTile(
+                      title: const Text('Forum Messages'),
+                      subtitle: const Text('New posts in your channels'),
+                      value: forumOn,
+                      onChanged: (v) {
+                        sp.setBool('notif_forum', v);
+                        setDState(() {});
+                      },
+                      dense: true,
+                    ),
+                    SwitchListTile(
+                      title: const Text('Announcements'),
+                      subtitle: const Text('Important class announcements'),
+                      value: announcementsOn,
+                      onChanged: (v) {
+                        sp.setBool('notif_announcements', v);
+                        setDState(() {});
+                      },
+                      dense: true,
+                    ),
+                  ],
+                ),
+                actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done'))],
+              );
+            },
+          );
+        },
       ),
     );
   }

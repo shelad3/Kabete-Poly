@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/class_notification.dart';
 import '../../models/ticket.dart';
 import '../../services/auth_provider.dart';
@@ -9,6 +10,9 @@ import '../explore_screen.dart';
 import 'manage_auth_codes_screen.dart';
 import 'manage_students_screen.dart';
 import 'manage_tickets_screen.dart';
+import 'admin_timetable_manager_screen.dart';
+import '../grades/manage_grades_screen.dart';
+import 'manage_alerts_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -36,7 +40,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       setState(() {
         _totalStudents = stats['students'] ?? 0;
         _totalLessons = stats['lessons'] ?? 0;
-        _openTickets = 0;
+        _openTickets = stats['tickets'] ?? 0;
         _isLoadingStats = false;
       });
     }
@@ -75,15 +79,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             _buildActionCard(context, Icons.vpn_key, 'Auth Codes', 'Generate registration keys', Colors.purple,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageAuthCodesScreen())),
             ),
+            _buildActionCard(context, Icons.calendar_month, 'Timetable Manager', 'Add/edit schedule entries', Colors.cyan,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminTimetableManagerScreen())),
+            ),
+            _buildActionCard(context, Icons.assignment, 'Manage Grades', 'Enter & view student grades', Colors.amber,
+              onTap: () => _selectClassAndNavigate(context),
+            ),
             _buildActionCard(context, Icons.confirmation_number, 'Manage Tickets', 'Help requests, errors, feedback', Colors.teal,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
             ),
-            _buildActionCard(context, Icons.gavel, 'Forum Moderation', '$_openTickets flagged messages', Colors.red),
+            _buildActionCard(context, Icons.gavel, 'Forum Moderation', '$_openTickets pending reports & tickets', Colors.red,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
+            ),
             _buildActionCard(context, Icons.campaign, 'Announcements', 'Send push notifications', Colors.green,
               onTap: () => _showAnnouncementDialog(context),
             ),
             _buildActionCard(context, Icons.notifications_active, 'Send Alert', 'Target user, class, or all', Colors.indigo,
               onTap: () => _showAlertDialog(context),
+            ),
+            _buildActionCard(context, Icons.manage_history, 'Manage Alerts', 'View, edit & delete sent items', Colors.brown,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageAlertsScreen())),
             ),
           ],
         ),
@@ -336,6 +351,69 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           }
         );
       }
+    );
+  }
+
+  void _selectClassAndNavigate(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    final user = auth.currentUser;
+
+    if (user == null) return;
+
+    if (!user.isAdmin && !user.isTeacher) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only teachers and officials can manage grades')),
+      );
+      return;
+    }
+
+    if (user.isAdmin) {
+      FirebaseFirestore.instance.collection('classes').get().then((snap) {
+        final allClasses = snap.docs.map((d) => d.id).toList()..sort();
+        if (!context.mounted) return;
+        _showClassPicker(context, allClasses);
+      });
+    } else {
+      final classes = user.enrolledClasses;
+      if (classes.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No classes assigned to your account')),
+        );
+        return;
+      }
+      _showClassPicker(context, classes);
+    }
+  }
+
+  void _showClassPicker(BuildContext context, List<String> classes) {
+    if (classes.length == 1) {
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => ManageGradesScreen(classId: classes.first),
+      ));
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Select Class'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: classes.length,
+            itemBuilder: (_, i) => ListTile(
+              title: Text(classes[i]),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => ManageGradesScreen(classId: classes[i]),
+                ));
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

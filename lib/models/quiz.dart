@@ -33,7 +33,9 @@ class Quiz {
       questionIds: List<String>.from(json['questionIds'] ?? []),
       createdBy: json['createdBy'] ?? '',
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? (json['createdAt'] is String
+              ? DateTime.parse(json['createdAt'])
+              : (json['createdAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       isPublished: json['isPublished'] ?? false,
       maxScore: json['maxScore'],
@@ -86,7 +88,9 @@ class QuizSubmission {
       score: json['score'] ?? 0,
       total: json['total'] ?? 0,
       submittedAt: json['submittedAt'] != null
-          ? DateTime.parse(json['submittedAt'])
+          ? (json['submittedAt'] is String
+              ? DateTime.parse(json['submittedAt'])
+              : (json['submittedAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
     );
   }

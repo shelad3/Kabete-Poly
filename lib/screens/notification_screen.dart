@@ -61,6 +61,9 @@ class NotificationScreen extends StatelessWidget {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const ShimmerNotificationList();
                       }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error loading alerts: ${snapshot.error}'));
+                      }
                       final alerts = snapshot.data ?? [];
                       if (alerts.isEmpty) {
                         return const SizedBox.shrink();

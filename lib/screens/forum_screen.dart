@@ -176,6 +176,9 @@ class _ForumScreenState extends State<ForumScreen> {
         if (channelSnapshot.connectionState == ConnectionState.waiting) {
           return const ShimmerForumMessages();
         }
+        if (channelSnapshot.hasError) {
+          return Center(child: Text('Error loading channels: ${channelSnapshot.error}'));
+        }
         final channels = channelSnapshot.data ?? [];
         final user = context.read<AuthProvider>().currentUser;
         if (_showChannelList) {

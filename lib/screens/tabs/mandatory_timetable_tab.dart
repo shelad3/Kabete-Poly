@@ -20,6 +20,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     final user = context.watch<AuthProvider>().currentUser;
     final isStudent = user != null && (user.role == 'Student' || user.role == 'Leader');
     final hasEnrolledClass = user != null && user.enrolledClasses.isNotEmpty;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Auto-select user's enrolled class if available
     if (hasEnrolledClass) {
@@ -39,7 +40,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(isStudent, hasEnrolledClass),
+          _buildHeader(isStudent, hasEnrolledClass, isDark),
           const SizedBox(height: 24),
           ...days.map((day) {
             final lessons = weekSchedule[day] ?? [];
@@ -52,14 +53,14 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                   padding: const EdgeInsets.only(bottom: 12, left: 4),
                   child: Text(
                     day,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blueGrey,
+                      color: isDark ? Colors.white70 : Colors.blueGrey,
                     ),
                   ),
                 ),
-                ...lessons.map((lesson) => _buildMandatoryCard(lesson, day)),
+                ...lessons.map((lesson) => _buildMandatoryCard(lesson, day, isDark)),
                 const SizedBox(height: 16),
               ],
             );
@@ -69,27 +70,27 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     );
   }
 
-  Widget _buildHeader(bool isStudent, bool hasEnrolledClass) {
+  Widget _buildHeader(bool isStudent, bool hasEnrolledClass, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.1),
+        color: isDark ? const Color(0xFF2A2A3E) : Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.blue.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Department Timetable',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.blueGrey),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: isDark ? Colors.white54 : Colors.blueGrey),
               ),
               Text(
                 'Official Classes',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : null),
               ),
             ],
           ),
@@ -108,20 +109,22 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
               : Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                      ),
-                    ],
+                    boxShadow: isDark
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4,
+                            ),
+                          ],
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedCohort,
                       icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
                       items: TimetableData.cohorts.keys.map((String cohort) {
                         return DropdownMenuItem<String>(
                           value: cohort,
@@ -141,21 +144,23 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     );
   }
 
-  Widget _buildMandatoryCard(Map<String, dynamic> lesson, String dayString) {
+  Widget _buildMandatoryCard(Map<String, dynamic> lesson, String dayString, bool isDark) {
     final Color stripColor = Color(lesson['color'] as int);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF2A2A3E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -192,9 +197,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.grey.withValues(alpha: 0.1),
+                                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.1),
                               ),
-                              child: const Icon(Icons.notifications_none, size: 18, color: Colors.blueGrey),
+                              child: Icon(Icons.notifications_none, size: 18, color: isDark ? Colors.white54 : Colors.blueGrey),
                             ),
                           ),
                         ],
@@ -202,7 +207,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       const SizedBox(height: 12),
                       Text(
                         lesson['unit'],
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : null),
                       ),
                       const SizedBox(height: 8),
                       Row(

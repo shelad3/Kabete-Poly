@@ -10,6 +10,7 @@ import '../widgets/shimmer_loading.dart';
 import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
 import 'quiz/quiz_list_screen.dart';
+import 'grades/grade_report_screen.dart';
 import 'package:intl/intl.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -69,6 +70,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       context,
                       MaterialPageRoute(builder: (_) => const QuizListScreen()),
                     ),
+                  ),
+                ),
+              ),
+              Card(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.amber.withValues(alpha: 0.1),
+                    child: const Icon(Icons.grade, color: Colors.amber),
+                  ),
+                  title: const Text('My Grades', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('View report card & performance'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const GradeReportScreen()),
                   ),
                 ),
               ),
