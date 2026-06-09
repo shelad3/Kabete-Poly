@@ -14,6 +14,21 @@ class MandatoryTimetableTab extends StatefulWidget {
 class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   String _selectedCohort = 'EET 600 M24';
   final NotificationService _notificationService = NotificationService();
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    final user = context.read<AuthProvider>().currentUser;
+    if (user != null && user.enrolledClasses.isNotEmpty) {
+      final firstClass = user.enrolledClasses.first;
+      if (TimetableData.cohorts.containsKey(firstClass)) {
+        _selectedCohort = firstClass;
+      }
+    }
+    _initialized = true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,16 +36,6 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     final isStudent = user != null && (user.role == 'Student' || user.role == 'Leader');
     final hasEnrolledClass = user != null && user.enrolledClasses.isNotEmpty;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Auto-select user's enrolled class if available
-    if (hasEnrolledClass) {
-      final firstClass = user.enrolledClasses.first;
-      if (TimetableData.cohorts.containsKey(firstClass) && _selectedCohort != firstClass) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) setState(() => _selectedCohort = firstClass);
-        });
-      }
-    }
 
     final weekSchedule = TimetableData.getTimetableForCohort(_selectedCohort);
     final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];

@@ -94,14 +94,11 @@ service cloud.firestore {
     // Auth Codes Collection
     // ---------------------------------------------------- //
     match /auth_codes/{codeId} {
-      // Allow unauthenticated read so verifyCode() works during registration
-      allow read: if true;
+      allow read: if isAuthenticated();
       // Only admins can create new codes or delete them
       allow create: if isAdmin();
       allow delete: if isAdmin();
-      // Allow anyone (including unauthenticated) to mark a code as used
-      // Only the isUsed/usedBy fields may change — all other fields must stay
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isUsed', 'usedBy']);
+      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isUsed', 'usedBy']);
     }
 
     // ---------------------------------------------------- //

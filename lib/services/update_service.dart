@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ class UpdateService {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
 
-      final response = await http.get(Uri.parse(_githubApiUrl));
+      final response = await http.get(Uri.parse(_githubApiUrl)).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -253,7 +254,7 @@ class UpdateService {
     final client = http.Client();
     try {
       final request = http.Request('GET', Uri.parse(url));
-      final response = await client.send(request);
+      final response = await client.send(request).timeout(const Duration(minutes: 5));
 
       final contentLength = response.contentLength;
       final dir = Directory.systemTemp;

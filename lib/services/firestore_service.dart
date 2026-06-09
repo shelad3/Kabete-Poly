@@ -9,7 +9,7 @@ class FirestoreService {
 
   // --- Lessons ---
   Stream<List<Lesson>> getLessonsStream([String? classId]) {
-    Query query = _firestore.collection('lessons').orderBy('date', descending: true);
+    Query query = _firestore.collection('lessons').orderBy('date', descending: true).limit(200);
     if (classId != null && classId.isNotEmpty && classId != 'Global / General Assembly') {
       query = query.where('classId', isEqualTo: classId);
     }
@@ -140,7 +140,7 @@ class FirestoreService {
   }
 
   Stream<List<HelpRequest>> getHelpRequestsStream({String? status}) {
-    Query q = _firestore.collection('help_requests').orderBy('timestamp', descending: true);
+    Query q = _firestore.collection('help_requests').orderBy('timestamp', descending: true).limit(100);
     if (status != null) q = q.where('status', isEqualTo: status);
     return q.snapshots().map((s) => s.docs.map((d) => HelpRequest.fromJson(d.data() as Map<String, dynamic>, d.id)).toList());
   }
@@ -161,7 +161,7 @@ class FirestoreService {
   }
 
   Stream<List<ErrorReport>> getErrorReportsStream({String? status}) {
-    Query q = _firestore.collection('error_reports').orderBy('timestamp', descending: true);
+    Query q = _firestore.collection('error_reports').orderBy('timestamp', descending: true).limit(100);
     if (status != null) q = q.where('status', isEqualTo: status);
     return q.snapshots().map((s) => s.docs.map((d) => ErrorReport.fromJson(d.data() as Map<String, dynamic>, d.id)).toList());
   }
@@ -178,7 +178,7 @@ class FirestoreService {
   }
 
   Stream<List<AppFeedback>> getFeedbackStream() {
-    return _firestore.collection('feedback').orderBy('timestamp', descending: true).snapshots()
+    return _firestore.collection('feedback').orderBy('timestamp', descending: true).limit(100).snapshots()
         .map((s) => s.docs.map((d) => AppFeedback.fromJson(d.data(), d.id)).toList());
   }
 
@@ -199,6 +199,7 @@ class FirestoreService {
         .collection('alerts')
         .where('targetType', whereIn: ['all', 'user', 'class', 'regNo'])
         .orderBy('timestamp', descending: true)
+        .limit(50)
         .snapshots()
         .map((s) => s.docs
           .map((d) => Alert.fromJson(d.data(), d.id))
@@ -212,7 +213,7 @@ class FirestoreService {
   }
 
   Stream<List<Alert>> getAllAlertsStream() {
-    return _firestore.collection('alerts').orderBy('timestamp', descending: true).snapshots()
+    return _firestore.collection('alerts').orderBy('timestamp', descending: true).limit(100).snapshots()
         .map((s) => s.docs.map((d) => Alert.fromJson(d.data(), d.id)).toList());
   }
 

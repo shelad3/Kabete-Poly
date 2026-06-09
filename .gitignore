@@ -47,3 +47,4 @@ app.*.map.json
 
 # Secrets (API keys, passwords, etc)
 android/secrets.properties
+android/app/google-services.json

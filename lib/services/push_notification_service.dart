@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +18,9 @@ class PushNotificationService {
   final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
   String? _fcmToken;
   bool _initialized = false;
+  StreamSubscription<String>? _tokenSubscription;
+  StreamSubscription<RemoteMessage>? _messageSubscription;
+  StreamSubscription<RemoteMessage>? _openSubscription;
 
   String? get fcmToken => _fcmToken;
 
@@ -32,16 +36,20 @@ class PushNotificationService {
     );
 
     _fcmToken = await _fcm.getToken();
-    debugPrint('FCM Token: $_fcmToken');
 
-    _fcm.onTokenRefresh.listen((token) {
+    _tokenSubscription = _fcm.onTokenRefresh.listen((token) {
       _fcmToken = token;
-      debugPrint('FCM Token refreshed: $token');
     });
 
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    _messageSubscription = FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    _openSubscription = FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
     FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+  }
+
+  void dispose() {
+    _tokenSubscription?.cancel();
+    _messageSubscription?.cancel();
+    _openSubscription?.cancel();
   }
 
   Future<void> _requestPermission() async {

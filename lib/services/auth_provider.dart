@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,6 +11,7 @@ class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  StreamSubscription<User?>? _authSubscription;
 
   UserProfile? _currentUser;
   bool _isAuthenticated = false;
@@ -21,7 +23,7 @@ class AuthProvider extends ChangeNotifier {
   String get currentUserId => _auth.currentUser?.uid ?? '';
 
   AuthProvider() {
-    _auth.authStateChanges().listen((User? user) async {
+    _authSubscription = _auth.authStateChanges().listen((User? user) async {
       if (user != null) {
         await _fetchUserProfile(user);
       } else {
@@ -31,6 +33,12 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchUserProfile(User user) async {

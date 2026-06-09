@@ -14,6 +14,7 @@ class ManageStudentsScreen extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection('users')
             .orderBy('fullName')
+            .limit(200)
             .snapshots(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {

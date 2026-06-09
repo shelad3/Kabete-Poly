@@ -1,4 +1,6 @@
 class CloudinaryConfig {
   static const String cloudName = 'dpa8tbxdj';
-  static const String uploadPreset = 'YOUR_UPLOAD_PRESET'; // Create an unsigned upload preset at cloudinary.com/console/settings/upload
+  // TODO: Replace with a real unsigned upload preset from https://cloudinary.com/console/settings/upload
+  // Until this is set, image uploads will fail.
+  static const String uploadPreset = 'YOUR_UPLOAD_PRESET';
 }
