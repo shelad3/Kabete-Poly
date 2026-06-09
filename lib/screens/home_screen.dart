@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
 import '../services/update_service.dart';
+import '../services/unread_badge_provider.dart';
 import 'onboarding_screen.dart';
 import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
@@ -39,11 +40,22 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
       final classProvider = context.read<ClassProvider>();
+      final badgeProvider = context.read<UnreadBadgeProvider>();
       final user = authProvider.currentUser;
 
       // Sync ClassProvider with user's enrolled classes
       if (user != null && user.enrolledClasses.isNotEmpty) {
         classProvider.setFromEnrolled(user.enrolledClasses);
+      }
+
+      // Initialize badge provider
+      if (user != null) {
+        badgeProvider.init(
+          authProvider.currentUserId,
+          user.registrationNumber,
+          user.enrolledClasses,
+          classProvider.currentClass,
+        );
       }
 
       // Auto-check for updates on startup
@@ -71,20 +83,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final badge = context.watch<UnreadBadgeProvider>();
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        onPageChanged: (i) => setState(() => _currentIndex = i),
+        onPageChanged: (i) {
+          setState(() => _currentIndex = i);
+          if (i == 3) {
+            context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
+          }
+        },
         children: _screens,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
+          setState(() => _currentIndex = index);
           _pageController.animateToPage(
             index,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
           );
+          if (index == 3) {
+            context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
+          }
         },
         type: BottomNavigationBarType.fixed,
         unselectedItemColor: Colors.grey,
@@ -92,7 +114,18 @@ class _HomeScreenState extends State<HomeScreen> {
           const BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Explore'),
           const BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: 'Schedule'),
           const BottomNavigationBarItem(icon: Icon(Icons.forum_outlined), label: 'Forum'),
-          const BottomNavigationBarItem(icon: Icon(Icons.notifications_none_outlined), label: 'Alerts'),
+          BottomNavigationBarItem(
+            icon: badge.totalUnread > 0
+                ? Badge(
+                    label: Text(
+                      badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString(),
+                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                    ),
+                    child: const Icon(Icons.notifications_none_outlined),
+                  )
+                : const Icon(Icons.notifications_none_outlined),
+            label: 'Alerts',
+          ),
           const BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
         ],
       ),
