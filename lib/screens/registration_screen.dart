@@ -8,6 +8,7 @@ import '../services/auth_provider.dart';
 import '../services/storage_service.dart';
 import '../models/user_profile.dart';
 import '../utils/timetable_data.dart';
+import '../utils/role_data.dart';
 import 'home_screen.dart';
 import 'admin/admin_home_screen.dart';
 
@@ -29,7 +30,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _confirmPasswordController = TextEditingController();
   
   // Role specific fields
-  final _designationController = TextEditingController(); // For Leaders, Teachers, Officials
+  String? _selectedDesignation; // For Leaders, Teachers, Officials
+  bool _isCustomDesignation = false;
+  final _customDesignationController = TextEditingController();
   bool _isHostelResident = false; // For Students and Leaders
   
   // Cohort Selection from Timetable
@@ -139,15 +142,107 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Conditional Form Fields based on Roles
               if (widget.selectedRole != 'Student') ...[
-                TextFormField(
-                  controller: _designationController,
+                DropdownButtonFormField<String>(
+                  value: _selectedDesignation,
                   decoration: InputDecoration(
-                    labelText: widget.selectedRole == 'Teacher' ? 'Department' : 'Leadership Designation (e.g., Class Rep)',
+                    labelText: widget.selectedRole == 'Teacher'
+                        ? 'Department'
+                        : widget.selectedRole == 'Official'
+                            ? 'Office / Role'
+                            : 'Leadership Position',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: Icon(
+                      widget.selectedRole == 'Teacher'
+                          ? Icons.school
+                          : widget.selectedRole == 'Official'
+                              ? Icons.admin_panel_settings
+                              : Icons.star,
+                    ),
                   ),
-                  validator: (val) => val == null || val.trim().isEmpty ? 'This field is required' : null,
+                  isExpanded: true,
+                  hint: Text(widget.selectedRole == 'Teacher'
+                      ? 'Select your department'
+                      : widget.selectedRole == 'Official'
+                          ? 'Select your office'
+                          : 'Select your position'),
+                  items: [
+                    for (final section in RoleData.sectionsForRole(widget.selectedRole))
+                      ...[
+                        DropdownMenuItem<String>(
+                          enabled: false,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              section.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        for (final item in section.items)
+                          DropdownMenuItem(
+                            value: item,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Text(item, style: const TextStyle(fontSize: 14)),
+                            ),
+                          ),
+                      ],
+                    DropdownMenuItem(
+                      enabled: true,
+                      value: '__custom__',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit, size: 16, color: Colors.orange),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Other (specify)',
+                            style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                              color: Colors.orange[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _isCustomDesignation = val == '__custom__';
+                      if (!_isCustomDesignation) {
+                        _selectedDesignation = val;
+                      } else {
+                        _selectedDesignation = null;
+                      }
+                    });
+                  },
+                  validator: (val) {
+                    if (_isCustomDesignation) return null;
+                    if (val == null) return 'Please select an option';
+                    return null;
+                  },
                 ),
+                if (_isCustomDesignation) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _customDesignationController,
+                    decoration: InputDecoration(
+                      labelText: 'Specify your ${widget.selectedRole == 'Teacher' ? 'department' : widget.selectedRole == 'Official' ? 'office' : 'position'}',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.edit),
+                    ),
+                    validator: (val) {
+                      if (_isCustomDesignation && (val == null || val.trim().isEmpty)) {
+                        return 'Please specify your designation';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
               ],
               
@@ -300,7 +395,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         email: _emailController.text.trim(),
         isHostelResident: (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ? _isHostelResident : false,
         role: widget.selectedRole,
-        designation: widget.selectedRole != 'Student' ? _designationController.text.trim() : null,
+        designation: widget.selectedRole != 'Student'
+            ? (_isCustomDesignation
+                ? _customDesignationController.text.trim()
+                : _selectedDesignation)
+            : null,
         enrolledClasses: enrolled,
       );
       
