@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'services/auth_provider.dart';
@@ -14,6 +16,12 @@ import 'screens/admin/admin_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final GoogleMapsFlutterPlatform mapsPlatform = GoogleMapsFlutterPlatform.instance;
+  if (mapsPlatform is GoogleMapsFlutterAndroid) {
+    mapsPlatform.useAndroidViewSurface = false;
+  }
+
   await Firebase.initializeApp();
 
   final NotificationService notificationService = NotificationService();

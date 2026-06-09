@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../utils/campus_map_data.dart';
 
 class CampusMapWidget extends StatefulWidget {
@@ -20,8 +21,9 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
   Set<Marker> _highlightMarkers = {};
-  String? _currentHighlightId;
   String? _currentHighlightLabel;
+  bool _locationGranted = false;
+  bool _mapReady = false;
 
   static const LatLng _campusCenter = LatLng(-1.264627, 36.727029);
 
@@ -29,6 +31,24 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
   void initState() {
     super.initState();
     _rebuildMarkers();
+    _checkLocationPermission();
+  }
+
+  Future<void> _checkLocationPermission() async {
+    final status = await Permission.location.status;
+    if (status.isGranted) {
+      if (mounted) setState(() => _locationGranted = true);
+    }
+  }
+
+  Future<void> _requestLocationPermission() async {
+    final status = await Permission.location.request();
+    if (mounted) {
+      setState(() => _locationGranted = status.isGranted);
+      if (!status.isGranted && status.isPermanentlyDenied) {
+        openAppSettings();
+      }
+    }
   }
 
   @override
@@ -73,7 +93,6 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
 
     _markers = markers;
     _highlightMarkers = highlightMarkers;
-    _currentHighlightId = widget.highlightId;
     _currentHighlightLabel = widget.highlightLabel;
     if (mounted) setState(() {});
   }
@@ -111,15 +130,20 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
     }
   }
 
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    setState(() => _mapReady = true);
+    if (widget.highlightId != null) {
+      _zoomToLocation(widget.highlightId!);
+    }
+  }
+
   void _zoomToLocation(String locationId) {
     final loc = campusLocations.where((l) => l.id == locationId).firstOrNull;
     if (loc == null) return;
 
     _mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(
-        LatLng(loc.lat, loc.lng),
-        18.0,
-      ),
+      CameraUpdate.newLatLngZoom(LatLng(loc.lat, loc.lng), 18.0),
     );
   }
 
@@ -171,27 +195,56 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
           initialCameraPosition: const CameraPosition(
             target: _campusCenter,
             zoom: 16.0,
+            tilt: 45.0,
+            bearing: 0.0,
           ),
-          onMapCreated: (controller) {
-            _mapController = controller;
-            if (widget.highlightId != null) {
-              _zoomToLocation(widget.highlightId!);
-            }
-          },
+          onMapCreated: _onMapCreated,
           markers: {..._markers, ..._highlightMarkers},
-          myLocationEnabled: true,
-          myLocationButtonEnabled: true,
-          mapType: MapType.satellite,
+          myLocationEnabled: _locationGranted,
+          myLocationButtonEnabled: _locationGranted,
+          compassEnabled: true,
           mapToolbarEnabled: false,
+          mapType: MapType.satellite,
+          rotateGesturesEnabled: true,
+          tiltGesturesEnabled: true,
+          scrollGesturesEnabled: true,
+          zoomGesturesEnabled: true,
+          minMaxZoomPreference: const MinMaxZoomPreference(15.0, 21.0),
+          onTap: (_) {
+            setState(() => _currentHighlightLabel = null);
+          },
         ),
+        if (!_mapReady)
+          const Center(child: CircularProgressIndicator()),
+        if (_mapReady && !_locationGranted)
+          Positioned(
+            right: 16,
+            bottom: 120,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'location_permission',
+                  backgroundColor: Colors.white,
+                  onPressed: _requestLocationPermission,
+                  child: const Icon(Icons.my_location, color: Colors.blue),
+                ),
+              ],
+            ),
+          ),
         if (_currentHighlightLabel != null)
           Positioned(
             top: 16,
             left: 16,
             right: 16,
-            child: Card(
-              color: Colors.white.withValues(alpha: 0.9),
-              child: Padding(
+            child: Material(
+              elevation: 4,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
@@ -205,11 +258,7 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, size: 18),
-                      onPressed: () {
-                        setState(() {
-                          _currentHighlightLabel = null;
-                        });
-                      },
+                      onPressed: () => setState(() => _currentHighlightLabel = null),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -218,20 +267,6 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
               ),
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Align(
-            alignment: Alignment.bottomLeft,
-            child: Text(
-              'Tap a marker for details',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 12,
-                backgroundColor: Colors.black54,
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
