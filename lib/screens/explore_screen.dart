@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/lesson.dart';
+import '../models/schedule_item.dart';
+import '../models/feed_item.dart';
 import '../services/firestore_service.dart';
 import '../services/class_provider.dart';
 import '../services/auth_provider.dart';
@@ -12,6 +14,7 @@ import 'schedule_upcoming_screen.dart';
 import 'quiz/quiz_list_screen.dart';
 import 'grades/grade_report_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -37,7 +40,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             child: TextField(
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
-                hintText: 'Search lessons...',
+                hintText: 'Search lessons and timeline...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 border: OutlineInputBorder(
@@ -90,34 +93,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ),
               ),
               Expanded(
-                child: StreamBuilder<List<Lesson>>(
-                  stream: _firestoreService.getLessonsStream(targetClass),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return const Center(child: Text('Something went wrong'));
-                    }
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const ShimmerExploreList();
-                    }
-                    final lessons = snapshot.data ?? [];
-                    final filteredLessons = lessons
-                        .where((l) =>
-                            l.topic.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                            l.subtopic.toLowerCase().contains(_searchQuery.toLowerCase()))
-                        .toList();
-                    if (filteredLessons.isEmpty) {
-                      return const Center(child: Text('No lessons found.'));
-                    }
-                    return ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: filteredLessons.length,
-                      itemBuilder: (context, index) {
-                        final lesson = filteredLessons[index];
-                        return _buildLessonCard(lesson);
-                      },
-                    );
-                  },
-                ),
+                child: _buildTimeline(targetClass),
               ),
             ],
           );
@@ -133,6 +109,194 @@ class _ExploreScreenState extends State<ExploreScreen> {
           }
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+
+  Widget _buildTimeline(String targetClass) {
+    final lessonsStream = _firestoreService.getLessonsStream(targetClass);
+    final scheduleStream = _firestoreService.getScheduleTimelineStream(targetClass);
+
+    return StreamBuilder<List<Lesson>>(
+      stream: lessonsStream,
+      builder: (context, lessonSnap) {
+        return StreamBuilder<List<ScheduleItem>>(
+          stream: scheduleStream,
+          builder: (context, scheduleSnap) {
+            if (lessonSnap.connectionState == ConnectionState.waiting &&
+                scheduleSnap.connectionState == ConnectionState.waiting) {
+              return const ShimmerExploreList();
+            }
+
+            final lessons = lessonSnap.data ?? [];
+            final schedules = scheduleSnap.data ?? [];
+
+            final List<FeedItem> feed = [
+              ...lessons.map((l) => FeedItem.lesson(l)),
+              ...schedules.map((s) => FeedItem.schedule(s)),
+            ];
+
+            feed.sort((a, b) => b.date.compareTo(a.date));
+
+            if (_searchQuery.isNotEmpty) {
+              feed.removeWhere((item) {
+                final q = _searchQuery.toLowerCase();
+                if (item.type == 'lesson') {
+                  final l = item.lesson!;
+                  return !l.topic.toLowerCase().contains(q) && !l.subtopic.toLowerCase().contains(q);
+                }
+                return !item.schedule!.subject.toLowerCase().contains(q);
+              });
+            }
+
+            if (feed.isEmpty) {
+              return Center(
+                child: Text(_searchQuery.isEmpty ? 'No activity yet.' : 'No matches found.'),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: feed.length,
+              itemBuilder: (context, index) {
+                final item = feed[index];
+                if (item.type == 'lesson') {
+                  return _buildLessonCard(item.lesson!);
+                }
+                return _buildScheduleCard(item.schedule!);
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildScheduleCard(ScheduleItem item) {
+    final isPast = item.date.isBefore(DateTime.now());
+    final color = item.color;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          if (item.attachmentUrls.isNotEmpty) {
+            _showAttachments(context, item);
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  item.description == 'Practical Lab Session' ? Icons.science : Icons.book,
+                  color: color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.subject,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isPast ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            isPast ? 'Completed' : 'Upcoming',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isPast ? Colors.green : Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.room}  •  ${item.startTime} - ${item.endTime}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                    Text(
+                      DateFormat('MMM dd, yyyy').format(item.date),
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
+                    if (item.attachmentUrls.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.attach_file, size: 14, color: Colors.grey[400]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${item.attachmentUrls.length} attachment(s)',
+                            style: TextStyle(color: Colors.grey[400], fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAttachments(BuildContext context, ScheduleItem item) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Attachments for ${item.subject}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 12),
+            ...List.generate(item.attachmentUrls.length, (i) {
+              return ListTile(
+                leading: const Icon(Icons.picture_as_pdf, color: Colors.blue),
+                title: Text(
+                  i < item.attachmentNames.length ? item.attachmentNames[i] : 'Document ${i + 1}',
+                ),
+                trailing: const Icon(Icons.open_in_new, size: 16),
+                onTap: () async {
+                  final uri = Uri.parse(item.attachmentUrls[i]);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

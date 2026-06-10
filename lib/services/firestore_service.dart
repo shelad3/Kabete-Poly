@@ -68,6 +68,17 @@ class FirestoreService {
     });
   }
 
+  Stream<List<ScheduleItem>> getScheduleTimelineStream(String classId) {
+    return _firestore
+        .collection('schedules')
+        .where('classId', isEqualTo: classId)
+        .orderBy('date', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => ScheduleItem.fromJson(doc.data(), doc.id)).toList());
+  }
+
   Stream<List<ScheduleItem>> getDefaultScheduleStream(String classId) {
     return _firestore
         .collection('schedules')
