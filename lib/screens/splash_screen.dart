@@ -210,7 +210,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ],
               const Spacer(flex: 1),
               Text(
-                'v2.1.0',
+                'v2.2.0',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.4),
