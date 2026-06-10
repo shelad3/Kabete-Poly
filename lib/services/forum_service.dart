@@ -60,6 +60,10 @@ class ForumService {
     await _firestore.collection('forum_channels').add(channel.toJson());
   }
 
+  Future<void> updateChannel(String channelId, Map<String, dynamic> data) async {
+    await _firestore.collection('forum_channels').doc(channelId).update(data);
+  }
+
   Future<void> deleteChannel(String channelId) async {
     await _firestore.collection('forum_channels').doc(channelId).delete();
   }

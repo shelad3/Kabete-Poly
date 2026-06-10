@@ -136,6 +136,71 @@ class _ForumScreenState extends State<ForumScreen> {
     }
   }
 
+  Future<void> _editChannel(ForumChannel channel) async {
+    final nameCtrl = TextEditingController(text: channel.name);
+    String type = channel.type;
+
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDState) => AlertDialog(
+          title: const Text('Edit Channel'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Channel name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: type,
+                decoration: const InputDecoration(
+                  labelText: 'Type',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'chat', child: Text('Chat (everyone can post)')),
+                  DropdownMenuItem(value: 'announcement', child: Text('Announcement (admin only)')),
+                ],
+                onChanged: (v) => setDState(() => type = v!),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameCtrl.text.trim().isNotEmpty) {
+                  Navigator.pop(ctx, {'name': nameCtrl.text.trim(), 'type': type});
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      await _forumService.updateChannel(channel.id, {
+        'name': result['name'],
+        'type': result['type'],
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Channel "${result['name']}" updated')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,6 +265,9 @@ class _ForumScreenState extends State<ForumScreen> {
       itemBuilder: (context, index) {
         final ch = channels[index];
         final isDark = Theme.of(context).brightness == Brightness.dark;
+        final isAdmin = user?.isAdmin ?? false;
+        final isTeacher = user?.isTeacher ?? false;
+        final canEdit = isTeacher || isAdmin;
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: ListTile(
@@ -217,7 +285,50 @@ class _ForumScreenState extends State<ForumScreen> {
               ch.isAnnouncement ? 'Announcements' : 'Open discussion',
               style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.grey[600]),
             ),
-            trailing: const Icon(Icons.chevron_right, size: 18),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (canEdit)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 18),
+                    onSelected: (action) async {
+                      if (action == 'edit') {
+                        _editChannel(ch);
+                      } else if (action == 'delete' && isAdmin) {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Delete Channel'),
+                            content: Text('Delete "${ch.name}"? This cannot be undone.'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true && mounted) {
+                          await _forumService.deleteChannel(ch.id);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('"${ch.name}" deleted')),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit, size: 18), title: Text('Edit'))),
+                      if (isAdmin)
+                        const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete, size: 18, color: Colors.red), title: Text('Delete', style: TextStyle(color: Colors.red)))),
+                    ],
+                  ),
+                const Icon(Icons.chevron_right, size: 18),
+              ],
+            ),
             onTap: () {
               setState(() {
                 _selectedChannelId = ch.id;

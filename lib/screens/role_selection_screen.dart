@@ -142,8 +142,8 @@ class RoleSelectionScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Welcome to Kabete Poly!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              'Join KNP Management System',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),

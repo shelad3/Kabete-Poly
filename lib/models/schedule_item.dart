@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 
 class ScheduleItem {
   final String id;
-  final String classId; // Maps to enrolledClasses like "Jan 2026 EIT/EET"
+  final String classId;
   final String subject;
   final String teacher;
   final String room;
-  final String startTime; // Format "HH:MM" e.g. "08:00"
+  final String startTime;
   final String endTime;
   final Color color;
   final String description;
   final DateTime date;
-  final bool isDefault; // True if from the official unchangeable PDF timetable
-  final int? dayOfWeek; // 1 (Monday) to 7 (Sunday) for recurring official classes
-  final String? attachmentUrl;
-  final String? attachmentName;
+  final bool isDefault;
+  final int? dayOfWeek;
+  final List<String> attachmentUrls;
+  final List<String> attachmentNames;
 
   ScheduleItem({
     required this.id,
@@ -29,11 +29,18 @@ class ScheduleItem {
     required this.date,
     this.isDefault = false,
     this.dayOfWeek,
-    this.attachmentUrl,
-    this.attachmentName,
-  });
+    List<String>? attachmentUrls,
+    List<String>? attachmentNames,
+  })  : attachmentUrls = attachmentUrls ?? [],
+        attachmentNames = attachmentNames ?? [];
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json, String id) {
+    final urls = json['attachmentUrls'] != null
+        ? List<String>.from(json['attachmentUrls'])
+        : (json['attachmentUrl'] != null ? [json['attachmentUrl'] as String] : <String>[]);
+    final names = json['attachmentNames'] != null
+        ? List<String>.from(json['attachmentNames'])
+        : (json['attachmentName'] != null ? [json['attachmentName'] as String] : <String>[]);
     return ScheduleItem(
       id: id,
       classId: json['classId'] ?? 'General',
@@ -51,8 +58,8 @@ class ScheduleItem {
           : DateTime.now(),
       isDefault: json['isDefault'] ?? false,
       dayOfWeek: json['dayOfWeek'],
-      attachmentUrl: json['attachmentUrl'],
-      attachmentName: json['attachmentName'],
+      attachmentUrls: urls,
+      attachmentNames: names,
     );
   }
 
@@ -69,8 +76,8 @@ class ScheduleItem {
       'date': date.toIso8601String(),
       'isDefault': isDefault,
       'dayOfWeek': dayOfWeek,
-      'attachmentUrl': attachmentUrl,
-      'attachmentName': attachmentName,
+      'attachmentUrls': attachmentUrls,
+      'attachmentNames': attachmentNames,
     };
   }
 

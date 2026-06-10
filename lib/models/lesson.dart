@@ -1,6 +1,6 @@
 class Lesson {
   final String id;
-  final String classId; // Targets a specific class cohort (e.g. "EET 600 M24")
+  final String classId;
   final String topic;
   final String subtopic;
   final String teacher;
@@ -12,8 +12,8 @@ class Lesson {
   final String nb1;
   final String nb2;
   final DateTime date;
-  final String? attachmentUrl;
-  final String? attachmentName;
+  final List<String> attachmentUrls;
+  final List<String> attachmentNames;
 
   Lesson({
     required this.id,
@@ -29,11 +29,18 @@ class Lesson {
     required this.nb1,
     required this.nb2,
     required this.date,
-    this.attachmentUrl,
-    this.attachmentName,
-  });
+    List<String>? attachmentUrls,
+    List<String>? attachmentNames,
+  })  : attachmentUrls = attachmentUrls ?? [],
+        attachmentNames = attachmentNames ?? [];
 
   factory Lesson.fromJson(Map<String, dynamic> json) {
+    final urls = json['attachmentUrls'] != null
+        ? List<String>.from(json['attachmentUrls'])
+        : (json['attachmentUrl'] != null ? [json['attachmentUrl'] as String] : <String>[]);
+    final names = json['attachmentNames'] != null
+        ? List<String>.from(json['attachmentNames'])
+        : (json['attachmentName'] != null ? [json['attachmentName'] as String] : <String>[]);
     return Lesson(
       id: json['id'],
       classId: json['classId'] ?? 'General',
@@ -52,8 +59,8 @@ class Lesson {
               ? DateTime.parse(json['date'])
               : (json['date'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
-      attachmentUrl: json['attachmentUrl'],
-      attachmentName: json['attachmentName'],
+      attachmentUrls: urls,
+      attachmentNames: names,
     );
   }
 
@@ -72,8 +79,8 @@ class Lesson {
       'nb1': nb1,
       'nb2': nb2,
       'date': date.toIso8601String(),
-      'attachmentUrl': attachmentUrl,
-      'attachmentName': attachmentName,
+      'attachmentUrls': attachmentUrls,
+      'attachmentNames': attachmentNames,
     };
   }
 }

@@ -71,7 +71,7 @@ class LessonDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          if (lesson.attachmentUrl != null && lesson.attachmentUrl!.isNotEmpty) ...[
+          if (lesson.attachmentUrls.isNotEmpty) ...[
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
@@ -80,38 +80,51 @@ class LessonDetailScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.picture_as_pdf, color: Colors.blue, size: 32),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          lesson.attachmentName ?? 'Attached Document',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text('Tap to open/download', style: TextStyle(fontSize: 12, color: Colors.blueGrey)),
-                      ],
-                    ),
+                  const Row(
+                    children: [
+                      Icon(Icons.attach_file, color: Colors.blue, size: 20),
+                      SizedBox(width: 8),
+                      Text('Attachments', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final url = Uri.parse(lesson.attachmentUrl!);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Open'),
-                  ),
+                  const SizedBox(height: 12),
+                  ...List.generate(lesson.attachmentUrls.length, (i) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.picture_as_pdf, color: Colors.blue, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              i < lesson.attachmentNames.length ? lesson.attachmentNames[i] : 'Document ${i + 1}',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final url = Uri.parse(lesson.attachmentUrls[i]);
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              minimumSize: const Size(0, 32),
+                            ),
+                            child: const Text('Open', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),

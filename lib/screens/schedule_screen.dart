@@ -117,6 +117,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
       ),
       body: TabBarView(
         controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
         children: [
           const MandatoryTimetableTab(),
           _buildTargetTimelineTab(),
@@ -291,42 +292,49 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
                   Text(item.teacher, style: const TextStyle(color: Colors.grey)),
                 ],
               ),
-              if (item.attachmentUrl != null) ...[
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () async {
-                    final uri = Uri.parse(item.attachmentUrl!);
-                    final messenger = ScaffoldMessenger.of(context);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    } else {
-                      messenger.showSnackBar(const SnackBar(content: Text('Could not open the attachment.')));
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.download, size: 16, color: Colors.blue),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            item.attachmentName ?? 'Download Notes / PDF',
-                            style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 13),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+              if (item.attachmentUrls.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Text('Attachments:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
+                const SizedBox(height: 6),
+                ...List.generate(item.attachmentUrls.length, (i) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: InkWell(
+                      onTap: () async {
+                        final uri = Uri.parse(item.attachmentUrls[i]);
+                        final messenger = ScaffoldMessenger.of(context);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else {
+                          messenger.showSnackBar(const SnackBar(content: Text('Could not open the attachment.')));
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.download, size: 14, color: Colors.blue),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                i < item.attachmentNames.length ? item.attachmentNames[i] : 'Document ${i + 1}',
+                                style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ],
               if (isCurrent) ...[
                 const SizedBox(height: 24),

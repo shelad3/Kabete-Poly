@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'theme/app_theme.dart';
@@ -11,9 +12,7 @@ import 'services/notification_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/analytics_service.dart';
 import 'services/unread_badge_provider.dart';
-import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/admin/admin_home_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +23,17 @@ void main() async {
   }
 
   await Firebase.initializeApp();
+
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
+
+  try {
+    await FirebaseFirestore.instance.enableNetwork();
+  } catch (_) {
+    // offline — Firestore will use local cache
+  }
 
   final NotificationService notificationService = NotificationService();
   await notificationService.init();
@@ -58,33 +68,7 @@ class KabeteApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeNotifier.themeMode,
       navigatorObservers: [AnalyticsService().observer],
-      home: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          if (auth.isLoading) {
-            return const Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.school, size: 80, color: Color(0xFF1A237E)),
-                    SizedBox(height: 24),
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading...', style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              ),
-            );
-          }
-          if (auth.isAuthenticated) {
-            if (auth.currentUser?.isAdmin == true) {
-              return const AdminHomeScreen();
-            }
-            return const HomeScreen();
-          }
-          return const LoginScreen();
-        },
-      ),
+      home: const SplashScreen(),
     );
   }
 }

@@ -22,8 +22,9 @@ class FirestoreService {
     });
   }
 
-  Future<void> addLesson(Lesson lesson) async {
-    await _firestore.collection('lessons').doc(lesson.id).set(lesson.toJson());
+  Future<String> addLesson(Lesson lesson) async {
+    final doc = await _firestore.collection('lessons').add(lesson.toJson());
+    return doc.id;
   }
 
   Future<void> updateLesson(Lesson lesson) async {

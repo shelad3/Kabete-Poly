@@ -26,14 +26,26 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 40),
+              const Icon(Icons.school, size: 64, color: Color(0xFF1A237E)),
+              const SizedBox(height: 16),
+              const Text(
+                'KNP Management System',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A237E)),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Kabete National Polytechnique',
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 32),
               Text(
                 'Welcome Back',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
               Text(
-                'Sign in to your class archive',
+                'Sign in to continue',
                 style: TextStyle(color: Colors.grey[600], fontSize: 16),
               ),
               const SizedBox(height: 48),

@@ -19,7 +19,7 @@ class AddLessonScreen extends StatefulWidget {
 class _AddLessonScreenState extends State<AddLessonScreen> {
   final _formKey = GlobalKey<FormState>();
   final FirestoreService _firestoreService = FirestoreService();
-  
+
   late TextEditingController _topicCtrl;
   late TextEditingController _subtopicCtrl;
   late TextEditingController _teacherCtrl;
@@ -28,23 +28,29 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
   late TextEditingController _reportCtrl;
   late TextEditingController _nb1Ctrl;
   late TextEditingController _nb2Ctrl;
-  
-  File? _attachedFile;
-  String? _attachmentName;
+
+  final List<_AttachmentItem> _attachments = [];
   final StorageService _storageService = StorageService();
-  
+
   bool _isLoading = false;
 
-  Future<void> _pickDocument() async {
+  Future<void> _pickDocuments() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'],
+      allowMultiple: true,
     );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null) {
       setState(() {
-        _attachedFile = File(result.files.single.path!);
-        _attachmentName = result.files.single.name;
+        for (final file in result.files) {
+          if (file.path != null) {
+            _attachments.add(_AttachmentItem(
+              file: File(file.path!),
+              name: file.name,
+            ));
+          }
+        }
       });
     }
   }
@@ -60,7 +66,29 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
     _reportCtrl = TextEditingController(text: widget.lessonToEdit?.report);
     _nb1Ctrl = TextEditingController(text: widget.lessonToEdit?.nb1);
     _nb2Ctrl = TextEditingController(text: widget.lessonToEdit?.nb2);
-    _attachmentName = widget.lessonToEdit?.attachmentName;
+    if (widget.lessonToEdit != null) {
+      for (var i = 0; i < widget.lessonToEdit!.attachmentUrls.length; i++) {
+        _attachments.add(_AttachmentItem(
+          existingUrl: widget.lessonToEdit!.attachmentUrls[i],
+          name: i < widget.lessonToEdit!.attachmentNames.length
+              ? widget.lessonToEdit!.attachmentNames[i]
+              : 'Attachment ${i + 1}',
+        ));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _topicCtrl.dispose();
+    _subtopicCtrl.dispose();
+    _teacherCtrl.dispose();
+    _contentCtrl.dispose();
+    _summaryCtrl.dispose();
+    _reportCtrl.dispose();
+    _nb1Ctrl.dispose();
+    _nb2Ctrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -75,6 +103,33 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
           key: _formKey,
           child: Column(
             children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.class_, size: 20, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Posting to: ${widget.lessonToEdit?.classId ?? context.read<ClassProvider>().currentClass}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               _buildField(_topicCtrl, 'Topic', Icons.title),
               _buildField(_subtopicCtrl, 'Subtopic', Icons.subject),
               _buildField(_teacherCtrl, 'Teacher Name', Icons.person),
@@ -89,64 +144,72 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Document Attachment UI
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.attach_file, color: Colors.blue),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _attachmentName ?? 'Attach Document (PDF, DOCX, PPTX)',
-                        style: TextStyle(
-                          color: _attachmentName != null ? Colors.black87 : Colors.blueGrey,
-                          fontWeight: _attachmentName != null ? FontWeight.bold : FontWeight.normal,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (_attachmentName != null)
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            _attachedFile = null;
-                            _attachmentName = null;
-                          });
-                        },
-                      )
-                    else
-                      ElevatedButton(
-                        onPressed: _pickDocument,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.blue,
-                          elevation: 0,
-                          side: const BorderSide(color: Colors.blue),
-                        ),
-                        child: const Text('Browse'),
-                      ),
-                  ],
-                ),
-              ),
+              _buildAttachmentSection(),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _isLoading ? null : _handleSave,
                 child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(widget.lessonToEdit == null ? 'Post Lesson' : 'Save Changes'),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text(widget.lessonToEdit == null ? 'Post Lesson' : 'Save Changes'),
               ),
               const SizedBox(height: 48),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAttachmentSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.attach_file, color: Colors.blue),
+              const SizedBox(width: 8),
+              const Text('Attachments', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text('${_attachments.length} file(s)', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+          if (_attachments.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ..._attachments.asMap().entries.map((entry) => Card(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  child: ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.insert_drive_file, color: Colors.blue, size: 20),
+                    title: Text(entry.value.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                      onPressed: () => setState(() => _attachments.removeAt(entry.key)),
+                    ),
+                  ),
+                )),
+          ],
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _pickDocuments,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add Files'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.blue,
+              side: const BorderSide(color: Colors.blue),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -169,21 +232,22 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
   Future<void> _handleSave() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      
+
       try {
-        String? docUrl = widget.lessonToEdit?.attachmentUrl;
-        String? docName = widget.lessonToEdit?.attachmentName;
+        final List<String> urls = [];
+        final List<String> names = [];
 
-        if (_attachedFile != null) {
-          final path = 'lessons/docs/${DateTime.now().millisecondsSinceEpoch}_$_attachmentName';
-          docUrl = await _storageService.uploadFile(_attachedFile!, path);
-          docName = _attachmentName;
-        }
-
-        // If the user cleared the attachment entirely
-        if (_attachedFile == null && _attachmentName == null) {
-          docUrl = null;
-          docName = null;
+        // Upload new files, keep existing URLs
+        for (final att in _attachments) {
+          if (att.file != null) {
+            final path = 'lessons/docs/${DateTime.now().millisecondsSinceEpoch}_${att.name}';
+            final url = await _storageService.uploadFile(att.file!, path);
+            urls.add(url ?? '');
+            names.add(att.name);
+          } else if (att.existingUrl != null) {
+            urls.add(att.existingUrl!);
+            names.add(att.name);
+          }
         }
 
         final classProvider = Provider.of<ClassProvider>(context, listen: false);
@@ -203,8 +267,8 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
           nb1: _nb1Ctrl.text,
           nb2: _nb2Ctrl.text,
           date: widget.lessonToEdit?.date ?? DateTime.now(),
-          attachmentUrl: docUrl,
-          attachmentName: docName,
+          attachmentUrls: urls,
+          attachmentNames: names,
         );
 
         if (widget.lessonToEdit == null) {
@@ -238,4 +302,12 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
       }
     }
   }
+}
+
+class _AttachmentItem {
+  final File? file;
+  final String name;
+  final String? existingUrl;
+
+  _AttachmentItem({this.file, required this.name, this.existingUrl});
 }
