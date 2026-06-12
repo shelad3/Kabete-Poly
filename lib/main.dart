@@ -12,7 +12,12 @@ import 'services/notification_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/analytics_service.dart';
 import 'services/unread_badge_provider.dart';
-import 'widgets/auth_gate.dart';
+import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/admin/admin_home_screen.dart';
+import 'screens/guest_home_screen.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,19 +66,47 @@ class KabeteApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = context.watch<ThemeNotifier>();
+    final auth = context.watch<AuthProvider>();
+
     final (ThemeData theme, ThemeData? darkTheme, ThemeMode themeMode) = switch (themeNotifier.mode) {
       AppThemeMode.knp  => (AppTheme.knpTheme, AppTheme.darkTheme, ThemeMode.light),
       AppThemeMode.light => (AppTheme.lightTheme, AppTheme.darkTheme, ThemeMode.light),
       AppThemeMode.dark  => (AppTheme.darkTheme, null, ThemeMode.dark),
     };
+
+    Widget home;
+    if (auth.isLoading) {
+      home = const SplashScreen();
+    } else if (auth.isGuest) {
+      home = const GuestHomeScreen();
+    } else if (!auth.isAuthenticated) {
+      home = FutureBuilder<bool>(
+        future: OnboardingScreen.hasSeen(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SplashScreen();
+          }
+          return snapshot.data == true ? const LoginScreen() : const OnboardingScreen();
+        },
+      );
+    } else {
+      final user = auth.currentUser;
+      if (user != null) {
+        home = user.isAdmin ? const AdminHomeScreen() : const HomeScreen();
+      } else {
+        home = const LoginScreen();
+      }
+    }
+
     return MaterialApp(
+      key: ValueKey('${auth.isAuthenticated}_${auth.isGuest}_${auth.currentUserId}'),
       title: 'Kabete Poly',
       debugShowCheckedModeBanner: false,
       theme: theme,
       darkTheme: darkTheme,
       themeMode: themeMode,
       navigatorObservers: [AnalyticsService().observer],
-      home: const AuthGate(),
+      home: home,
     );
   }
 }

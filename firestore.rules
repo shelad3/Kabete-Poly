@@ -58,12 +58,18 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------- //
-    // Classes / Cohorts Collection
+    // Classes / Cohorts Collection + Timetable subcollection
     // ---------------------------------------------------- //
     match /classes/{classId} {
       allow read: if isAuthenticated();
       allow create, update: if isLeaderOrAbove();
       allow delete: if isAdmin();
+
+      match /timetable/{entryId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isTeacherOrAbove();
+        allow delete: if isTeacherOrAbove();
+      }
     }
 
     // ---------------------------------------------------- //
@@ -98,7 +104,7 @@ service cloud.firestore {
       // Only admins can create new codes or delete them
       allow create: if isAdmin();
       allow delete: if isAdmin();
-      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isUsed', 'usedBy']);
+      allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isUsed', 'usedBy', 'useCount', 'usedAt']);
     }
 
     // ---------------------------------------------------- //
@@ -149,6 +155,23 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
+    // User Sessions subcollection
+    // ---------------------------------------------------- //
+    match /users/{userId}/sessions/{sessionId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && (isOwner(userId) || isAdmin());
+    }
+
+    // ---------------------------------------------------- //
+    // School Info
+    // ---------------------------------------------------- //
+    match /school_info/{infoId} {
+      allow read: if true;  // public — shown to guests too
+      allow write: if isAdmin();
     }
 
     // ---------------------------------------------------- //
