@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../utils/timetable_data.dart';
 import '../../services/auth_provider.dart';
 import '../../services/notification_service.dart';
+import '../admin/manage_timetable_screen.dart';
 
 class MandatoryTimetableTab extends StatefulWidget {
   const MandatoryTimetableTab({super.key});
@@ -34,48 +36,73 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
     final isStudent = user != null && (user.role == 'Student' || user.role == 'Leader');
+    final isTeacher = user != null && (user.isTeacher || user.isLeader);
     final hasEnrolledClass = user != null && user.enrolledClasses.isNotEmpty;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final weekSchedule = TimetableData.getTimetableForCohort(_selectedCohort);
+    final hardcodedSchedule = TimetableData.getTimetableForCohort(_selectedCohort);
     final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+    final firestoreRef = FirebaseFirestore.instance
+        .collection('classes')
+        .doc(_selectedCohort)
+        .collection('timetable');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(isStudent, hasEnrolledClass, isDark),
-          const SizedBox(height: 24),
-          ...days.map((day) {
-            final lessons = weekSchedule[day] ?? [];
-            if (lessons.isEmpty) return const SizedBox.shrink();
+          _buildHeader(isStudent, hasEnrolledClass, isTeacher, isDark),
+          const SizedBox(height: 16),
+          StreamBuilder<QuerySnapshot>(
+            stream: firestoreRef.snapshots(),
+            builder: (context, snapshot) {
+              // Build map of Firestore entries by day
+              final firestoreByDay = <String, List<Map<String, dynamic>>>{};
+              if (snapshot.hasData) {
+                for (final doc in snapshot.data!.docs) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final day = data['day'] as String? ?? '';
+                  firestoreByDay.putIfAbsent(day, () => []).add(data);
+                }
+              }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12, left: 4),
-                  child: Text(
-                    day,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white70 : Colors.blueGrey,
-                    ),
-                  ),
-                ),
-                ...lessons.map((lesson) => _buildMandatoryCard(lesson, day, isDark)),
-                const SizedBox(height: 16),
-              ],
-            );
-          }),
+              return Column(
+                children: days.map((day) {
+                  final hardcoded = hardcodedSchedule[day] ?? [];
+                  final firestore = firestoreByDay[day] ?? [];
+                  if (hardcoded.isEmpty && firestore.isEmpty) return const SizedBox.shrink();
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12, left: 4, top: 12),
+                        child: Text(
+                          day,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white70 : Colors.blueGrey,
+                          ),
+                        ),
+                      ),
+                      ...hardcoded.map((lesson) => _buildMandatoryCard(lesson, day, isDark, isHardcoded: true)),
+                      ...firestore.map((lesson) => _buildMandatoryCard(lesson, day, isDark, isHardcoded: false)),
+                      const SizedBox(height: 8),
+                    ],
+                  );
+                }).toList(),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(bool isStudent, bool hasEnrolledClass, bool isDark) {
+  Widget _buildHeader(bool isStudent, bool hasEnrolledClass, bool isTeacher, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -99,57 +126,75 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
               ),
             ],
           ),
-          isStudent
-              ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _selectedCohort,
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                  ),
-                )
-              : Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 4,
-                            ),
-                          ],
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedCohort,
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
-                      style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
-                      items: TimetableData.cohorts.keys.map((String cohort) {
-                        return DropdownMenuItem<String>(
-                          value: cohort,
-                          child: Text(cohort),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          setState(() => _selectedCohort = newValue);
-                        }
-                      },
-                    ),
-                  ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isTeacher)
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  tooltip: 'Manage timetable',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ManageTimetableScreen(className: _selectedCohort),
+                      ),
+                    );
+                  },
                 ),
+              isStudent
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _selectedCohort,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: isDark
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedCohort,
+                          icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
+                          items: TimetableData.cohorts.keys.map((String cohort) {
+                            return DropdownMenuItem<String>(
+                              value: cohort,
+                              child: Text(cohort),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() => _selectedCohort = newValue);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMandatoryCard(Map<String, dynamic> lesson, String dayString, bool isDark) {
+  Widget _buildMandatoryCard(Map<String, dynamic> lesson, String dayString, bool isDark, {bool isHardcoded = true}) {
     final Color stripColor = Color(lesson['color'] as int);
 
     return Container(
@@ -191,9 +236,18 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                               color: stripColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(
-                              lesson['time'],
-                              style: TextStyle(color: stripColor, fontWeight: FontWeight.bold, fontSize: 12),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  lesson['time'],
+                                  style: TextStyle(color: stripColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
+                                if (!isHardcoded) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.cloud, size: 12, color: Colors.grey[400]),
+                                ],
+                              ],
                             ),
                           ),
                           InkWell(

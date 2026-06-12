@@ -19,20 +19,28 @@ class ClassProvider extends ChangeNotifier {
   Future<void> _fetchDynamicClasses() async {
     try {
       final snapshot = await FirebaseFirestore.instance.collection('classes').get();
-      final List<String> fetched = snapshot.docs.map((d) => d.id).toList();
-      
-      bool updated = false;
-      for (String c in fetched) {
-        if (!availableClasses.contains(c)) {
-          availableClasses.add(c);
-          updated = true;
-        }
-      }
-      
-      if (updated) notifyListeners();
+      _mergeFirestoreClasses(snapshot.docs.map((d) => d.id).toList());
     } catch (e) {
       debugPrint("Class Provider failed to fetch dynamic classes: $e");
     }
+  }
+
+  Future<void> refreshClasses() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('classes').get();
+      _mergeFirestoreClasses(snapshot.docs.map((d) => d.id).toList());
+    } catch (_) {}
+  }
+
+  void _mergeFirestoreClasses(List<String> fetched) {
+    bool updated = false;
+    for (String c in fetched) {
+      if (!availableClasses.contains(c)) {
+        availableClasses.add(c);
+        updated = true;
+      }
+    }
+    if (updated) notifyListeners();
   }
 
   void setClassContext(String newClass) {

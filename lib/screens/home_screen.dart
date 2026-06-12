@@ -12,6 +12,7 @@ import 'schedule_screen.dart';
 import 'forum_screen.dart';
 import 'notification_screen.dart';
 import 'settings_screen.dart';
+import 'users/users_tab_screen.dart';
 import 'quiz/quiz_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,14 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   late final PageController _pageController;
-
-  final List<Widget> _screens = [
-    const ExploreScreen(),
-    const ScheduleScreen(),
-    const ForumScreen(),
-    NotificationScreen(),
-    const SettingsScreen(),
-  ];
+  bool _hasUsersTab = false;
 
   @override
   void initState() {
@@ -42,6 +36,11 @@ class _HomeScreenState extends State<HomeScreen> {
       final classProvider = context.read<ClassProvider>();
       final badgeProvider = context.read<UnreadBadgeProvider>();
       final user = authProvider.currentUser;
+
+      final elevated = user != null && (user.isTeacher || user.isLeader);
+      if (mounted && elevated != _hasUsersTab) {
+        setState(() => _hasUsersTab = elevated);
+      }
 
       // Sync ClassProvider with user's enrolled classes
       if (user != null && user.enrolledClasses.isNotEmpty) {
@@ -75,6 +74,38 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  int get _notifIndex => _hasUsersTab ? 4 : 3;
+
+  List<Widget> _buildScreens() => [
+    const ExploreScreen(),
+    const ScheduleScreen(),
+    if (_hasUsersTab) const UsersTabScreen(),
+    const ForumScreen(),
+    NotificationScreen(),
+    const SettingsScreen(),
+  ];
+
+  List<BottomNavigationBarItem> _buildNavItems(UnreadBadgeProvider badge) => [
+    const BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Explore'),
+    const BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: 'Schedule'),
+    if (_hasUsersTab)
+      const BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: 'Users'),
+    const BottomNavigationBarItem(icon: Icon(Icons.forum_outlined), label: 'Forum'),
+    BottomNavigationBarItem(
+      icon: badge.totalUnread > 0
+          ? Badge(
+              label: Text(
+                badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString(),
+                style: const TextStyle(fontSize: 10, color: Colors.white),
+              ),
+              child: const Icon(Icons.notifications_none_outlined),
+            )
+          : const Icon(Icons.notifications_none_outlined),
+      label: 'Alerts',
+    ),
+    const BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
+  ];
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -83,6 +114,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+    final elevated = user != null && (user.isTeacher || user.isLeader);
+    if (elevated != _hasUsersTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _hasUsersTab = elevated);
+      });
+    }
+
     final badge = context.watch<UnreadBadgeProvider>();
     return Scaffold(
       body: PageView(
@@ -90,14 +130,14 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const NeverScrollableScrollPhysics(),
         onPageChanged: (i) {
           setState(() => _currentIndex = i);
-          if (i == 3) {
+          if (i == _notifIndex) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
           }
         },
-        children: _screens,
+        children: _buildScreens(),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+        currentIndex: _currentIndex.clamp(0, _buildNavItems(badge).length - 1),
         onTap: (index) {
           setState(() => _currentIndex = index);
           _pageController.animateToPage(
@@ -105,30 +145,13 @@ class _HomeScreenState extends State<HomeScreen> {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
           );
-          if (index == 3) {
+          if (index == _notifIndex) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
           }
         },
         type: BottomNavigationBarType.fixed,
         unselectedItemColor: Colors.grey,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Explore'),
-          const BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: 'Schedule'),
-          const BottomNavigationBarItem(icon: Icon(Icons.forum_outlined), label: 'Forum'),
-          BottomNavigationBarItem(
-            icon: badge.totalUnread > 0
-                ? Badge(
-                    label: Text(
-                      badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString(),
-                      style: const TextStyle(fontSize: 10, color: Colors.white),
-                    ),
-                    child: const Icon(Icons.notifications_none_outlined),
-                  )
-                : const Icon(Icons.notifications_none_outlined),
-            label: 'Alerts',
-          ),
-          const BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
-        ],
+        items: _buildNavItems(badge),
       ),
       floatingActionButton: Consumer<AuthProvider>(
         builder: (context, auth, _) {

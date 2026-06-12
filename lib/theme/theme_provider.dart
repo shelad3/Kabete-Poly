@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum AppThemeMode { knp, light, dark }
+
 class ThemeNotifier extends ChangeNotifier {
-  static const String _key = 'theme_mode';
+  static const String _key = 'app_theme_mode';
 
-  ThemeMode _themeMode = ThemeMode.light;
+  AppThemeMode _mode = AppThemeMode.knp;
 
-  ThemeMode get themeMode => _themeMode;
+  AppThemeMode get mode => _mode;
 
   ThemeNotifier() {
     _load();
@@ -14,37 +16,37 @@ class ThemeNotifier extends ChangeNotifier {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString(_key) ?? 'light';
-    _themeMode = _fromString(value);
+    final value = prefs.getString(_key) ?? 'knp';
+    _mode = _fromString(value);
     notifyListeners();
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
-    _themeMode = mode;
+  Future<void> setMode(AppThemeMode mode) async {
+    _mode = mode;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, _toString(mode));
   }
 
-  ThemeMode _fromString(String value) {
+  AppThemeMode _fromString(String value) {
     switch (value) {
       case 'light':
-        return ThemeMode.light;
+        return AppThemeMode.light;
       case 'dark':
-        return ThemeMode.dark;
+        return AppThemeMode.dark;
       default:
-        return ThemeMode.system;
+        return AppThemeMode.knp;
     }
   }
 
-  String _toString(ThemeMode mode) {
+  String _toString(AppThemeMode mode) {
     switch (mode) {
-      case ThemeMode.light:
+      case AppThemeMode.knp:
+        return 'knp';
+      case AppThemeMode.light:
         return 'light';
-      case ThemeMode.dark:
+      case AppThemeMode.dark:
         return 'dark';
-      case ThemeMode.system:
-        return 'system';
     }
   }
 }

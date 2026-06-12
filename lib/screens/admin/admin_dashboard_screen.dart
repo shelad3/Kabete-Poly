@@ -13,6 +13,7 @@ import 'manage_tickets_screen.dart';
 import 'admin_timetable_manager_screen.dart';
 import '../grades/manage_grades_screen.dart';
 import 'manage_alerts_screen.dart';
+import 'manage_classes_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -81,6 +82,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             _buildActionCard(context, Icons.calendar_month, 'Timetable Manager', 'Add/edit schedule entries', Colors.cyan,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminTimetableManagerScreen())),
+            ),
+            _buildActionCard(context, Icons.class_, 'Manage Classes', 'Create & delete cohorts', Colors.deepOrange,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageClassesScreen())),
             ),
             _buildActionCard(context, Icons.assignment, 'Manage Grades', 'Enter & view student grades', Colors.amber,
               onTap: () => _selectClassAndNavigate(context),

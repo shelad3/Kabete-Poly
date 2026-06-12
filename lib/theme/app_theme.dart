@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'knp_theme.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF1A237E); // Deep Indigo
-  static const Color accentColor = Color(0xFFFFAB40);  // Amber Accent
+  static const Color primaryColor = Color(0xFF1A237E);
+  static const Color accentColor = Color(0xFFFF8F00);
   static const Color backgroundColor = Color(0xFFF5F5F7);
   static const Color cardColor = Colors.white;
   static const Color errorColor = Color(0xFFD32F2F);
   static const Color successColor = Color(0xFF388E3C);
 
+  static ThemeData get knpTheme => KnpTheme.theme;
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        primary: primaryColor,
-        secondary: accentColor,
+        seedColor: const Color(0xFF1565C0),
+        primary: const Color(0xFF1565C0),
+        secondary: const Color(0xFF00838F),
         surface: backgroundColor,
         error: errorColor,
       ),
+      scaffoldBackgroundColor: backgroundColor,
       textTheme: GoogleFonts.outfitTextTheme().copyWith(
         titleLarge: GoogleFonts.outfit(
           fontWeight: FontWeight.bold,
-          color: primaryColor,
+          color: const Color(0xFF1565C0),
         ),
         headlineMedium: GoogleFonts.outfit(
           fontWeight: FontWeight.bold,
@@ -34,11 +38,11 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          color: primaryColor,
+          color: Color(0xFF1565C0),
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),
-        iconTheme: IconThemeData(color: primaryColor),
+        iconTheme: IconThemeData(color: Color(0xFF1565C0)),
       ),
       cardTheme: CardThemeData(
         elevation: 2,
@@ -49,7 +53,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: const Color(0xFF1565C0),
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(
@@ -74,7 +78,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
+          borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),

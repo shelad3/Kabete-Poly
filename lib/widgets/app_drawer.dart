@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
-import '../screens/login_screen.dart';
+import '../theme/theme_provider.dart';
 import '../screens/my_devices_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -81,17 +81,22 @@ class AppDrawer extends StatelessWidget {
             },
           ),
 
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'APPEARANCE',
+              style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+          _ThemeTile(),
+          const Divider(),
+
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Log Out', style: TextStyle(color: Colors.red)),
             onTap: () async {
               await auth.logout();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
-              }
             },
           ),
           const SizedBox(height: 16),
@@ -121,6 +126,72 @@ class AppDrawer extends StatelessWidget {
           provider.setClassContext(className);
           Navigator.pop(context); // Close the drawer automatically
         },
+      ),
+    );
+  }
+}
+
+class _ThemeTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final themeNotifier = context.watch<ThemeNotifier>();
+    return ListTile(
+      leading: Icon(
+        switch (themeNotifier.mode) {
+          AppThemeMode.knp   => Icons.palette,
+          AppThemeMode.light => Icons.light_mode,
+          AppThemeMode.dark  => Icons.dark_mode,
+        },
+        color: Colors.blueGrey,
+      ),
+      title: Text(
+        switch (themeNotifier.mode) {
+          AppThemeMode.knp   => 'KNP Theme',
+          AppThemeMode.light => 'Light Theme',
+          AppThemeMode.dark  => 'Dark Theme',
+        },
+      ),
+      trailing: PopupMenuButton<AppThemeMode>(
+        icon: const Icon(Icons.arrow_drop_down),
+        onSelected: (mode) => themeNotifier.setMode(mode),
+        itemBuilder: (_) => [
+          PopupMenuItem(
+            value: AppThemeMode.knp,
+            child: Row(
+              children: [
+                Icon(Icons.palette, size: 20, color: themeNotifier.mode == AppThemeMode.knp ? Theme.of(context).primaryColor : null),
+                const SizedBox(width: 12),
+                Text('KNP Default', style: TextStyle(fontWeight: themeNotifier.mode == AppThemeMode.knp ? FontWeight.bold : FontWeight.normal)),
+                if (themeNotifier.mode == AppThemeMode.knp) const Spacer() else const SizedBox(),
+                if (themeNotifier.mode == AppThemeMode.knp) const Icon(Icons.check, size: 16),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: AppThemeMode.light,
+            child: Row(
+              children: [
+                Icon(Icons.light_mode, size: 20, color: themeNotifier.mode == AppThemeMode.light ? Theme.of(context).primaryColor : null),
+                const SizedBox(width: 12),
+                Text('Light', style: TextStyle(fontWeight: themeNotifier.mode == AppThemeMode.light ? FontWeight.bold : FontWeight.normal)),
+                if (themeNotifier.mode == AppThemeMode.light) const Spacer() else const SizedBox(),
+                if (themeNotifier.mode == AppThemeMode.light) const Icon(Icons.check, size: 16),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: AppThemeMode.dark,
+            child: Row(
+              children: [
+                Icon(Icons.dark_mode, size: 20, color: themeNotifier.mode == AppThemeMode.dark ? Theme.of(context).primaryColor : null),
+                const SizedBox(width: 12),
+                Text('Dark', style: TextStyle(fontWeight: themeNotifier.mode == AppThemeMode.dark ? FontWeight.bold : FontWeight.normal)),
+                if (themeNotifier.mode == AppThemeMode.dark) const Spacer() else const SizedBox(),
+                if (themeNotifier.mode == AppThemeMode.dark) const Icon(Icons.check, size: 16),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

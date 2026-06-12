@@ -196,7 +196,7 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
           initialCameraPosition: const CameraPosition(
             target: _campusCenter,
             zoom: 16.0,
-            tilt: 45.0,
+            tilt: 0.0,
             bearing: 0.0,
           ),
           onMapCreated: _onMapCreated,
@@ -235,7 +235,7 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
           ),
         Positioned(
           right: 16,
-          top: 16,
+          bottom: 200,
           child: FloatingActionButton.small(
             heroTag: 'legend_toggle',
             backgroundColor: Colors.white,
@@ -245,7 +245,7 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
         ),
         if (_legendOpen)
           Positioned(
-            top: 70,
+            top: 16,
             right: 16,
             left: 16,
             bottom: 16,

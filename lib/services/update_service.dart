@@ -13,6 +13,8 @@ class UpdateService {
 
   static const String _fileName = 'kabete_poly_update.apk';
 
+  static String get _filePath => '${Directory.systemTemp.path}/$_fileName';
+
   static Future<void> checkForUpdates(BuildContext context,
       {bool showNoUpdateMsg = false}) async {
     try {
@@ -134,7 +136,7 @@ class UpdateService {
                     : downloadComplete
                         ? const Text(
                             'The update file has been downloaded. '
-                            'The installer will open to complete the installation.')
+                            'Tap "Install Now" to open the package installer.')
                         : downloading
                             ? Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -172,16 +174,52 @@ class UpdateService {
                 actions: [
                   if (installing)
                     const SizedBox.shrink()
-                  else if (downloadComplete)
+                  else if (downloadComplete) ...[
+                    TextButton(
+                      onPressed: () {
+                        setDialogState(() => installing = true);
+                        _installAndFinish(
+                          setDialogState,
+                          _filePath,
+                          (s) {
+                            installStatus = s;
+                            setDialogState(() {});
+                          },
+                          () {
+                            setDialogState(() {
+                              installing = false;
+                              downloadComplete = true;
+                            });
+                          },
+                        );
+                      },
+                      child: const Text('Later',
+                          style: TextStyle(color: Colors.grey)),
+                    ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white),
                       onPressed: () {
-                        Navigator.of(dialogContext).pop();
+                        setDialogState(() => installing = true);
+                        _installAndFinish(
+                          setDialogState,
+                          _filePath,
+                          (s) {
+                            installStatus = s;
+                            setDialogState(() {});
+                          },
+                          () {
+                            setDialogState(() {
+                              installing = false;
+                              downloadComplete = true;
+                            });
+                          },
+                        );
                       },
-                      child: const Text('Close'),
-                    )
+                      child: const Text('Install Now'),
+                    ),
+                  ]
                   else ...[
                     TextButton(
                       onPressed: downloading
@@ -197,6 +235,14 @@ class UpdateService {
                       onPressed: downloading
                           ? null
                           : () async {
+                              // Check if APK already exists
+                              final existing = File(_filePath);
+                              if (existing.existsSync()) {
+                                setDialogState(() => downloadComplete = true);
+                                _showPersistentNotification();
+                                return;
+                              }
+
                               setDialogState(() => downloading = true);
                               try {
                                 final filePath =
@@ -208,24 +254,13 @@ class UpdateService {
                                     downloading = false;
                                     downloadComplete = true;
                                   });
-                                  setDialogState(() {
-                                    installing = true;
-                                    downloadComplete = false;
-                                  });
-                                  await _installApk(filePath, (s) {
-                                    setDialogState(() => installStatus = s);
-                                  });
-                                  setDialogState(() {
-                                    installing = false;
-                                    downloadComplete = true;
-                                  });
+                                  _showPersistentNotification();
                                 }
                               } catch (e) {
                                 if (context.mounted) {
                                   setDialogState(() {
                                     downloading = false;
                                     downloadComplete = false;
-                                    installing = false;
                                   });
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -237,7 +272,7 @@ class UpdateService {
                                 }
                               }
                             },
-                      child: Text(downloading ? 'Downloading...' : 'Update Now'),
+                      child: const Text('Update Now'),
                     ),
                   ],
                 ],
@@ -249,20 +284,40 @@ class UpdateService {
     );
   }
 
+  static void _installAndFinish(
+    StateSetter setDialogState,
+    String filePath,
+    void Function(String) onStatus,
+    VoidCallback onDone,
+  ) async {
+    try {
+      await _installApk(filePath, onStatus);
+      onDone();
+    } catch (e) {
+      onStatus('Installation failed: $e');
+      onDone();
+    }
+  }
+
+  static void _showPersistentNotification() {
+    // Show a persistent notification so the user can install later
+    // even if they close the dialog or the screen was off.
+    NotificationService().showDownloadCompleteNotification(_filePath);
+  }
+
   static Future<String?> _downloadApk(
       String url, void Function(double progress) onProgress) async {
+    final file = File(_filePath);
+    if (file.existsSync()) {
+      return file.path;
+    }
+
     final client = http.Client();
     try {
       final request = http.Request('GET', Uri.parse(url));
       final response = await client.send(request).timeout(const Duration(minutes: 5));
 
       final contentLength = response.contentLength;
-      final dir = Directory.systemTemp;
-      final file = File('${dir.path}/$_fileName');
-
-      if (file.existsSync()) {
-        await file.delete();
-      }
 
       final sink = file.openWrite();
       int bytesDownloaded = 0;
@@ -298,12 +353,12 @@ class UpdateService {
     onStatus('Opening package installer...');
     // Cancel progress notification
     await NotificationService().cancelDownloadNotification(ids: [9999]);
-    // Show completion notification for retry if installer fails
+    // Show completion notification for retry if installer fails or screen was off
     await NotificationService().showDownloadCompleteNotification(filePath);
 
     final result = await OpenFilex.open(filePath);
     if (result.type != ResultType.done) {
-      onStatus('Installer failed, tap notification to retry');
+      onStatus('Installer failed — tap notification to retry');
       debugPrint('OpenFilex failed: ${result.message}');
     }
   }

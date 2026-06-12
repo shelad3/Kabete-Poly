@@ -12,7 +12,7 @@ import 'services/notification_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/analytics_service.dart';
 import 'services/unread_badge_provider.dart';
-import 'screens/splash_screen.dart';
+import 'widgets/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,14 +61,19 @@ class KabeteApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = context.watch<ThemeNotifier>();
+    final (ThemeData theme, ThemeData? darkTheme, ThemeMode themeMode) = switch (themeNotifier.mode) {
+      AppThemeMode.knp  => (AppTheme.knpTheme, AppTheme.darkTheme, ThemeMode.light),
+      AppThemeMode.light => (AppTheme.lightTheme, AppTheme.darkTheme, ThemeMode.light),
+      AppThemeMode.dark  => (AppTheme.darkTheme, null, ThemeMode.dark),
+    };
     return MaterialApp(
       title: 'Kabete Poly',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeNotifier.themeMode,
+      theme: theme,
+      darkTheme: darkTheme,
+      themeMode: themeMode,
       navigatorObservers: [AnalyticsService().observer],
-      home: const SplashScreen(),
+      home: const AuthGate(),
     );
   }
 }

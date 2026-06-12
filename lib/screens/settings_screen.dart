@@ -149,14 +149,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ListTile(
                 leading: const Icon(Icons.palette_outlined, color: Colors.purple),
                 title: const Text('Theme', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: SegmentedButton<ThemeMode>(
+                trailing: SegmentedButton<AppThemeMode>(
                   segments: const [
-                    ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.brightness_auto, size: 18), label: Text('System', style: TextStyle(fontSize: 12))),
-                    ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode, size: 18), label: Text('Light', style: TextStyle(fontSize: 12))),
-                    ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode, size: 18), label: Text('Dark', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(value: AppThemeMode.knp, icon: Icon(Icons.palette, size: 18), label: Text('KNP', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(value: AppThemeMode.light, icon: Icon(Icons.light_mode, size: 18), label: Text('Light', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(value: AppThemeMode.dark, icon: Icon(Icons.dark_mode, size: 18), label: Text('Dark', style: TextStyle(fontSize: 12))),
                   ],
-                  selected: {themeNotifier.themeMode},
-                  onSelectionChanged: (s) => themeNotifier.setThemeMode(s.first),
+                  selected: {themeNotifier.mode},
+                  onSelectionChanged: (s) => themeNotifier.setMode(s.first),
                 ),
               ),
             ]),
