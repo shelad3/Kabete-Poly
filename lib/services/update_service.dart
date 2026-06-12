@@ -92,12 +92,48 @@ class UpdateService {
     }
   }
 
+  static String _formatBytes(int bytes) {
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  /// Returns the expected content length from the download URL via a HEAD request,
+  /// or null if it cannot be determined.
+  static Future<int?> _fetchExpectedSize(String url) async {
+    try {
+      final head = await http.head(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      final len = head.headers['content-length'];
+      if (len != null) return int.tryParse(len);
+    } catch (_) {}
+    return null;
+  }
+
+  /// Checks whether the file at [filePath] was fully downloaded by comparing
+  /// its size on disk against the expected content-length from a HEAD request.
+  /// Returns `true` if the file doesn't exist (no download attempted yet),
+  /// so callers should check existence first.
+  static Future<bool> _isFileComplete(String url, String filePath) async {
+    final file = File(filePath);
+    if (!file.existsSync()) return false;
+    final actual = file.lengthSync();
+    final expected = await _fetchExpectedSize(url);
+    if (expected == null) {
+      // can't verify — assume it's OK
+      return true;
+    }
+    return actual >= expected;
+  }
+
   static void _showUpdateDialog(
       BuildContext context, String newVersion, String url, String releaseNotes) {
     bool downloading = false;
     bool downloadComplete = false;
     bool installing = false;
     double progress = 0;
+    int downloadedBytes = 0;
+    int totalBytes = 0;
     String installStatus = 'Opening package installer...';
 
     showDialog(
@@ -147,6 +183,16 @@ class UpdateService {
                                       value: progress > 0 ? progress : null),
                                   const SizedBox(height: 8),
                                   Text('${(progress * 100).toStringAsFixed(0)}%'),
+                                  if (totalBytes > 0) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${_formatBytes(downloadedBytes)} / ${_formatBytes(totalBytes)}',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               )
                             : SingleChildScrollView(
@@ -235,24 +281,42 @@ class UpdateService {
                       onPressed: downloading
                           ? null
                           : () async {
-                              // Check if APK already exists
+                              // Check if APK already exists and is fully downloaded
                               final existing = File(_filePath);
                               if (existing.existsSync()) {
-                                setDialogState(() => downloadComplete = true);
-                                _showPersistentNotification();
-                                return;
+                                final complete = await _isFileComplete(url, _filePath);
+                                if (complete) {
+                                  setDialogState(() => downloadComplete = true);
+                                  _showPersistentNotification();
+                                  return;
+                                }
+                                // Partial file — delete and re-download
+                                await existing.delete();
                               }
 
-                              setDialogState(() => downloading = true);
+                              setDialogState(() {
+                                downloading = true;
+                                progress = 0;
+                                downloadedBytes = 0;
+                                totalBytes = 0;
+                              });
+
                               try {
-                                final filePath =
-                                    await _downloadApk(url, (p) {
-                                  setDialogState(() => progress = p);
+                                final result = await _downloadApk(url, (pct, downloaded, total) {
+                                  setDialogState(() {
+                                    progress = pct;
+                                    downloadedBytes = downloaded;
+                                    totalBytes = total;
+                                  });
                                 });
-                                if (filePath != null) {
+
+                                if (result != null) {
+                                  final (path, contentLength) = result;
                                   setDialogState(() {
                                     downloading = false;
                                     downloadComplete = true;
+                                    totalBytes = contentLength;
+                                    downloadedBytes = contentLength;
                                   });
                                   _showPersistentNotification();
                                 }
@@ -300,16 +364,18 @@ class UpdateService {
   }
 
   static void _showPersistentNotification() {
-    // Show a persistent notification so the user can install later
-    // even if they close the dialog or the screen was off.
     NotificationService().showDownloadCompleteNotification(_filePath);
   }
 
-  static Future<String?> _downloadApk(
-      String url, void Function(double progress) onProgress) async {
+  /// Downloads the APK, returning the file path and the total content length.
+  /// [onProgress] receives (fraction, bytesDownloaded, totalBytes).
+  static Future<(String, int)?> _downloadApk(
+    String url,
+    void Function(double progress, int downloaded, int total) onProgress,
+  ) async {
     final file = File(_filePath);
     if (file.existsSync()) {
-      return file.path;
+      return (file.path, file.lengthSync());
     }
 
     final client = http.Client();
@@ -317,7 +383,7 @@ class UpdateService {
       final request = http.Request('GET', Uri.parse(url));
       final response = await client.send(request).timeout(const Duration(minutes: 5));
 
-      final contentLength = response.contentLength;
+      final contentLength = response.contentLength ?? 0;
 
       final sink = file.openWrite();
       int bytesDownloaded = 0;
@@ -326,11 +392,10 @@ class UpdateService {
       await for (final chunk in response.stream) {
         sink.add(chunk);
         bytesDownloaded += chunk.length;
-        if (contentLength != null && contentLength > 0) {
+        if (contentLength > 0) {
           final pct = bytesDownloaded / contentLength;
-          onProgress(pct);
+          onProgress(pct, bytesDownloaded, contentLength);
 
-          // Update notification every 5%
           final pctInt = (pct * 100).toInt();
           if (pctInt - lastNotifiedProgress >= 5 || pctInt == 100) {
             lastNotifiedProgress = pctInt;
@@ -339,11 +404,13 @@ class UpdateService {
               progress: pctInt,
             );
           }
+        } else {
+          onProgress(0, bytesDownloaded, contentLength);
         }
       }
 
       await sink.close();
-      return file.path;
+      return (file.path, contentLength);
     } finally {
       client.close();
     }
@@ -351,9 +418,7 @@ class UpdateService {
 
   static Future<void> _installApk(String filePath, void Function(String) onStatus) async {
     onStatus('Opening package installer...');
-    // Cancel progress notification
     await NotificationService().cancelDownloadNotification(ids: [9999]);
-    // Show completion notification for retry if installer fails or screen was off
     await NotificationService().showDownloadCompleteNotification(filePath);
 
     final result = await OpenFilex.open(filePath);
