@@ -155,7 +155,6 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
         stream: FirebaseFirestore.instance
             .collection('users')
             .where('enrolledClasses', arrayContains: widget.classId)
-            .orderBy('fullName')
             .snapshots(),
         builder: (context, userSnap) {
           if (userSnap.connectionState == ConnectionState.waiting) {
@@ -164,7 +163,13 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
           if (userSnap.hasError) {
             return Center(child: Text('Error: ${userSnap.error}'));
           }
-          final students = userSnap.data?.docs ?? [];
+          var rawDocs = userSnap.data?.docs ?? [];
+          rawDocs.sort((a, b) {
+            final nameA = ((a.data() as Map<String, dynamic>)['fullName'] as String? ?? '').toLowerCase();
+            final nameB = ((b.data() as Map<String, dynamic>)['fullName'] as String? ?? '').toLowerCase();
+            return nameA.compareTo(nameB);
+          });
+          final students = rawDocs;
 
           return Column(
             children: [

@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import '../models/user_profile.dart';
+import '../models/user_session.dart';
 import 'push_notification_service.dart';
 import 'analytics_service.dart';
 
@@ -16,19 +19,27 @@ class AuthProvider extends ChangeNotifier {
   UserProfile? _currentUser;
   bool _isAuthenticated = false;
   bool _isLoading = true;
+  bool _isGuest = false;
+  String? _currentSessionId;
 
   UserProfile? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
   bool get isLoading => _isLoading;
+  bool get isGuest => _isGuest;
   String get currentUserId => _auth.currentUser?.uid ?? '';
+  String? get currentSessionId => _currentSessionId;
 
   AuthProvider() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {
       if (user != null) {
         await _fetchUserProfile(user);
+        if (_isAuthenticated) {
+          await _createSession(user.uid);
+        }
       } else {
         _currentUser = null;
         _isAuthenticated = false;
+        _currentSessionId = null;
       }
       _isLoading = false;
       notifyListeners();
@@ -41,13 +52,108 @@ class AuthProvider extends ChangeNotifier {
     super.dispose();
   }
 
+  Future<Map<String, String>> _getDeviceInfo() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final info = await deviceInfo.androidInfo;
+        return {
+          'name': '${info.brand} ${info.model}',
+          'type': 'Android ${info.version.release}',
+        };
+      } else if (Platform.isIOS) {
+        final info = await deviceInfo.iosInfo;
+        return {
+          'name': '${info.name} (${info.model})',
+          'type': 'iOS ${info.systemVersion}',
+        };
+      }
+    } catch (_) {}
+    return {'name': 'Unknown Device', 'type': 'Unknown'};
+  }
+
+  Future<void> _createSession(String userId) async {
+    try {
+      final device = await _getDeviceInfo();
+      final session = UserSession(
+        id: '',
+        userId: userId,
+        deviceName: device['name']!,
+        deviceType: device['type']!,
+        loginAt: DateTime.now(),
+        lastActiveAt: DateTime.now(),
+        isCurrentDevice: true,
+      );
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('sessions')
+          .add(session.toJson());
+      _currentSessionId = doc.id;
+    } catch (e) {
+      debugPrint('Session creation failed (non-fatal): $e');
+    }
+  }
+
+  Future<void> terminateSession(String sessionId) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('sessions')
+        .doc(sessionId)
+        .delete();
+  }
+
+  Future<void> terminateOtherSessions() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+    final snap = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('sessions')
+        .get();
+    final batch = _firestore.batch();
+    for (final doc in snap.docs) {
+      if (doc.id != _currentSessionId) {
+        batch.delete(doc.reference);
+      }
+    }
+    await batch.commit();
+  }
+
+  Stream<List<UserSession>> getSessionsStream() {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return Stream.value([]);
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('sessions')
+        .orderBy('loginAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) {
+          final s = UserSession.fromJson(d.data(), d.id);
+          return UserSession(
+            id: s.id,
+            userId: s.userId,
+            deviceName: s.deviceName,
+            deviceType: s.deviceType,
+            ipAddress: s.ipAddress,
+            location: s.location,
+            loginAt: s.loginAt,
+            lastActiveAt: s.lastActiveAt,
+            isCurrentDevice: d.id == _currentSessionId,
+          );
+        }).toList());
+  }
+
   Future<void> _fetchUserProfile(User user) async {
     try {
       DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists) {
         _currentUser = UserProfile.fromJson(doc.data() as Map<String, dynamic>);
-        
-        // Automatic Admin Check (Runtime Override just in case)
+
         if (_currentUser?.email.toLowerCase() == 'sheldonramu8@gmail.com') {
            _currentUser = UserProfile(
             registrationNumber: _currentUser!.registrationNumber,
@@ -59,11 +165,8 @@ class AuthProvider extends ChangeNotifier {
             role: 'Official',
           );
         }
-        
+
       } else {
-        // Document doesn't exist (e.g., mid-registration or early Google Sign-In)
-        // Set a highly temporary in-memory session only. NEVER write to Firestore here.
-        // Wait for register() to complete its own structured Firestore payload.
         _currentUser = UserProfile(
           registrationNumber: 'PENDING-${user.uid.substring(0, 5)}',
           fullName: user.displayName ?? 'Student',
@@ -80,7 +183,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint("Error fetching user profile: $e");
-      // Fallback if Firestore fails completely
       _currentUser = UserProfile(
         registrationNumber: 'UNKNOWN',
         fullName: 'Offline User',
@@ -98,6 +200,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> login(String email, String password) async {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      _isGuest = false;
       AnalyticsService().logLogin('email');
     } catch (e) {
       if (e is FirebaseAuthException) {
@@ -110,7 +213,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return; // User canceled
+      if (googleUser == null) return;
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
@@ -119,8 +222,8 @@ class AuthProvider extends ChangeNotifier {
       );
 
       await _auth.signInWithCredential(credential);
+      _isGuest = false;
       AnalyticsService().logLogin('google');
-      // _fetchUserProfile will handle creating doc if new
     } catch (e) {
       throw Exception('Google Sign-In failed: $e');
     }
@@ -134,32 +237,42 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  void enterGuestMode() {
+    _currentUser = null;
+    _isAuthenticated = true;
+    _isGuest = true;
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  void exitGuestMode() {
+    _isGuest = false;
+    _isAuthenticated = false;
+    _currentUser = null;
+    notifyListeners();
+  }
 
   Future<void> register(UserProfile profile, String password) async {
     try {
-      // 1. Create a user account in Firebase Auth
-      // This MUST happen before checking Firestore, so the user passes the isAuthenticated() rule
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
         email: profile.email,
         password: password,
       );
 
       final regNo = profile.registrationNumber.toUpperCase();
-      
+
       try {
-        // Now that the user is authenticated, we can read the users collection
         final query = await _firestore
             .collection('users')
             .where('registrationNumber', isEqualTo: regNo)
             .get();
-            
+
         if (query.docs.isNotEmpty) {
           throw Exception('Registration number already in use');
         }
 
         bool isActuallyAdmin = profile.email.toLowerCase() == 'sheldonramu8@gmail.com';
 
-        // 2. Prepare the expanded User Profile data
         final newUserProfile = UserProfile(
           registrationNumber: regNo,
           fullName: profile.fullName,
@@ -172,17 +285,14 @@ class AuthProvider extends ChangeNotifier {
           enrolledClasses: profile.enrolledClasses,
         );
 
-        // 3. Save the profile data to Firestore
         await _firestore.collection('users').doc(credential.user!.uid).set(newUserProfile.toJson());
 
-        // 4. Auto-Generate Class Cohort if needed
         if (profile.enrolledClasses.isNotEmpty) {
           for (String classId in profile.enrolledClasses) {
             final classRef = _firestore.collection('classes').doc(classId);
             final classDoc = await classRef.get();
-            
+
             if (!classDoc.exists) {
-              // Create the class cohort infrastructure
               await classRef.set({
                 'id': classId,
                 'createdAt': FieldValue.serverTimestamp(),
@@ -190,7 +300,6 @@ class AuthProvider extends ChangeNotifier {
                 'createdBy': credential.user!.uid,
               });
             } else {
-              // Just add the user to the existing members list
               await classRef.update({
                 'members': FieldValue.arrayUnion([credential.user!.uid])
               });
@@ -198,16 +307,14 @@ class AuthProvider extends ChangeNotifier {
           }
         }
 
-        // 5. Reload profile from Firestore (race condition: auth listener may have
-        //    loaded a fallback before Firestore write completed)
         await _fetchUserProfile(credential.user!);
+        _isGuest = false;
         AnalyticsService().logSignUp('email');
       } catch (e) {
-        // Rollback Firebase Auth creation if any Firestore requirement fails
         await credential.user?.delete();
-        rethrow; // Pass error up
+        rethrow;
       }
-      
+
     } catch (e) {
       if (e is FirebaseAuthException) {
         throw Exception(e.message ?? 'Registration failed');
@@ -224,6 +331,19 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    final userId = _auth.currentUser?.uid;
+    if (_currentSessionId != null && userId != null) {
+      try {
+        await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('sessions')
+            .doc(_currentSessionId)
+            .delete();
+      } catch (_) {}
+    }
+    _currentSessionId = null;
+    _isGuest = false;
     await _googleSignIn.signOut();
     await _auth.signOut();
   }

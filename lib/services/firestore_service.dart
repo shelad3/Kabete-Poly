@@ -3,6 +3,7 @@ import '../models/lesson.dart';
 import '../models/schedule_item.dart';
 import '../models/class_notification.dart';
 import '../models/ticket.dart';
+import '../models/template.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -254,6 +255,44 @@ class FirestoreService {
     return _firestore.collection('class_change_requests')
         .orderBy('timestamp', descending: true)
         .snapshots();
+  }
+
+  // --- Templates ---
+
+  Future<String> saveLessonTemplate(LessonTemplate template) async {
+    final doc = await _firestore.collection('lesson_templates').add(template.toJson());
+    return doc.id;
+  }
+
+  Future<void> deleteLessonTemplate(String id) async {
+    await _firestore.collection('lesson_templates').doc(id).delete();
+  }
+
+  Stream<List<LessonTemplate>> getLessonTemplatesStream(String userId) {
+    return _firestore
+        .collection('lesson_templates')
+        .where('createdBy', isEqualTo: userId)
+        .orderBy('name')
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => LessonTemplate.fromJson(d.data(), d.id)).toList());
+  }
+
+  Future<String> saveScheduleTemplate(ScheduleTemplate template) async {
+    final doc = await _firestore.collection('schedule_templates').add(template.toJson());
+    return doc.id;
+  }
+
+  Future<void> deleteScheduleTemplate(String id) async {
+    await _firestore.collection('schedule_templates').doc(id).delete();
+  }
+
+  Stream<List<ScheduleTemplate>> getScheduleTemplatesStream(String userId) {
+    return _firestore
+        .collection('schedule_templates')
+        .where('createdBy', isEqualTo: userId)
+        .orderBy('name')
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => ScheduleTemplate.fromJson(d.data(), d.id)).toList());
   }
 
   Future<void> approveClassChangeRequest(String requestId, String userId, String newClass) async {

@@ -5,8 +5,10 @@ import 'package:file_picker/file_picker.dart';
 import '../services/class_provider.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
+import '../services/auth_provider.dart';
 import '../models/schedule_item.dart';
 import '../models/class_notification.dart';
+import '../models/template.dart';
 
 class ScheduleUpcomingScreen extends StatefulWidget {
   final bool isPractical;
@@ -145,11 +147,137 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
     }
   }
 
+  Future<void> _saveTemplate() async {
+    final nameCtrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save as Template'),
+        content: TextField(
+          controller: nameCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Template Name',
+            hintText: 'e.g. Weekly Theory',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+
+    try {
+      final user = context.read<AuthProvider>().currentUser;
+      final template = ScheduleTemplate(
+        id: '',
+        createdBy: user?.email ?? 'unknown',
+        name: name,
+        subject: _topicController.text.trim(),
+        room: _roomController.text.trim(),
+        isPractical: widget.isPractical,
+      );
+      await _firestoreService.saveScheduleTemplate(template);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Template saved!'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  void _showTemplatePicker() {
+    final user = context.read<AuthProvider>().currentUser;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return StreamBuilder<List<ScheduleTemplate>>(
+          stream: _firestoreService.getScheduleTemplatesStream(user?.email ?? ''),
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()));
+            }
+            final templates = snap.data ?? [];
+            if (templates.isEmpty) {
+              return const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No saved templates')));
+            }
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Load Template', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+                const Divider(height: 1),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: templates.length,
+                    itemBuilder: (_, i) {
+                      final t = templates[i];
+                      return ListTile(
+                        leading: Icon(t.isPractical ? Icons.science : Icons.book, color: t.isPractical ? Colors.purple : Colors.orange),
+                        title: Text(t.name),
+                        subtitle: Text('${t.subject} — ${t.room}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                          onPressed: () => _firestoreService.deleteScheduleTemplate(t.id),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _topicController.text = t.subject;
+                          _roomController.text = t.room;
+                          setState(() {});
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isPractical ? 'Schedule Practical' : 'Schedule Theory'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'save_template') _saveTemplate();
+              else if (v == 'load_template') _showTemplatePicker();
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'save_template', child: ListTile(
+                leading: Icon(Icons.save_as, color: Colors.teal),
+                title: Text('Save as Template'),
+                dense: true,
+              )),
+              const PopupMenuItem(value: 'load_template', child: ListTile(
+                leading: Icon(Icons.file_copy, color: Colors.blue),
+                title: Text('Load Template'),
+                dense: true,
+              )),
+            ],
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

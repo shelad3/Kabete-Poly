@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/schedule_item.dart';
 import '../../services/firestore_service.dart';
+import '../../services/class_provider.dart';
 
 class AdminTimetableManagerScreen extends StatefulWidget {
   const AdminTimetableManagerScreen({super.key});
@@ -11,8 +13,7 @@ class AdminTimetableManagerScreen extends StatefulWidget {
 
 class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  final TextEditingController _classIdController = TextEditingController(text: 'Jan 2026 EIT');
-  String _currentClassId = 'Jan 2026 EIT';
+  String _currentClassId = '';
 
   final Map<int, String> _weekdays = {
     1: 'Monday',
@@ -25,68 +26,89 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
   };
 
   @override
+  void initState() {
+    super.initState();
+    final cp = context.read<ClassProvider>();
+    _currentClassId = cp.availableClasses.isNotEmpty ? cp.availableClasses.first : '';
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Timetable Manager'),
       ),
-      body: Column(
-        children: [
-          _buildClassSelector(),
-          const Divider(),
-          Expanded(
-            child: StreamBuilder<List<ScheduleItem>>(
-              stream: _firestoreService.getDefaultScheduleStream(_currentClassId),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Error loading timetables.'));
-                }
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      body: _currentClassId.isEmpty
+          ? const Center(child: Text('No classes available'))
+          : Column(
+              children: [
+                _buildClassSelector(),
+                const Divider(),
+                Expanded(
+                  child: StreamBuilder<List<ScheduleItem>>(
+                    stream: _firestoreService.getDefaultScheduleStream(_currentClassId),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                final items = snapshot.data ?? [];
-                if (items.isEmpty) {
-                  return const Center(child: Text('No official timetable entries for this class.'));
-                }
-
-                // Group by day of week
-                final grouped = <int, List<ScheduleItem>>{};
-                for (var item in items) {
-                  final day = item.dayOfWeek ?? 1;
-                  grouped[day] = (grouped[day] ?? [])..add(item);
-                }
-
-                final sortedDays = grouped.keys.toList()..sort();
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: sortedDays.length,
-                  itemBuilder: (context, index) {
-                    final dayInt = sortedDays[index];
-                    final dayItems = grouped[dayInt]!;
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            _weekdays[dayInt] ?? 'Unknown Day',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                      final items = snapshot.data ?? [];
+                      if (items.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.calendar_month_outlined, size: 64, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text('No official timetable entries for $_currentClassId.',
+                                  style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                              const SizedBox(height: 8),
+                              Text('Tap + to add the first entry.',
+                                  style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                            ],
                           ),
-                        ),
-                        ...dayItems.map((item) => _buildScheduleCard(item)),
-                        const SizedBox(height: 16),
-                      ],
-                    );
-                  },
-                );
-              },
+                        );
+                      }
+
+                      final grouped = <int, List<ScheduleItem>>{};
+                      for (var item in items) {
+                        final day = item.dayOfWeek ?? 1;
+                        grouped[day] = (grouped[day] ?? [])..add(item);
+                      }
+
+                      final sortedDays = grouped.keys.toList()..sort();
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: sortedDays.length,
+                        itemBuilder: (context, index) {
+                          final dayInt = sortedDays[index];
+                          final dayItems = grouped[dayInt]!;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  _weekdays[dayInt] ?? 'Unknown Day',
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                                ),
+                              ),
+                              ...dayItems.map((item) => _buildScheduleCard(item)),
+                              const SizedBox(height: 16),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddEntryDialog,
         icon: const Icon(Icons.add),
@@ -96,34 +118,25 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
   }
 
   Widget _buildClassSelector() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _classIdController,
-              decoration: const InputDecoration(
-                labelText: 'Target Class Cohort (e.g. Jan 2026 EIT)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.group),
-              ),
+    return Consumer<ClassProvider>(
+      builder: (context, cp, _) {
+        final classes = cp.availableClasses;
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: DropdownButtonFormField<String>(
+            initialValue: _currentClassId,
+            decoration: const InputDecoration(
+              labelText: 'Target Class',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.group),
             ),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _currentClassId = _classIdController.text.trim();
-              });
+            items: classes.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+            onChanged: (val) {
+              if (val != null) setState(() => _currentClassId = val);
             },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-            ),
-            child: const Text('Load'),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -152,12 +165,12 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Entry?'),
-        content: Text('Are you sure you want to remove ${item.subject} from the official timetable? All students in $_currentClassId will immediately lose access to this entry.'),
+        content: Text('Remove ${item.subject} from $_currentClassId timetable?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(context, true), 
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -176,7 +189,7 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
     final subjectController = TextEditingController();
     final teacherController = TextEditingController();
     final roomController = TextEditingController();
-    int selectedDay = 1;
+    int selectedDay = DateTime.now().weekday;
     TimeOfDay? selectedStart;
     TimeOfDay? selectedEnd;
 
@@ -255,7 +268,6 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                             return;
                           }
 
-                          // Format time helper e.g. "08:00"
                           String formatTime(TimeOfDay tod) {
                             final hh = tod.hour.toString().padLeft(2, '0');
                             final mm = tod.minute.toString().padLeft(2, '0');
@@ -270,15 +282,15 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                             room: roomController.text.trim().isEmpty ? 'TBA' : roomController.text.trim(),
                             startTime: formatTime(selectedStart!),
                             endTime: formatTime(selectedEnd!),
-                            color: Colors.blueGrey, // Default color for manager entries
+                            color: Colors.blueGrey,
                             description: 'Official Timetable',
-                            date: DateTime.now(), // Ignored for defaults but required by model
+                            date: DateTime.now(),
                             isDefault: true,
                             dayOfWeek: selectedDay,
                           );
 
                           await _firestoreService.addScheduleItem(newItem);
-                          
+
                           if (context.mounted) {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved successfully!')));
@@ -294,7 +306,7 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
             );
           },
         );
-      }
+      },
     );
   }
 }

@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import '../models/lesson.dart';
+import '../models/template.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 import '../services/class_provider.dart';
+import '../services/auth_provider.dart';
 
 class AddLessonScreen extends StatefulWidget {
   final Lesson? lessonToEdit;
@@ -96,6 +98,27 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.lessonToEdit == null ? 'Post New Lesson' : 'Edit Lesson'),
+        actions: [
+          if (widget.lessonToEdit == null)
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'save_template') _saveTemplate();
+                else if (v == 'load_template') _showTemplatePicker();
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'save_template', child: ListTile(
+                  leading: Icon(Icons.save_as, color: Colors.teal),
+                  title: Text('Save as Template'),
+                  dense: true,
+                )),
+                const PopupMenuItem(value: 'load_template', child: ListTile(
+                  leading: Icon(Icons.file_copy, color: Colors.blue),
+                  title: Text('Load Template'),
+                  dense: true,
+                )),
+              ],
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -161,6 +184,132 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _saveTemplate() async {
+    final nameCtrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save as Template'),
+        content: TextField(
+          controller: nameCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Template Name',
+            hintText: 'e.g. Weekly Report Format',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+
+    try {
+      final user = context.read<AuthProvider>().currentUser;
+      final template = LessonTemplate(
+        id: '',
+        createdBy: user?.email ?? 'unknown',
+        name: name,
+        topic: _topicCtrl.text,
+        subtopic: _subtopicCtrl.text,
+        teacher: _teacherCtrl.text,
+        content: _contentCtrl.text,
+        summary: _summaryCtrl.text,
+        report: _reportCtrl.text,
+        nb1: _nb1Ctrl.text,
+        nb2: _nb2Ctrl.text,
+      );
+      await _firestoreService.saveLessonTemplate(template);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Template saved!'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  void _showTemplatePicker() {
+    final user = context.read<AuthProvider>().currentUser;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return StreamBuilder<List<LessonTemplate>>(
+          stream: _firestoreService.getLessonTemplatesStream(user?.email ?? ''),
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(),
+              ));
+            }
+            final templates = snap.data ?? [];
+            if (templates.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: Text('No saved templates')),
+              );
+            }
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Load Template', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+                const Divider(height: 1),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: templates.length,
+                    itemBuilder: (_, i) {
+                      final t = templates[i];
+                      return ListTile(
+                        leading: const Icon(Icons.description, color: Colors.blue),
+                        title: Text(t.name),
+                        subtitle: Text('${t.topic} — ${t.subtopic}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                          onPressed: () => _firestoreService.deleteLessonTemplate(t.id),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _topicCtrl.text = t.topic;
+                          _subtopicCtrl.text = t.subtopic;
+                          _teacherCtrl.text = t.teacher;
+                          _contentCtrl.text = t.content;
+                          _summaryCtrl.text = t.summary;
+                          _reportCtrl.text = t.report;
+                          _nb1Ctrl.text = t.nb1;
+                          _nb2Ctrl.text = t.nb2;
+                          setState(() {});
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -237,7 +386,6 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
         final List<String> urls = [];
         final List<String> names = [];
 
-        // Upload new files, keep existing URLs
         for (final att in _attachments) {
           if (att.file != null) {
             final path = 'lessons/docs/${DateTime.now().millisecondsSinceEpoch}_${att.name}';

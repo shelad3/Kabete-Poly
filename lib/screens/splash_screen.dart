@@ -10,6 +10,7 @@ import '../services/unread_badge_provider.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 import 'admin/admin_home_screen.dart';
+import 'guest_home_screen.dart';
 import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -43,6 +44,15 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     if (!mounted) return;
+
+    final authProv = context.read<app_auth.AuthProvider>();
+    if (authProv.isGuest) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const GuestHomeScreen()),
+      );
+      return;
+    }
+
     final user = auth.currentUser;
 
     if (user != null) {
@@ -210,7 +220,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ],
               const Spacer(flex: 1),
               Text(
-                'v2.2.0',
+                'v2.3.0',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.4),

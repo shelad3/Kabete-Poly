@@ -1,6 +1,53 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+class AuthCodeRule {
+  final String label;
+  final String id;
+  final int? maxUses;
+  final Duration? expiresAfter;
+
+  const AuthCodeRule({
+    required this.label,
+    required this.id,
+    this.maxUses,
+    this.expiresAfter,
+  });
+
+  static const List<AuthCodeRule> predefined = [
+    AuthCodeRule(
+      label: 'Unlimited, No Expiry',
+      id: 'unlimited',
+      maxUses: null,
+      expiresAfter: null,
+    ),
+    AuthCodeRule(
+      label: '10 Uses, No Expiry',
+      id: 'ten_uses',
+      maxUses: 10,
+      expiresAfter: null,
+    ),
+    AuthCodeRule(
+      label: '5 Uses, 12 Hours',
+      id: 'five_uses_12h',
+      maxUses: 5,
+      expiresAfter: Duration(hours: 12),
+    ),
+    AuthCodeRule(
+      label: '10 Uses, 24 Hours',
+      id: 'ten_uses_24h',
+      maxUses: 10,
+      expiresAfter: Duration(hours: 24),
+    ),
+    AuthCodeRule(
+      label: 'Single Use (Immediate Expiry)',
+      id: 'single_use',
+      maxUses: 1,
+      expiresAfter: Duration.zero,
+    ),
+  ];
+}
+
 class AuthCode {
   final String id;
   final String code;
@@ -9,6 +56,14 @@ class AuthCode {
   final String? usedBy;
   final DateTime createdAt;
   final String createdBy;
+  final DateTime? expiresAt;
+  final int? maxUses;
+  final int useCount;
+  final String ruleId;
+
+  bool get isExpired => expiresAt != null && DateTime.now().isAfter(expiresAt!);
+  bool get isExhausted => maxUses != null && useCount >= maxUses!;
+  bool get isValid => !isUsed && !isExpired && !isExhausted;
 
   AuthCode({
     required this.id,
@@ -18,6 +73,10 @@ class AuthCode {
     this.usedBy,
     required this.createdAt,
     required this.createdBy,
+    this.expiresAt,
+    this.maxUses,
+    this.useCount = 0,
+    this.ruleId = 'unlimited',
   });
 
   factory AuthCode.fromJson(Map<String, dynamic> json, String docId) {
@@ -33,6 +92,14 @@ class AuthCode {
               : (json['createdAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       createdBy: json['createdBy'] ?? '',
+      expiresAt: json['expiresAt'] != null
+          ? (json['expiresAt'] is String
+              ? DateTime.parse(json['expiresAt'])
+              : (json['expiresAt'] as dynamic).toDate() as DateTime)
+          : null,
+      maxUses: json['maxUses'],
+      useCount: json['useCount'] ?? 0,
+      ruleId: json['ruleId'] ?? 'unlimited',
     );
   }
 
@@ -44,6 +111,10 @@ class AuthCode {
       'usedBy': usedBy,
       'createdAt': createdAt.toIso8601String(),
       'createdBy': createdBy,
+      'expiresAt': expiresAt?.toIso8601String(),
+      'maxUses': maxUses,
+      'useCount': useCount,
+      'ruleId': ruleId,
     };
   }
 }
@@ -63,14 +134,20 @@ class AuthCodeService {
             .toList());
   }
 
-  Future<String> generateCode(String role, String createdBy) async {
+  Future<String> generateCode(String role, String createdBy, {AuthCodeRule? rule}) async {
+    final r = rule ?? AuthCodeRule.predefined[0];
     final code = _generateRandomCode();
+    final now = DateTime.now();
     final authCode = AuthCode(
       id: '',
       code: code,
       role: role,
-      createdAt: DateTime.now(),
+      createdAt: now,
       createdBy: createdBy,
+      expiresAt: r.expiresAfter != null ? now.add(r.expiresAfter!) : null,
+      maxUses: r.maxUses,
+      useCount: 0,
+      ruleId: r.id,
     );
     final doc = await _firestore.collection('auth_codes').add(authCode.toJson());
     return doc.id;
@@ -84,12 +161,17 @@ class AuthCodeService {
     final snap = await _firestore
         .collection('auth_codes')
         .where('code', isEqualTo: code)
-        .where('isUsed', isEqualTo: false)
         .limit(1)
         .get();
 
     if (snap.docs.isEmpty) return null;
-    return snap.docs.first.data()['role'] as String?;
+
+    final data = snap.docs.first.data();
+    final authCode = AuthCode.fromJson(data, snap.docs.first.id);
+
+    if (!authCode.isValid) return null;
+
+    return data['role'] as String?;
   }
 
   Future<void> markCodeUsed(String code, String userId) async {
@@ -99,9 +181,15 @@ class AuthCodeService {
         .limit(1)
         .get();
     if (snap.docs.isNotEmpty) {
+      final data = snap.docs.first.data();
+      final currentCount = (data['useCount'] as num?)?.toInt() ?? 0;
+      final maxUses = data['maxUses'] as int?;
+      final newCount = currentCount + 1;
+      final isNowExhausted = maxUses != null && newCount >= maxUses;
       await snap.docs.first.reference.update({
-        'isUsed': true,
+        'isUsed': isNowExhausted,
         'usedBy': userId,
+        'useCount': newCount,
       });
     }
   }

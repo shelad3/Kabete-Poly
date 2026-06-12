@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
 import '../screens/login_screen.dart';
+import '../screens/my_devices_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -70,6 +71,15 @@ class AppDrawer extends StatelessWidget {
           ),
 
           const Divider(),
+
+          ListTile(
+            leading: const Icon(Icons.devices, color: Colors.blueGrey),
+            title: const Text('My Devices'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const MyDevicesScreen()));
+            },
+          ),
 
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),

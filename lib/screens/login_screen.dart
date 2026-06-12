@@ -106,6 +106,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  context.read<AuthProvider>().enterGuestMode();
+                },
+                icon: const Icon(Icons.explore_outlined, size: 18),
+                label: const Text('Continue as Guest'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  side: BorderSide(color: Colors.grey[400]!),
+                ),
+              ),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

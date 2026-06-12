@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/lesson.dart';
+import '../services/firestore_service.dart';
+import '../services/auth_provider.dart';
+import 'add_lesson_screen.dart';
 
 class LessonDetailScreen extends StatelessWidget {
   final Lesson lesson;
+  final VoidCallback? onDelete;
 
-  const LessonDetailScreen({super.key, required this.lesson});
+  const LessonDetailScreen({super.key, required this.lesson, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +19,31 @@ class LessonDetailScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(lesson.topic),
+          actions: [
+            Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                if (auth.currentUser?.isTeacher != true) return const SizedBox.shrink();
+                return PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddLessonScreen(lessonToEdit: lesson),
+                        ),
+                      );
+                    } else if (value == 'delete') {
+                      _confirmDelete(context);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit), title: Text('Edit'))),
+                    const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete, color: Colors.red), title: Text('Delete', style: TextStyle(color: Colors.red)))),
+                  ],
+                );
+              },
+            ),
+          ],
           bottom: const TabBar(
             isScrollable: true,
             tabs: [
@@ -34,6 +64,42 @@ class LessonDetailScreen extends StatelessWidget {
             _buildNBsTab(),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Lesson'),
+        content: Text('Permanently delete "${lesson.topic}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await FirestoreService().deleteLesson(lesson.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Lesson deleted'), backgroundColor: Colors.green),
+                  );
+                  onDelete?.call();
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

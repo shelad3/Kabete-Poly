@@ -24,6 +24,7 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
   String? _currentHighlightLabel;
   bool _locationGranted = false;
   bool _mapReady = false;
+  bool _legendOpen = false;
 
   static const LatLng _campusCenter = LatLng(-1.264627, 36.727029);
 
@@ -232,11 +233,70 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
               ],
             ),
           ),
+        Positioned(
+          right: 16,
+          top: 16,
+          child: FloatingActionButton.small(
+            heroTag: 'legend_toggle',
+            backgroundColor: Colors.white,
+            onPressed: () => setState(() => _legendOpen = !_legendOpen),
+            child: Icon(_legendOpen ? Icons.map : Icons.layers, color: Colors.blueGrey),
+          ),
+        ),
+        if (_legendOpen)
+          Positioned(
+            top: 70,
+            right: 16,
+            left: 16,
+            bottom: 16,
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.map, size: 20),
+                          const SizedBox(width: 8),
+                          const Text('Campus Map Legend', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 20),
+                            onPressed: () => setState(() => _legendOpen = false),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        children: _buildLegendGroups(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         if (_currentHighlightLabel != null)
           Positioned(
             top: 16,
             left: 16,
-            right: 16,
+            right: 72,
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(12),
@@ -269,5 +329,64 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
           ),
       ],
     );
+  }
+
+  List<Widget> _buildLegendGroups() {
+    final grouped = <LocationType, List<CampusLocation>>{};
+    for (final loc in campusLocations) {
+      grouped.putIfAbsent(loc.type, () => []).add(loc);
+    }
+    final sortedTypes = grouped.keys.toList()
+      ..sort((a, b) => grouped[b]!.length.compareTo(grouped[a]!.length));
+
+    return [
+      for (final type in sortedTypes) ...[
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              Icon(iconForType(type), size: 18, color: colorForType(type)),
+              const SizedBox(width: 8),
+              Text(
+                labelForType(type),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: colorForType(type),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${grouped[type]!.length}',
+                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+        ...grouped[type]!.map((loc) => InkWell(
+          onTap: () {
+            setState(() {
+              _currentHighlightLabel = loc.name;
+              _legendOpen = false;
+            });
+            _zoomToLocation(loc.id);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 6),
+            child: Row(
+              children: [
+                Icon(Icons.circle, size: 8, color: colorForType(type).withValues(alpha: 0.5)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(loc.name, style: const TextStyle(fontSize: 13)),
+                ),
+                Icon(Icons.zoom_in, size: 14, color: Colors.grey[400]),
+              ],
+            ),
+          ),
+        )),
+        const SizedBox(height: 4),
+      ],
+    ];
   }
 }

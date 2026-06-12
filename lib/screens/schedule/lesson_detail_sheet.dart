@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/schedule_item.dart';
 import '../../utils/campus_map_data.dart';
 
@@ -16,6 +18,7 @@ class LessonDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = findLocationByVenue(lesson.room);
     final teacherLocation = findLocationByTeacher(lesson.teacher);
+    final isPractical = lesson.description == 'Practical Lab Session';
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -38,18 +41,71 @@ class LessonDetailSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text(
-            lesson.subject,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: lesson.color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isPractical ? Icons.science : Icons.book,
+                  color: lesson.color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lesson.subject,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: lesson.color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isPractical ? 'Practical' : 'Theory',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: lesson.color,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          DateFormat('MMM dd, yyyy').format(lesson.date),
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            '${lesson.startTime} - ${lesson.endTime}',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 8),
+          _buildOption(
+            context,
+            icon: Icons.schedule,
+            iconColor: Colors.teal,
+            title: '${lesson.startTime} - ${lesson.endTime}',
+            subtitle: _durationText(),
+            onTap: null,
+          ),
+          const SizedBox(height: 12),
           _buildOption(
             context,
             icon: Icons.location_on,
@@ -79,6 +135,31 @@ class LessonDetailSheet extends StatelessWidget {
                   }
                 : null,
           ),
+          if (lesson.description.isNotEmpty && lesson.description != 'Theory Class' && lesson.description != 'Practical Lab Session') ...[
+            const SizedBox(height: 12),
+            _buildOption(
+              context,
+              icon: Icons.description,
+              iconColor: Colors.grey,
+              title: lesson.description,
+              subtitle: 'Additional details',
+              onTap: null,
+            ),
+          ],
+          if (lesson.attachmentUrls.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildOption(
+              context,
+              icon: Icons.attach_file,
+              iconColor: Colors.blue,
+              title: '${lesson.attachmentUrls.length} Attachment(s)',
+              subtitle: 'Tap to view',
+              onTap: () {
+                Navigator.pop(context);
+                _showAttachments(context);
+              },
+            ),
+          ],
           const SizedBox(height: 12),
           _buildOption(
             context,
@@ -95,6 +176,20 @@ class LessonDetailSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _durationText() {
+    try {
+      final start = DateFormat('HH:mm').parse(lesson.startTime);
+      final end = DateFormat('HH:mm').parse(lesson.endTime);
+      final diff = end.difference(start);
+      if (diff.inMinutes > 0) {
+        return '${diff.inMinutes} minutes';
+      }
+      return '';
+    } catch (_) {
+      return '';
+    }
   }
 
   Widget _buildOption(
@@ -136,6 +231,42 @@ class LessonDetailSheet extends StatelessWidget {
                 Icon(Icons.chevron_right, color: Colors.grey[400]),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showAttachments(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Attachments for ${lesson.subject}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 12),
+            ...List.generate(lesson.attachmentUrls.length, (i) {
+              return ListTile(
+                leading: const Icon(Icons.picture_as_pdf, color: Colors.blue),
+                title: Text(
+                  i < lesson.attachmentNames.length ? lesson.attachmentNames[i] : 'Document ${i + 1}',
+                ),
+                trailing: const Icon(Icons.open_in_new, size: 16),
+                onTap: () async {
+                  final uri = Uri.parse(lesson.attachmentUrls[i]);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+              );
+            }),
+          ],
         ),
       ),
     );

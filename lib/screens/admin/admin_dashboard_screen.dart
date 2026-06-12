@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/class_notification.dart';
 import '../../models/ticket.dart';
 import '../../services/auth_provider.dart';
+import '../../services/class_provider.dart';
 import '../../services/firestore_service.dart';
 import '../notification_screen.dart';
 import '../explore_screen.dart';
@@ -367,21 +367,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return;
     }
 
+    final allClasses = context.read<ClassProvider>().availableClasses;
     if (user.isAdmin) {
-      FirebaseFirestore.instance.collection('classes').get().then((snap) {
-        final allClasses = snap.docs.map((d) => d.id).toList()..sort();
-        if (!context.mounted) return;
-        _showClassPicker(context, allClasses);
-      });
+      _showClassPicker(context, allClasses);
     } else {
-      final classes = user.enrolledClasses;
-      if (classes.isEmpty) {
+      final myClasses = user.enrolledClasses.where((c) => allClasses.contains(c)).toList();
+      if (myClasses.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No classes assigned to your account')),
         );
         return;
       }
-      _showClassPicker(context, classes);
+      _showClassPicker(context, myClasses);
     }
   }
 

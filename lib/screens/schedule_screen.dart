@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/firestore_service.dart';
 import '../services/class_provider.dart';
+import '../services/auth_provider.dart';
 import '../models/schedule_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
@@ -220,6 +221,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
 
     return GestureDetector(
       onTap: () => _showLessonDetail(item),
+      onLongPress: () => _confirmDeleteSchedule(item),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
@@ -390,6 +392,42 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
           ],
         ),
       ],
+    );
+  }
+
+  void _confirmDeleteSchedule(ScheduleItem item) {
+    final user = context.read<AuthProvider>().currentUser;
+    if (user?.isTeacher != true) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Schedule Item'),
+        content: Text('Permanently delete "${item.subject}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await _firestoreService.deleteScheduleItem(item.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Schedule item deleted'), backgroundColor: Colors.green),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -257,10 +257,61 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+              Consumer<AuthProvider>(
+                builder: (context, auth, _) {
+                  if (auth.currentUser?.isTeacher != true) return const Icon(Icons.chevron_right, size: 18, color: Colors.grey);
+                  return PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 18, color: Colors.grey),
+                    onSelected: (value) {
+                      if (value == 'delete') _confirmDeleteSchedule(item);
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(value: 'delete', child: ListTile(
+                        leading: Icon(Icons.delete, color: Colors.red, size: 20),
+                        title: Text('Delete', style: TextStyle(color: Colors.red, fontSize: 14)),
+                        dense: true,
+                      )),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteSchedule(ScheduleItem item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Schedule Item'),
+        content: Text('Permanently delete "${item.subject}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await _firestoreService.deleteScheduleItem(item.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Schedule item deleted'), backgroundColor: Colors.green),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
@@ -344,19 +395,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   child: Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       if (auth.currentUser?.isTeacher == true) {
-                        return CircleAvatar(
-                          backgroundColor: Colors.white,
-                          child: IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => AddLessonScreen(lessonToEdit: lesson),
-                                ),
-                              );
-                            },
-                          ),
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AddLessonScreen(lessonToEdit: lesson),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                onPressed: () => _confirmDeleteLesson(lesson),
+                              ),
+                            ),
+                          ],
                         );
                       }
                       return const SizedBox.shrink();
@@ -417,6 +481,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteLesson(Lesson lesson) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Lesson'),
+        content: Text('Permanently delete "${lesson.topic}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await _firestoreService.deleteLesson(lesson.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Lesson deleted'), backgroundColor: Colors.green),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

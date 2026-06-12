@@ -13,15 +13,16 @@ class ManageAuthCodesScreen extends StatefulWidget {
 class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
   final AuthCodeService _service = AuthCodeService();
   bool _isGenerating = false;
+  AuthCodeRule _selectedRule = AuthCodeRule.predefined[0];
 
   Future<void> _generateCode(String role) async {
     setState(() => _isGenerating = true);
     final user = context.read<AuthProvider>().currentUser;
-    await _service.generateCode(role, user?.email ?? 'admin');
+    await _service.generateCode(role, user?.email ?? 'admin', rule: _selectedRule);
     if (mounted) {
       setState(() => _isGenerating = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$role code generated')),
+        SnackBar(content: Text('$role code generated (${_selectedRule.label})')),
       );
     }
   }
@@ -43,6 +44,39 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
               children: [
                 Text('Generate Registration Codes',
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<AuthCodeRule>(
+                  value: _selectedRule,
+                  decoration: InputDecoration(
+                    labelText: 'Code Rule',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: AuthCodeRule.predefined.map((r) {
+                    final desc = StringBuffer();
+                    if (r.maxUses != null) desc.write('${r.maxUses} use${r.maxUses! > 1 ? 's' : ''}');
+                    if (r.expiresAfter != null) {
+                      if (desc.isNotEmpty) desc.write(', ');
+                      if (r.expiresAfter == Duration.zero) desc.write('immediate expiry');
+                      else if (r.expiresAfter!.inHours >= 24) desc.write('${r.expiresAfter!.inDays} days');
+                      else desc.write('${r.expiresAfter!.inHours} hours');
+                    }
+                    return DropdownMenuItem(
+                      value: r,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(r.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                          if (desc.isNotEmpty)
+                            Text(desc.toString(), style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedRule = val);
+                  },
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -88,6 +122,7 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                   itemCount: codes.length,
                   itemBuilder: (context, index) {
                     final code = codes[index];
+                    final rule = AuthCodeRule.predefined.where((r) => r.id == code.ruleId).firstOrNull;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
@@ -97,12 +132,27 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                         ),
                         title: Text(code.code,
                             style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2)),
-                        subtitle: Text(
-                          '${code.role} · ${code.isUsed ? "Used by ${code.usedBy ?? 'unknown'}" : "Available"}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: code.isUsed ? Colors.grey : Colors.green,
-                          ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${code.role} · ${code.isUsed ? "Used by ${code.usedBy ?? 'unknown'}" : (code.isExpired ? "Expired" : code.isExhausted ? "Exhausted" : "Available")}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: code.isUsed || code.isExpired || code.isExhausted ? Colors.grey : Colors.green,
+                              ),
+                            ),
+                            if (rule != null)
+                              Text(
+                                rule.label,
+                                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                              ),
+                            if (code.useCount > 0 || code.maxUses != null)
+                              Text(
+                                'Used ${code.useCount}x${code.maxUses != null ? ' / ${code.maxUses}x max' : ''}',
+                                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                              ),
+                          ],
                         ),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.red),
