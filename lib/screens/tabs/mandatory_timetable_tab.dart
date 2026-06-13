@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../utils/timetable_data.dart';
 import '../../services/auth_provider.dart';
+import '../../services/class_provider.dart';
 import '../../services/notification_service.dart';
 import '../admin/manage_timetable_screen.dart';
 
@@ -24,10 +25,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     if (_initialized) return;
     final user = context.read<AuthProvider>().currentUser;
     if (user != null && user.enrolledClasses.isNotEmpty) {
-      final firstClass = user.enrolledClasses.first;
-      if (TimetableData.cohorts.containsKey(firstClass)) {
-        _selectedCohort = firstClass;
-      }
+      _selectedCohort = user.enrolledClasses.first;
     }
     _initialized = true;
   }
@@ -173,7 +171,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                           value: _selectedCohort,
                           icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
                           style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
-                          items: TimetableData.cohorts.keys.map((String cohort) {
+                          items: context.watch<ClassProvider>().availableClasses
+                              .where((c) => c != 'Global / General Assembly')
+                              .map((String cohort) {
                             return DropdownMenuItem<String>(
                               value: cohort,
                               child: Text(cohort),

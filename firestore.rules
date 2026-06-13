@@ -58,6 +58,15 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------- //
+    // Grades Collection
+    // ---------------------------------------------------- //
+    match /grades/{gradeId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isTeacherOrAbove();
+      allow delete: if isTeacherOrAbove();
+    }
+
+    // ---------------------------------------------------- //
     // Classes / Cohorts Collection + Timetable subcollection
     // ---------------------------------------------------- //
     match /classes/{classId} {

@@ -14,6 +14,7 @@ import 'help_screen.dart';
 import 'error_report_screen.dart';
 import 'feedback_screen.dart';
 import '../services/update_service.dart';
+import '../services/class_provider.dart';
 import '../utils/timetable_data.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -382,7 +383,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showClassSelector(BuildContext context, user) {
-    final classes = TimetableData.allCohortCodes;
+    final classes = context.read<ClassProvider>().availableClasses
+        .where((c) => c != 'Global / General Assembly')
+        .toList();
     String? selected;
     TextEditingController customCtrl = TextEditingController();
 

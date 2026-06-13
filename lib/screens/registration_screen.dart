@@ -9,6 +9,7 @@ import '../services/storage_service.dart';
 import '../models/user_profile.dart';
 import '../utils/timetable_data.dart';
 import '../utils/role_data.dart';
+import '../services/class_provider.dart';
 import 'home_screen.dart';
 import 'admin/admin_home_screen.dart';
 
@@ -257,7 +258,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   isExpanded: true,
                   hint: const Text('Choose your class from the timetable'),
                   items: [
-                    ...TimetableData.allCohortCodes.map((code) {
+                    ...context.read<ClassProvider>().availableClasses
+                        .where((c) => c != 'Global / General Assembly')
+                        .map((code) {
                       return DropdownMenuItem(value: code, child: Text(code, style: const TextStyle(fontSize: 14)));
                     }),
                     const DropdownMenuItem(
