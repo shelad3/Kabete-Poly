@@ -1,0 +1,2 @@
+PyQt6>=6.11
+firebase-admin>=7.4
