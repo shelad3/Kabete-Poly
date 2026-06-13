@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../utils/timetable_data.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../../services/notification_service.dart';
@@ -38,9 +37,6 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     final hasEnrolledClass = user != null && user.enrolledClasses.isNotEmpty;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final hardcodedSchedule = TimetableData.getTimetableForCohort(_selectedCohort);
-    final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-
     final firestoreRef = FirebaseFirestore.instance
         .collection('classes')
         .doc(_selectedCohort)
@@ -56,22 +52,45 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
           StreamBuilder<QuerySnapshot>(
             stream: firestoreRef.snapshots(),
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(child: Text('Error loading timetable', style: TextStyle(color: Colors.red[400])));
+              }
+
               // Build map of Firestore entries by day
-              final firestoreByDay = <String, List<Map<String, dynamic>>>{};
+              final entriesByDay = <String, List<Map<String, dynamic>>>{};
               if (snapshot.hasData) {
                 for (final doc in snapshot.data!.docs) {
                   final data = doc.data() as Map<String, dynamic>;
                   final day = data['day'] as String? ?? '';
-                  firestoreByDay.putIfAbsent(day, () => []).add(data);
+                  entriesByDay.putIfAbsent(day, () => []).add(data);
                 }
               }
 
-              return Column(
-                children: days.map((day) {
-                  final hardcoded = hardcodedSchedule[day] ?? [];
-                  final firestore = firestoreByDay[day] ?? [];
-                  if (hardcoded.isEmpty && firestore.isEmpty) return const SizedBox.shrink();
+              // Sort days by weekday order
+              final dayOrder = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4};
+              final sortedDays = entriesByDay.keys.toList()
+                ..sort((a, b) => (dayOrder[a] ?? 99).compareTo(dayOrder[b] ?? 99));
 
+              if (sortedDays.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.calendar_month, size: 64, color: Colors.grey[300]),
+                      const SizedBox(height: 16),
+                      Text('No timetable entries yet',
+                          style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                      const SizedBox(height: 8),
+                      Text('Entries will appear here once uploaded to the database.',
+                          style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                    ],
+                  ),
+                );
+              }
+
+              return Column(
+                children: sortedDays.map((day) {
+                  final entries = entriesByDay[day] ?? [];
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -86,8 +105,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                           ),
                         ),
                       ),
-                      ...hardcoded.map((lesson) => _buildMandatoryCard(lesson, day, isDark, isHardcoded: true)),
-                      ...firestore.map((lesson) => _buildMandatoryCard(lesson, day, isDark, isHardcoded: false)),
+                      ...entries.map((lesson) => _buildMandatoryCard(lesson, day, isDark)),
                       const SizedBox(height: 8),
                     ],
                   );
@@ -194,7 +212,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     );
   }
 
-  Widget _buildMandatoryCard(Map<String, dynamic> lesson, String dayString, bool isDark, {bool isHardcoded = true}) {
+  Widget _buildMandatoryCard(Map<String, dynamic> lesson, String dayString, bool isDark) {
     final Color stripColor = Color(lesson['color'] as int);
 
     return Container(
@@ -243,10 +261,6 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                                   lesson['time'],
                                   style: TextStyle(color: stripColor, fontWeight: FontWeight.bold, fontSize: 12),
                                 ),
-                                if (!isHardcoded) ...[
-                                  const SizedBox(width: 4),
-                                  Icon(Icons.cloud, size: 12, color: Colors.grey[400]),
-                                ],
                               ],
                             ),
                           ),

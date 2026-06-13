@@ -239,9 +239,14 @@ class MainWindow(QMainWindow):
         self.refresh_classes_btn.clicked.connect(self._refresh_classes)
         self.refresh_classes_btn.setStyleSheet('padding: 5px 10px;')
 
+        migrate_btn = QPushButton('Migrate Timetable')
+        migrate_btn.clicked.connect(self._migrate_timetable)
+        migrate_btn.setStyleSheet('padding: 5px 10px; background-color: #FF8F00; color: white; font-weight: bold;')
+
         top_bar.addWidget(top_label)
         top_bar.addWidget(self.class_combo)
         top_bar.addWidget(self.refresh_classes_btn)
+        top_bar.addWidget(migrate_btn)
         top_bar.addStretch()
 
         # User info label
@@ -287,6 +292,90 @@ class MainWindow(QMainWindow):
         self.grade_editor.set_class(class_id)
         self.timetable_editor.set_class(class_id)
         self.status.showMessage(f'Selected: {class_id}')
+
+    def _migrate_timetable(self):
+        """Upload timetable_export.json to Firestore."""
+        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'timetable_export.json')
+        json_path = os.path.normpath(json_path)
+
+        if not os.path.exists(json_path):
+            QMessageBox.warning(
+                self, 'File Not Found',
+                f'timetable_export.json not found.\n\n'
+                f'Looked at: {json_path}\n\n'
+                f'Generate it by running:\n'
+                f'  dart run tools/export_timetable_data.dart\n'
+                f'from the Flutter project root.',
+            )
+            return
+
+        reply = QMessageBox.question(
+            self, 'Confirm Migration',
+            'This will upload ALL hardcoded timetable entries to Firestore.\n\n'
+            'Existing timetable entries for the same classes will be replaced.\n'
+            'Continue?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        progress = QProgressDialog('Migrating timetable to Firestore...', None, 0, 0, self)
+        progress.setWindowTitle('Migration')
+        progress.setModal(True)
+        progress.show()
+        QApplication.processEvents()
+
+        try:
+            from firestore_client import FirestoreClient
+
+            with open(json_path) as f:
+                cohorts = json.load(f)
+
+            db = FirestoreClient.get()
+            total_entries = 0
+
+            for class_id, days in cohorts.items():
+                entries = []
+                for day, lessons in days.items():
+                    for lesson in lessons:
+                        entries.append({
+                            'day': day,
+                            'time': lesson.get('time', ''),
+                            'unit': lesson.get('unit', ''),
+                            'room': lesson.get('room', ''),
+                            'lecturer': lesson.get('lecturer', ''),
+                            'color': lesson.get('color', 4282339765),
+                        })
+
+                if not entries:
+                    continue
+
+                # Clear existing
+                existing = db.db.collection('classes').document(class_id).collection('timetable').list_documents()
+                for doc in existing:
+                    doc.delete()
+
+                # Batch write
+                batch = db.db.batch()
+                for entry in entries:
+                    ref = db.db.collection('classes').document(class_id).collection('timetable').document()
+                    batch.set(ref, entry)
+                batch.commit()
+                total_entries += len(entries)
+
+            progress.close()
+            QMessageBox.information(
+                self, 'Migration Complete',
+                f'{len(cohorts)} classes processed.\n'
+                f'{total_entries} timetable entries uploaded to Firestore.\n\n'
+                'Now update the Flutter app to read from Firestore only.',
+            )
+            self._refresh_classes()
+            self.status.showMessage(f'Migration done: {total_entries} entries across {len(cohorts)} classes')
+
+        except Exception as e:
+            progress.close()
+            QMessageBox.critical(self, 'Migration Failed', str(e))
 
 
 # ── App entry point ────────────────────────────────────────────────
