@@ -1,10 +1,10 @@
 """
-Upload the exported timetable_export.json to Firestore.
-Each class's timetable entries are written to classes/{classId}/timetable/{docId}.
+Upload timetable_export.json to Firestore.
+Run from admin-tool/ directory.
 
 Usage:
   source venv/bin/activate
-  python -m src.migrate_timetable --json ../../timetable_export.json
+  python migrate.py --json ../timetable_export.json --clear
 """
 
 import argparse
@@ -12,22 +12,27 @@ import json
 import sys
 import os
 
-# Ensure admin-tool/src is in the path for imports
-_src_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src')
-if _src_path not in sys.path:
-    sys.path.insert(0, _src_path)
+# Ensure src/ is in the path
+_src = os.path.join(os.path.dirname(__file__), 'src')
+sys.path.insert(0, _src)
 
-from config_manager import get_service_account_path
+from config_manager import get_service_account_path, set_service_account_path, set_web_api_key
 from firestore_client import FirestoreClient
+
+
+def sanitize_id(name: str) -> str:
+    """Firestore document IDs cannot contain slashes."""
+    return name.replace('/', ' & ').replace('\\', ' & ').strip()
 
 
 def migrate(json_path: str, clear_first: bool = False):
     sa_path = get_service_account_path()
     if not sa_path or not os.path.exists(sa_path):
         print('ERROR: Service account not configured or file missing.')
-        print('Run the admin tool first to set it up, or set config/settings.json manually.')
+        print('Set it with: python -c "import config_manager; config_manager.set_service_account_path(\'/path/to/key.json\')"')
         return
 
+    print(f'Using service account: {sa_path}')
     print('Initializing Firestore...')
     db = FirestoreClient.init_from_path(sa_path)
 
@@ -36,10 +41,14 @@ def migrate(json_path: str, clear_first: bool = False):
 
     print(f'Loaded {len(cohorts)} cohorts from JSON')
 
-    for class_id, days in cohorts.items():
-        print(f'\nProcessing {class_id}...')
-        entries = []
+    for raw_id, days in cohorts.items():
+        class_id = sanitize_id(raw_id)
+        changed = class_id != raw_id
+        print(f'\n{class_id}...', end=' ', flush=True)
+        if changed:
+            print(f'(was "{raw_id}") ', end='', flush=True)
 
+        entries = []
         for day, lessons in days.items():
             for lesson in lessons:
                 entries.append({
@@ -51,36 +60,32 @@ def migrate(json_path: str, clear_first: bool = False):
                     'color': lesson.get('color', 4282339765),
                 })
 
-        print(f'  {len(entries)} timetable entries')
+        if not entries:
+            print('skipped (no entries)')
+            continue
+
+        # Ensure the class document exists (with original name stored)
+        class_doc = db.db.collection('classes').document(class_id)
+        if not class_doc.get().exists:
+            class_doc.set({'id': class_id, '_originalName': raw_id if changed else '', 'migratedFromHardcoded': True})
+
+        ref = class_doc.collection('timetable')
 
         if clear_first:
-            # Delete existing entries
-            existing = (
-                db.db.collection('classes')
-                .document(class_id)
-                .collection('timetable')
-                .list_documents()
-            )
+            existing = ref.list_documents()
             deleted = 0
             for doc in existing:
                 doc.delete()
                 deleted += 1
             if deleted:
-                print(f'  Deleted {deleted} existing entries')
+                print(f'deleted {deleted}, ', end='')
 
-        # Batch write new entries
         batch = db.db.batch()
         for entry in entries:
-            ref = (
-                db.db.collection('classes')
-                .document(class_id)
-                .collection('timetable')
-                .document()
-            )
-            batch.set(ref, entry)
-
+            batch.set(ref.document(), entry)
         batch.commit()
-        print(f'  Uploaded {len(entries)} entries')
+
+        print(f'uploaded {len(entries)} entries')
 
     print(f'\nDone! {len(cohorts)} classes processed.')
 
