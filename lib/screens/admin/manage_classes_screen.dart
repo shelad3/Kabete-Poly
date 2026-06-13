@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../services/class_provider.dart';
-import '../../utils/timetable_data.dart';
 import 'manage_timetable_screen.dart';
 
 class ManageClassesScreen extends StatefulWidget {
@@ -29,50 +28,32 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('classes').snapshots(),
         builder: (context, snapshot) {
-          final firestoreClasses = snapshot.data?.docs.map((d) => d.id).toSet() ?? {};
-          final hardcodedClasses = TimetableData.cohorts.keys.toSet();
-          final allClasses = hardcodedClasses.union(firestoreClasses).toList()..sort();
-
-          if (allClasses.isEmpty) {
+          final firestoreClasses = snapshot.data?.docs.map((d) => d.id).toList()..sort() ?? [];
+          if (firestoreClasses.isEmpty) {
             return const Center(child: Text('No classes found'));
           }
 
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: allClasses.length,
+            itemCount: firestoreClasses.length,
             itemBuilder: (context, index) {
-              final className = allClasses[index];
-              final isHardcoded = hardcodedClasses.contains(className);
-              final isFirestore = firestoreClasses.contains(className);
-
+              final className = firestoreClasses[index];
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: isHardcoded ? Colors.blue.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.15),
-                    child: Icon(
-                      isHardcoded ? Icons.book : Icons.add_circle,
-                      color: isHardcoded ? Colors.blue : Colors.green,
-                      size: 20,
-                    ),
+                    backgroundColor: Colors.blue.withValues(alpha: 0.15),
+                    child: const Icon(Icons.school, color: Colors.blue, size: 20),
                   ),
                   title: Text(className, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(
-                    isHardcoded && isFirestore ? 'Hardcoded + Firestore' :
-                    isHardcoded ? 'Hardcoded timetable' : 'Firestore-managed',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  subtitle: const Text(
+                    'Firestore-managed',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isFirestore)
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                          tooltip: 'Delete class & all timetable data',
-                          onPressed: () => _deleteClass(context, className),
-                        ),
-                      const Icon(Icons.chevron_right, color: Colors.grey),
-                    ],
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    tooltip: 'Delete class & all timetable data',
+                    onPressed: () => _deleteClass(context, className),
                   ),
                   onTap: () {
                     Navigator.push(

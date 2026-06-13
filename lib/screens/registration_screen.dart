@@ -7,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import '../services/auth_provider.dart';
 import '../services/storage_service.dart';
 import '../models/user_profile.dart';
-import '../utils/timetable_data.dart';
 import '../utils/role_data.dart';
 import '../services/class_provider.dart';
 import 'home_screen.dart';

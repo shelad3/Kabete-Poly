@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../utils/timetable_data.dart';
 
 class ClassProvider extends ChangeNotifier {
-  List<String> availableClasses = [
-    'Global / General Assembly',
-    ...TimetableData.cohorts.keys, // Officially injected from the Mandatory PDF
-  ];
+  List<String> availableClasses = ['Global / General Assembly'];
 
   String _currentClass = 'Global / General Assembly';
 

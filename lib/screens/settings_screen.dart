@@ -15,7 +15,6 @@ import 'error_report_screen.dart';
 import 'feedback_screen.dart';
 import '../services/update_service.dart';
 import '../services/class_provider.dart';
-import '../utils/timetable_data.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
