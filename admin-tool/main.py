@@ -400,6 +400,12 @@ class App(QMainWindow):
                 w.widget().hide()
 
         if config_manager.is_configured():
+            try:
+                sa_path = config_manager.get_service_account_path()
+                FirestoreClient.init_from_path(sa_path)
+            except Exception as e:
+                QMessageBox.critical(self, 'Error', f'Failed to initialize Firestore:\n{e}')
+                return
             login = LoginScreen(self._on_logged_in)
             self.stack_layout.addWidget(login)
         else:
