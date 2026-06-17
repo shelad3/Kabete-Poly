@@ -127,3 +127,56 @@ class FirestoreClient:
             .document(entry_id)
             .delete()
         )
+
+    # ---- CSV Import Helpers ----
+
+    def timetable_entry_exists(self, class_id: str, day: str, time: str, unit: str) -> bool:
+        docs = (
+            self.db.collection('classes')
+            .document(class_id)
+            .collection('timetable')
+            .where('day', '==', day)
+            .where('time', '==', time)
+            .where('unit', '==', unit)
+            .limit(1)
+            .stream()
+        )
+        for _ in docs:
+            return True
+        return False
+
+    def import_timetable_batch(self, class_id: str, entries: list[dict]) -> int:
+        batch = self.db.batch()
+        for entry in entries:
+            ref = (
+                self.db.collection('classes')
+                .document(class_id)
+                .collection('timetable')
+                .document()
+            )
+            batch.set(ref, entry)
+        batch.commit()
+        return len(entries)
+
+    def grade_exists(self, class_id: str, subject: str, term: str, year: str, student_id: str) -> bool:
+        docs = (
+            self.db.collection('grades')
+            .where('classId', '==', class_id)
+            .where('subjectName', '==', subject)
+            .where('term', '==', term)
+            .where('academicYear', '==', year)
+            .where('studentId', '==', student_id)
+            .limit(1)
+            .stream()
+        )
+        for _ in docs:
+            return True
+        return False
+
+    def import_grades_batch(self, grades: list[dict]) -> int:
+        batch = self.db.batch()
+        for g in grades:
+            ref = self.db.collection('grades').document()
+            batch.set(ref, g)
+        batch.commit()
+        return len(grades)

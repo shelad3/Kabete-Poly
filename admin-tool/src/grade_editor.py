@@ -8,6 +8,7 @@ from PyQt6.QtGui import QColor, QBrush
 
 from firestore_client import FirestoreClient
 from models import GradeRecord, UserProfile
+from csv_import_dialog import CsvImportDialog, FieldDef
 
 TERMS = ['Term 1', 'Term 2', 'Term 3']
 
@@ -59,12 +60,20 @@ class GradeEditor(QWidget):
         self.load_btn.clicked.connect(self._load_data)
         self.load_btn.setEnabled(False)
 
+        self.import_csv_btn = QPushButton('Import CSV')
+        self.import_csv_btn.clicked.connect(self._import_csv)
+        self.import_csv_btn.setEnabled(False)
+        self.import_csv_btn.setStyleSheet(
+            'background-color: #FF8F00; color: white; padding: 8px 16px; font-weight: bold;'
+        )
+
         self.save_btn = QPushButton('Save All Grades')
         self.save_btn.clicked.connect(self._save_all)
         self.save_btn.setEnabled(False)
         self.save_btn.setStyleSheet('background-color: #4CAF50; color: white; padding: 8px 16px;')
 
         btn_row.addWidget(self.load_btn)
+        btn_row.addWidget(self.import_csv_btn)
         btn_row.addStretch()
         btn_row.addWidget(self.save_btn)
         layout.addLayout(btn_row)
@@ -102,6 +111,7 @@ class GradeEditor(QWidget):
     def _on_class_changed(self, class_id: str):
         self.current_class = class_id
         self.load_btn.setEnabled(bool(class_id))
+        self.import_csv_btn.setEnabled(bool(class_id))
 
     def _load_data(self):
         if not self.current_class:
@@ -255,6 +265,101 @@ class GradeEditor(QWidget):
             return float(item.text())
         except ValueError:
             return 0.0
+
+    def _import_csv(self):
+        if not self.current_class:
+            return
+
+        subject = self.subject_input.text().strip()
+        term = self.term_combo.currentText()
+        year = self.year_input.text().strip()
+
+        if not subject:
+            QMessageBox.warning(self, 'Missing Field', 'Please enter a subject name first.')
+            return
+        if not year:
+            QMessageBox.warning(self, 'Missing Field', 'Please enter the academic year first.')
+            return
+
+        fields = [
+            FieldDef('studentId', 'Student ID'),
+            FieldDef('regNo', 'Reg No.'),
+            FieldDef('studentName', 'Student Name'),
+            FieldDef('cat1Score', 'CAT1', default=0.0, type_hint='float'),
+            FieldDef('cat1Max', 'CAT1 Max', default=30.0, type_hint='float'),
+            FieldDef('cat2Score', 'CAT2', default=0.0, type_hint='float'),
+            FieldDef('cat2Max', 'CAT2 Max', default=30.0, type_hint='float'),
+            FieldDef('examScore', 'Exam', default=0.0, type_hint='float'),
+            FieldDef('examMax', 'Exam Max', default=40.0, type_hint='float'),
+        ]
+
+        context = {
+            'classId': self.current_class,
+            'subjectName': subject,
+            'term': term,
+            'academicYear': year,
+        }
+
+        # Pre-load students for regNo lookup
+        students = self.db.get_students_in_class(self.current_class)
+        reg_to_uid = {s.regNo: s.uid for s in students}
+        name_to_uid = {s.name: s.uid for s in students}
+
+        def checker(row):
+            sid = row.get('studentId', '').strip()
+            if not sid:
+                reg = row.get('regNo', '').strip()
+                sid = reg_to_uid.get(reg, '')
+            if not sid:
+                name = row.get('studentName', '').strip()
+                sid = name_to_uid.get(name, '')
+            if not sid:
+                return False  # can't match, treat as new
+            return self.db.grade_exists(self.current_class, subject, term, year, sid)
+
+        def importer(rows):
+            batch = []
+            for r in rows:
+                sid = r.get('studentId', '').strip()
+                if not sid:
+                    reg = r.get('regNo', '').strip()
+                    sid = reg_to_uid.get(reg, '')
+                if not sid:
+                    name = r.get('studentName', '').strip()
+                    sid = name_to_uid.get(name, '')
+                if not sid:
+                    continue  # skip unmatchable
+
+                batch.append({
+                    'studentId': sid,
+                    'studentName': r.get('studentName', ''),
+                    'regNo': r.get('regNo', ''),
+                    'classId': self.current_class,
+                    'subjectName': subject,
+                    'term': term,
+                    'academicYear': year,
+                    'cat1Score': float(r.get('cat1Score', 0)),
+                    'cat1Max': float(r.get('cat1Max', 30)),
+                    'cat2Score': float(r.get('cat2Score', 0)),
+                    'cat2Max': float(r.get('cat2Max', 30)),
+                    'examScore': float(r.get('examScore', 0)),
+                    'examMax': float(r.get('examMax', 40)),
+                    'teacherId': '',
+                    'teacherName': '',
+                    'comments': '',
+                })
+
+            count = self.db.import_grades_batch(batch)
+            skipped = len(rows) - count
+            msg = f'{skipped} row(s) skipped (could not match student).' if skipped else ''
+            return count, msg
+
+        dialog = CsvImportDialog(
+            self, self.db, self.current_class, fields,
+            checker, importer, context_fields=context,
+            title='Import Grades CSV',
+        )
+        dialog.exec()
 
     def _save_all(self):
         if not self.current_class:

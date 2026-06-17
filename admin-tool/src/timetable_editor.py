@@ -8,6 +8,7 @@ from PyQt6.QtGui import QColor
 
 from firestore_client import FirestoreClient
 from models import TimetableEntry
+from csv_import_dialog import CsvImportDialog, FieldDef
 
 DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 COLORS = {
@@ -82,12 +83,21 @@ class TimetableEditor(QWidget):
         layout.addLayout(row3)
         layout.addWidget(form_group)
 
-        # Refresh button
+        # Action buttons
         btn_row = QHBoxLayout()
         self.refresh_btn = QPushButton('Refresh Entries')
         self.refresh_btn.clicked.connect(self._load_entries)
         self.refresh_btn.setEnabled(False)
         btn_row.addWidget(self.refresh_btn)
+
+        self.import_csv_btn = QPushButton('Import CSV')
+        self.import_csv_btn.clicked.connect(self._import_csv)
+        self.import_csv_btn.setEnabled(False)
+        self.import_csv_btn.setStyleSheet(
+            'background-color: #FF8F00; color: white; padding: 8px 16px; font-weight: bold;'
+        )
+        btn_row.addWidget(self.import_csv_btn)
+
         btn_row.addStretch()
         layout.addLayout(btn_row)
 
@@ -109,6 +119,7 @@ class TimetableEditor(QWidget):
     def set_class(self, class_id: str):
         self.current_class = class_id
         self.refresh_btn.setEnabled(bool(class_id))
+        self.import_csv_btn.setEnabled(bool(class_id))
         if class_id:
             self._load_entries()
         else:
@@ -199,6 +210,45 @@ class TimetableEditor(QWidget):
             QMessageBox.critical(self, 'Error', f'Failed to save entry:\n{e}')
         finally:
             progress.close()
+
+    def _import_csv(self):
+        if not self.current_class:
+            return
+
+        fields = [
+            FieldDef('day', 'Day', required=True),
+            FieldDef('time', 'Time', required=True),
+            FieldDef('unit', 'Unit', required=True),
+            FieldDef('room', 'Room', default=''),
+            FieldDef('lecturer', 'Lecturer', default=''),
+            FieldDef('color', 'Color', default=0xFF1A237E, type_hint='int'),
+        ]
+
+        def checker(row):
+            return self.db.timetable_entry_exists(
+                self.current_class, row['day'], row['time'], row['unit'],
+            )
+
+        def importer(rows):
+            cleaned = []
+            for r in rows:
+                cleaned.append({
+                    'day': r['day'],
+                    'time': r['time'],
+                    'unit': r['unit'],
+                    'room': r.get('room', ''),
+                    'lecturer': r.get('lecturer', ''),
+                    'color': int(r.get('color', 0xFF1A237E)),
+                })
+            count = self.db.import_timetable_batch(self.current_class, cleaned)
+            self._load_entries()
+            return count, ''
+
+        dialog = CsvImportDialog(
+            self, self.db, self.current_class, fields,
+            checker, importer, title='Import Timetable CSV',
+        )
+        dialog.exec()
 
     def _delete_entry(self, row: int):
         if row < 0 or row >= len(self._entries):
