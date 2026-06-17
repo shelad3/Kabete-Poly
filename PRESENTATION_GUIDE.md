@@ -184,6 +184,292 @@ A few things to keep in mind walking in:
 
 ---
 
+## Part 8: Technical Deep Dive (Expected Questions)
+
+### "How is the data structured in Firestore?"
+
+This is the most common technical question. Know the six main collections:
+
+```
+users/{uid}
+  ├── name, email, role (Student/Teacher/Official)
+  ├── enrolledClasses: ["ICT & 610 & M25A", ...]
+  └── registrationNumber, phone, avatarUrl
+
+lessons/{lessonId}
+  ├── classId, topic, subtopic, notes, summary
+  ├── teacherId, teacherName, timestamps
+  └── fileUrls: [{name, url, type}]
+
+grades/{gradeId}
+  ├── classId, subjectName, studentId, studentName
+  ├── term, academicYear
+  └── cat1, cat2, exam (nullable integers)
+
+classes/{classId}
+  └── timetable/{entryId}         ← subcollection
+        ├── day (string: "Monday"), time (string: "8:00 - 10:00")
+        ├── unit, room, lecturer
+        └── color (int for UI badge)
+
+messages/{messageId}
+  ├── classId, channelId, senderId, senderName
+  ├── text, timestamp
+  └── type: "text" | "announcement"
+
+notifications/{notificationId}
+  ├── targetType: "class" | "user" | "registration"
+  ├── targetId, title, body
+  └── readBy: [uid1, uid2, ...]
+```
+
+**Why timetable is a subcollection:** A class may have 50+ timetable entries. Firestore documents have a 1 MiB size limit. Storing entries as an array inside the class document would hit that limit for large classes. Subcollections scale independently.
+
+**Why grades is a top-level collection:** Students are enrolled in multiple classes across different terms. A top-level collection allows querying `grades` where `studentId == X` across all classes. As a subcollection under `classes`, that query would require a collection group index.
+
+**Why messages use a flat structure:** No nested replies. Each message is independent. Threading is handled client-side by `channelId`. This keeps writes fast — no array operations that could hit the 20k writes/day free limit.
+
+---
+
+### "How do your Firestore security rules work?"
+
+Security rules are written in Firebase's custom rule language and evaluated on **every** database request — there is no client-side bypass.
+
+Key patterns in your rules:
+
+```
+// Students can only read lessons for classes they're enrolled in
+match /lessons/{lesson} {
+  allow read: if request.auth.uid != null
+    && resource.data.classId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.enrolledClasses;
+  allow write: if request.auth.token.role in ['Teacher', 'Official'];
+}
+
+// Grades: students read only their own, teachers read/write their class
+match /grades/{grade} {
+  allow read: if resource.data.studentId == request.auth.uid
+    || request.auth.token.role in ['Teacher', 'Official'];
+  allow write: if request.auth.token.role in ['Teacher', 'Official'];
+}
+
+// Timetable: anyone authenticated can read, only admins write
+match /classes/{classId}/timetable/{entry} {
+  allow read: if request.auth.uid != null;
+  allow write: if request.auth.token.role == 'Official';
+}
+
+// Messages: read if in the class, write if authenticated
+match /messages/{message} {
+  allow read: if request.auth.uid != null
+    && resource.data.classId in get(...).data.enrolledClasses;
+  allow create: if request.auth.uid != null
+    && request.resource.data.senderId == request.auth.uid;
+}
+```
+
+**Key takeaway:** Rules validate that a user's `enrolledClasses` array contains the class they're trying to read. A student in "ICT & 610 & M25A" cannot see "BMJ & 600 & S24B" lessons. Teacher and Official roles have elevated write permissions checked via `request.auth.token.role`, which is set using Firebase Custom Claims.
+
+---
+
+### "How does offline caching actually work?"
+
+```
+FirebaseFirestore.instance.settings = Settings(persistenceEnabled: true);
+```
+
+This single line enables Firestore's local cache (an embedded SQLite database on the device).
+
+**Read path:**
+1. App calls `FirebaseFirestore.instance.collection('lessons').where(...).snapshots()`
+2. Firestore returns cached data immediately (if available) — screen renders instantly
+3. Firestore simultaneously sends the request to the server
+4. When server responds, the stream fires again with fresh data → UI updates
+5. Cache is updated with server response for next offline use
+
+**Write path (when offline):**
+1. `set()` or `update()` is called
+2. Firestore queues the write in the local cache
+3. App gets an immediate success callback (optimistic update)
+4. When connectivity returns, Firestore flushes queued writes in order
+5. **Conflict resolution:** Last write wins. No merge logic.
+
+**Limitations:**
+- First load of any collection requires network — nothing to serve from cache
+- Cache has unlimited size by default, but large attachments (PDFs, images) are NOT cached; they're downloaded separately via Cloudinary URLs
+- Queries with `where('array_contains', ...)` on cached data work, but `order_by` may fail if the corresponding index isn't cached
+
+---
+
+### "How does the auto-update mechanism work?"
+
+This is a custom update system — NOT using Firebase Remote Config or in-app updates.
+
+**Flow:**
+1. App launches, `UpdateService.checkForUpdate()` runs in the background
+2. Makes a GET request to `https://api.github.com/repos/shelad3/KNP-Management-System/releases/latest`
+3. Compares the `tag_name` from the response with the current app version (`package_info_plus`)
+4. If newer → shows a dialog: "Update available (v2.x.x). Download now?"
+5. User taps Download → `http` client streams the APK from the release asset URL with a progress bar showing MB downloaded / total MB
+6. Download completes → `OpenFile.open(apkPath)` triggers the Android system package installer
+7. Before installing, the app verifies the file exists and checks its size against the `Content-Length` header from step 2 (integrity check)
+
+**Why this approach instead of Play Store:**
+- The app is not on the Play Store (costs $25 one-time fee + Google's approval process)
+- Sideloading APKs is standard practice for college-internal apps in Kenya
+- GitHub Releases gives free file hosting with a clean API
+
+---
+
+### "How do push notifications work?"
+
+**Infrastructure:** Firebase Cloud Messaging (FCM)
+
+**Registration flow:**
+1. On login, app calls `FirebaseMessaging.instance.getToken()` → gets a unique device token
+2. Token is saved to Firestore: `users/{uid}/devices/{tokenId}`
+3. App subscribes to topics: `class_INF600_M24` (one topic per class the user is enrolled in)
+4. On logout, tokens are unsubscribed and deleted
+
+**Sending flow:**
+When a teacher posts a lesson or schedules a class:
+1. Server-side Firebase Function or admin tool sends a POST to `https://fcm.googleapis.com/fcm/send`
+2. Payload targets the class topic: `"to": "/topics/class_INF600_M24"`
+3. FCM delivers to all devices subscribed to that topic
+4. Two message types:
+   - **Notification messages:** FCM handles display automatically (appears in system tray even if app is closed)
+   - **Data messages:** Custom payload processed by `FirebaseMessaging.onMessageOpenedApp` — used for deep linking (e.g., tapping a notification opens the specific lesson)
+
+**Why topics instead of individual tokens:**
+Topics scale better — one API call reaches an entire class. Individual tokens would require iterating every student and sending separate requests, which costs more in Cloud Functions execution time.
+
+---
+
+### "What would it take to deploy this at another institution?"
+
+The codebase has Kabete-specific hardcoding, but the architecture is transferable. Porting checklist:
+
+| Step | What changes | Difficulty |
+|------|-------------|-----------|
+| 1. Fork the repository | Clone the code | Easy |
+| 2. Firebase project | Create new project, enable Auth + Firestore + FCM | 30 min |
+| 3. `google-services.json` | Replace with new Firebase config | Easy |
+| 4. `firestore.rules` | Deploy same rules (no change needed) | 5 min |
+| 5. Deploy indexes | `firebase deploy --only firestore:indexes` | 5 min |
+| 6. Class data | Seed `classes` collection with new cohort names | 10 min |
+| 7. Department list | Edit `utils/role_data.dart` with new departments | Easy |
+| 8. Campus map | Update coordinates & markers in `campus_map_data.dart` | 30 min |
+| 9. App name/branding | Change app name in `AndroidManifest.xml`, update strings | 15 min |
+| 10. Admin tool | Point to new Firebase project, update Web API Key | 5 min |
+| 11. Build APK | `flutter build apk --release` | 10 min |
+| 12. Host APK | Push to GitHub Releases in the new fork | 5 min |
+
+Total time for a competent developer: **2–3 hours**.
+
+---
+
+### "How much does it cost to run?"
+
+| Service | Free Tier | Current Usage | Cost |
+|---------|-----------|---------------|------|
+| Firebase Firestore | 50k reads, 20k writes, 20k deletes/day | Well under limits | **$0** |
+| Firebase Auth | 50k monthly active users | < 500 | **$0** |
+| Firebase Cloud Messaging | Unlimited | — | **$0** |
+| Cloudinary (file storage) | 25 GB storage, 25 GB bandwidth/month | ~2 GB | **$0** |
+| GitHub Releases (APK) | Unlimited public storage | 64 MB | **$0** |
+| GitHub Pages (landing page) | Unlimited | — | **$0** |
+
+If it outgrows the Spark plan, Firestore Blaze (pay-as-you-go) costs about $0.06 per 100k reads. For a campus of 5,000 students each reading 50 documents/day = 250k reads/day = roughly $0.15/day. **Total estimated cost at scale: $5–10/month.**
+
+---
+
+### "Is user data safe? What about privacy?"
+
+- Passwords are handled entirely by Firebase Auth — you never see or store plaintext passwords
+- No sensitive personal data collected beyond name, email, registration number, and class
+- No location tracking, no camera access without explicit user action, no contact list access
+- Service account JSON (full database access) is stored on the admin's local machine, NEVER in the repository
+- `google-services.json` and `service_account*.json` are in `.gitignore`
+- Firestore rules prevent unauthorized access even if someone gets a user's auth token
+- **Backup strategy:** Firestore auto-backups exist but no manual export configured yet — documented as a future improvement
+
+---
+
+### "How does the Windows Admin Tool authenticate?"
+
+The admin tool uses a **two-layer auth** approach:
+
+1. **Firebase Auth REST API** (`signInWithPassword` endpoint):
+   - POST email + password + Web API Key to `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=WEB_API_KEY`
+   - Returns an `idToken` and user `uid`
+   - This validates the user's credentials against Firebase Auth
+
+2. **Firestore role check**:
+   - Uses the Firebase Admin SDK (service account) to query `users/{uid}`
+   - Checks that `user.role` is `Teacher`, `Official`, or `Admin`
+   - Rejects login if role is `Student`
+
+**Why both?** The REST API validates the password (Firebase Auth handles credential security). The Admin SDK reads the role (Firestore rules). Combined, they ensure only authorized personnel with valid credentials can use the tool.
+
+---
+
+### "Why Flutter and not React Native or native Java/Kotlin?"
+
+| Factor | Flutter | React Native | Native (Java/Kotlin) |
+|--------|---------|-------------|---------------------|
+| Learning curve | Dart is easy if you know any C-like language | Requires JS + React knowledge | Steep (Android SDK, lifecycle, threading) |
+| Code sharing | Single codebase for Android + future iOS | Single codebase, but bridge overhead | Separate code per platform |
+| Performance | Skia engine, 60fps out of the box | JS bridge can lag on complex UIs | Best, but more code |
+| Firebase support | First-class via `cloud_firestore`, `firebase_auth` packages | Good, but Android/iOS config separate | Good, but more boilerplate |
+| Developer experience | Hot reload, strong typing, no JS bridge | Hot reload, but JS debugging can be painful | Cold build every time |
+
+**Your actual reason:** You started with Flutter because the documentation was clear, the widget system made sense to a beginner, and you could see results immediately with hot reload. The technical advantages validated the choice later.
+
+---
+
+### "What is the most technically challenging part of the app?"
+
+Three things, in order:
+
+**1. Google Maps inside a scrollable tab**
+The campus map uses `GoogleMap` widget inside a `TabBarView` inside a `NestedScrollView`. Android's default `AndroidView` surface captures touch events and prevents the parent from scrolling. Fix: switched to `VirtualDisplay` surface mode, which composites the map as a texture instead of a native surface — touch events propagate correctly. Cost: 2 days of debugging.
+
+**2. Timetable data migration**
+The original timetable was 8,296 lines of hardcoded Dart maps. Extracting that to JSON, uploading 108 cohorts to Firestore with proper day/time indexing, and ensuring the Flutter app could read from Firestore exclusively without breaking the UI — all while maintaining offline caching. One missed index and queries fail silently.
+
+**3. Offline-first architecture**
+Making Firestore's real-time streams work seamlessly with offline persistence requires careful thought about loading states. The app must handle: (a) no cache + no network → error state, (b) cache + no network → show cached data, (c) cache + network → show cache, then live-update, (d) no cache + network → loading spinner, then live data. Each screen implements this pattern slightly differently.
+
+---
+
+## Part 9: Terminology You Should Know
+
+If someone asks about any of these, you need a one-sentence answer ready:
+
+| Term | One-sentence definition |
+|------|------------------------|
+| **Firestore** | NoSQL document database from Firebase — data is stored in collections of JSON-like documents with real-time listeners |
+| **Real-time listener** | A Firestore stream that pushes data to the app automatically whenever the database changes — no polling |
+| **Security rules** | Firebase's server-side access control language that validates every database read and write |
+| **Offline persistence** | Firestore's local cache (SQLite on device) that serves data when the network is unavailable |
+| **FCM** | Firebase Cloud Messaging — push notification service that delivers messages from server to device |
+| **FCM topic** | A named channel that devices subscribe to — send one message to the topic, all subscribers receive it |
+| **Provider** | Flutter state management library — widgets "consume" data from ChangeNotifier classes higher in the widget tree |
+| **ChangeNotifier** | A class that holds state and calls `notifyListeners()` when data changes — Provider rebuilds dependent widgets |
+| **Cloudinary** | Cloud-based file storage service — used to host PDFs and images instead of storing them in Firestore (which has a 1 MiB document limit) |
+| **Firebase Admin SDK** | Server-side library that bypasses security rules — used by the Windows admin tool for full database access |
+| **Custom Claims** | Key-value pairs on a Firebase Auth user's token (e.g., `{role: "Teacher"}`) — evaluated by security rules |
+| **GitHub Releases** | Free file hosting tied to git tags — used to distribute APK updates with a clean API for version checking |
+| **PyInstaller** | Bundles a Python app into a single .exe file so users don't need Python installed — used for the Windows admin tool |
+| **Web API Key** | Firebase project identifier used for REST API calls (NOT a secret — it's safe to include in client apps) |
+| **Service Account** | Firebase credentials JSON file that grants full server-side access to Firestore — stored locally, NEVER committed |
+| **Compound index** | A Firestore index that sorts by multiple fields (e.g., `day ASC, time ASC`) — required for `order_by` on multiple fields |
+| **Sideload** | Installing an APK directly (downloading the file and opening it) instead of through the Play Store |
+| **Hot reload** | Flutter feature that injects code changes into a running app in under a second — preserves app state |
+| **`--onefile`** | PyInstaller flag that bundles everything into a single executable with no dependency folder |
+| **VirtualDisplay** | Android surface mode that renders a native view (like Google Maps) as a texture — solves scroll conflicts inside scrollable widgets |
+
+---
+
 *Prepared for Sheldon Ramu — Kabete National Polytechnique*
-*KNP Management System — Version 2.2.0*
+*KNP Management System — Version 2.6.0*
 *June 2026*
