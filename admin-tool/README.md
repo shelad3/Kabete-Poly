@@ -6,6 +6,8 @@ Desktop app for managing timetable entries, grades, and classes in the KNP Manag
 
 ## Quick Start
 
+### Windows
+
 ```batch
 python -m venv venv
 venv\Scripts\activate
@@ -13,18 +15,28 @@ pip install -r requirements.txt
 python main.py
 ```
 
+### Linux
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+sudo apt install libxcb-cursor0   # required for PyQt6 on Ubuntu/Debian
+python main.py
+```
+
 On first launch you'll be prompted for:
 1. **Firebase service account JSON** — download from Firebase Console > Project Settings > Service Accounts > Generate new key
 2. **Firebase Web API Key** — Firebase Console > Project Settings > General > Web API Key
 
-These are saved to `%APPDATA%\KabeteAdminTool\settings.json`.
+These are saved to `~/.config/KabeteAdminTool/settings.json` (Linux) or `%APPDATA%\KabeteAdminTool\settings.json` (Windows).
 
 ---
 
 ## Requirements
 
-- Windows 10/11 (Linux/macOS works too but Qt platform plugins vary)
-- Python 3.12 or newer
+- **Windows:** 10/11, Python 3.12+
+- **Linux:** any distro with X11/Wayland, Python 3.12+, `libxcb-cursor0`
 - Internet connection (Firebase Auth + Firestore)
 
 ---
