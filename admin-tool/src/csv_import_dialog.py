@@ -193,17 +193,20 @@ class CsvImportDialog(QDialog):
 
         synonyms = {
             'reg': 'regNo', 'reg no': 'regNo', 'registration': 'regNo',
+            'regno': 'regNo',
             'adm': 'regNo', 'admission': 'regNo', 'admission no': 'regNo',
             'name': 'studentName', 'student': 'studentName', 'full name': 'studentName',
-            'student name': 'studentName',
+            'student name': 'studentName', 'studentname': 'studentName',
             'subject': 'subjectName', 'unit': 'unit', 'unit name': 'unit',
             'subject name': 'subjectName',
             'cat 1': 'cat1Score', 'cat1': 'cat1Score', 'cat1 score': 'cat1Score',
-            'cat 1 max': 'cat1Max', 'cat1 max': 'cat1Max',
+            'cat1score': 'cat1Score',
+            'cat 1 max': 'cat1Max', 'cat1 max': 'cat1Max', 'cat1max': 'cat1Max',
             'cat 2': 'cat2Score', 'cat2': 'cat2Score', 'cat2 score': 'cat2Score',
-            'cat 2 max': 'cat2Max', 'cat2 max': 'cat2Max',
-            'exam': 'examScore', 'exam score': 'examScore',
-            'exam max': 'examMax',
+            'cat2score': 'cat2Score',
+            'cat 2 max': 'cat2Max', 'cat2 max': 'cat2Max', 'cat2max': 'cat2Max',
+            'exam': 'examScore', 'exam score': 'examScore', 'examscore': 'examScore',
+            'exam max': 'examMax', 'exammax': 'examMax',
             'day': 'day', 'days': 'day',
             'time': 'time', 'period': 'time', 'start': 'time', 'start time': 'time',
             'room': 'room', 'venue': 'room', 'classroom': 'room', 'location': 'room',
@@ -230,7 +233,7 @@ class CsvImportDialog(QDialog):
                         combo.setCurrentIndex(combo.findData(i))
                         mapped.add(target)
 
-        # Second pass: partial character overlap for remaining fields
+        # Second pass: partial character overlap — pick best match
         for field in self.fields:
             if field.name in self.context_fields or field.name in mapped:
                 continue
@@ -238,14 +241,19 @@ class CsvImportDialog(QDialog):
             if combo.currentData() >= 0:
                 continue
             fset = set(field.name.lower().replace('_', '').replace(' ', ''))
+            best_i = -1
+            best_score = 0.0
             for i, col in enumerate(col_lower):
                 cset = set(col.replace('_', '').replace(' ', ''))
                 if not fset or not cset:
                     continue
                 overlap = len(fset & cset)
-                if overlap >= min(len(fset), len(cset)) * 0.6:
-                    combo.setCurrentIndex(combo.findData(i))
-                    break
+                score = overlap / max(len(fset), len(cset))
+                if score > best_score and overlap >= min(len(fset), len(cset)) * 0.6:
+                    best_score = score
+                    best_i = i
+            if best_i >= 0:
+                combo.setCurrentIndex(combo.findData(best_i))
 
     # ── Preview ──
 
