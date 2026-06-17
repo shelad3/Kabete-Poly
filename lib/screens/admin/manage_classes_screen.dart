@@ -28,7 +28,7 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('classes').snapshots(),
         builder: (context, snapshot) {
-          final firestoreClasses = snapshot.data?.docs.map((d) => d.id).toList()..sort() ?? [];
+          final firestoreClasses = (snapshot.data?.docs.map((d) => d.id).toList() ?? [])..sort();
           if (firestoreClasses.isEmpty) {
             return const Center(child: Text('No classes found'));
           }
