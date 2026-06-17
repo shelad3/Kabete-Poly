@@ -4,26 +4,20 @@ Desktop app for managing timetable entries, grades, and classes in the KNP Manag
 
 ---
 
-## Quick Start
+## Quick Start (One Command)
 
 ### Windows
-
+Double-click `setup.bat` or run in terminal:
 ```batch
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
+setup.bat
 ```
 
 ### Linux
-
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-sudo apt install libxcb-cursor0   # required for PyQt6 on Ubuntu/Debian
-python main.py
+chmod +x setup.sh && ./setup.sh
 ```
+
+The script handles everything: detects your OS, creates a virtual environment, installs dependencies, and launches the app. No need to know `python` vs `python3` or worry about paths.
 
 On first launch you'll be prompted for:
 1. **Firebase service account JSON** — download from Firebase Console > Project Settings > Service Accounts > Generate new key
