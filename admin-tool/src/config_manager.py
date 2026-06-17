@@ -4,16 +4,16 @@ Manages local configuration — service account path and Web API key.
 
 import json
 import os
+from pathlib import Path
 
-CONFIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config')
-CONFIG_PATH = os.path.join(CONFIG_DIR, 'settings.json')
+CONFIG_DIR = Path(os.environ.get('APPDATA', str(Path.home() / '.config'))) / 'KabeteAdminTool'
+CONFIG_PATH = CONFIG_DIR / 'settings.json'
 
 
 def _ensure_config():
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    if not os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, 'w') as f:
-            json.dump({'service_account_path': '', 'web_api_key': ''}, f, indent=2)
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    if not CONFIG_PATH.exists():
+        CONFIG_PATH.write_text(json.dumps({'service_account_path': '', 'web_api_key': ''}, indent=2))
 
 
 def load() -> dict:
