@@ -107,6 +107,18 @@ class KabeteApp extends StatelessWidget {
       themeMode: themeMode,
       navigatorObservers: [AnalyticsService().observer],
       home: home,
+      builder: (context, child) {
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1A237E), Color(0xFF283593)],
+            ),
+          ),
+          child: child,
+        );
+      },
     );
   }
 }
