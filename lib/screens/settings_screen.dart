@@ -144,6 +144,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 onTap: () => _showClassManagement(context, user),
               ),
+              ListTile(
+                leading: const Icon(Icons.qr_code, color: Colors.indigo),
+                title: const Text('My QR Code', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                subtitle: const Text('Show for attendance scanning', style: TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                onTap: () => _showQrCode(context, user),
+              ),
             ]),
             _buildSettingsSection(context, 'Appearance', [
               ListTile(
@@ -889,6 +896,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))
+        ],
+      ),
+    );
+  }
+
+  void _showQrCode(BuildContext context, user) {
+    final uid = context.read<AuthProvider>().currentUserId;
+    final qrUrl = 'https://api.qrserver.com/v1/create-qr-code/'
+        '?size=300x300&data=${Uri.encodeComponent(uid)}';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('My QR Code', textAlign: TextAlign.center),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Show this to your teacher for attendance scanning',
+                style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(qrUrl, width: 250, height: 250,
+                  errorBuilder: (_, __, ___) =>
+                      const Icon(Icons.qr_code, size: 200, color: Colors.grey)),
+            ),
+            const SizedBox(height: 12),
+            Text(user?.fullName ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(user?.registrationNumber ?? '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
         ],
       ),
     );

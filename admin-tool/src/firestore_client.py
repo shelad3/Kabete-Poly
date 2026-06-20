@@ -56,6 +56,21 @@ class FirestoreClient:
             return UserProfile.from_doc(doc)
         return None
 
+    def get_all_grades_for_class(self, class_id: str, term: str, academic_year: str) -> dict[str, list[GradeRecord]]:
+        """Fetch all grades for a class in a given term/year, grouped by studentId."""
+        docs = (
+            self.db.collection('grades')
+            .where('classId', '==', class_id)
+            .stream()
+        )
+        result: dict[str, list[GradeRecord]] = {}
+        for doc in docs:
+            g = GradeRecord.from_doc(doc)
+            if g.term != term or g.academicYear != academic_year:
+                continue
+            result.setdefault(g.studentId, []).append(g)
+        return result
+
     # ---- Grades ----
 
     def get_grades(self, class_id: str, subject: str, term: str, academic_year: str) -> dict[str, GradeRecord]:
