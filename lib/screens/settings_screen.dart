@@ -15,6 +15,7 @@ import 'error_report_screen.dart';
 import 'feedback_screen.dart';
 import '../services/update_service.dart';
 import '../services/class_provider.dart';
+import '../services/screenshot_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -901,36 +902,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showQrCode(BuildContext context, user) {
+  Future<void> _showQrCode(BuildContext context, user) async {
     final uid = context.read<AuthProvider>().currentUserId;
-    final qrUrl = 'https://api.qrserver.com/v1/create-qr-code/'
-        '?size=300x300&data=${Uri.encodeComponent(uid)}';
+    await ScreenshotService.enableSecure();
 
-    showDialog(
+    // Timestamp rounded to 30-second intervals so QR refreshes periodically
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final rounded = (now ~/ 30000) * 30000;
+    final qrData = '$uid|$rounded';
+
+    final qrUrl = 'https://api.qrserver.com/v1/create-qr-code/'
+        '?size=300x300&data=${Uri.encodeComponent(qrData)}';
+
+    if (!context.mounted) {
+      await ScreenshotService.disableSecure();
+      return;
+    }
+
+    await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('My QR Code', textAlign: TextAlign.center),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Show this to your teacher for attendance scanning',
-                style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(qrUrl, width: 250, height: 250,
-                  errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.qr_code, size: 200, color: Colors.grey)),
-            ),
-            const SizedBox(height: 12),
-            Text(user?.fullName ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text(user?.registrationNumber ?? '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: true,
+        child: AlertDialog(
+          title: const Text('Attendance QR Code', textAlign: TextAlign.center),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Show this to your teacher for scanning',
+                  style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(qrUrl, width: 250, height: 250,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.qr_code, size: 200, color: Colors.grey)),
+              ),
+              const SizedBox(height: 12),
+              Text(user?.fullName ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(user?.registrationNumber ?? '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              const SizedBox(height: 8),
+              Text('QR refreshes every 30s',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 10)),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-        ],
       ),
     );
+
+    await ScreenshotService.disableSecure();
   }
 }

@@ -132,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() => _currentIndex = i);
           if (i == _notifIndex) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
+            context.read<UnreadBadgeProvider>().resetAlertCount();
           }
         },
         children: _buildScreens(),
@@ -147,6 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
           if (index == _notifIndex) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
+            context.read<UnreadBadgeProvider>().resetAlertCount();
           }
         },
         type: BottomNavigationBarType.fixed,
