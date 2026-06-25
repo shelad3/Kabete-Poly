@@ -7,6 +7,7 @@ import '../../services/class_provider.dart';
 import '../../services/firestore_service.dart';
 import '../notification_screen.dart';
 import '../explore_screen.dart';
+import '../users/users_tab_screen.dart';
 import 'manage_auth_codes_screen.dart';
 import 'manage_students_screen.dart';
 import 'manage_tickets_screen.dart';
@@ -14,6 +15,8 @@ import 'admin_timetable_manager_screen.dart';
 import '../grades/manage_grades_screen.dart';
 import 'manage_alerts_screen.dart';
 import 'manage_classes_screen.dart';
+import 'lesson_verification_screen.dart';
+import 'manage_events_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -49,6 +52,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+    final isAdmin = user?.isAdmin ?? false;
+    final isTeacher = user?.isTeacher ?? false;
+    final isLeader = user?.isLeader ?? false;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin Dashboard'),
@@ -71,37 +79,74 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             _buildStatsRow(context),
             const SizedBox(height: 24),
-            _buildActionCard(context, Icons.people, 'Manage Students', '$_totalStudents registered students', Colors.blue,
+            // Users (admins only)
+            _buildActionCard(context, Icons.people, 'Browse Users', 'View all registered users by role', Colors.blue,
+              permitted: isAdmin,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UsersTabScreen())),
+            ),
+            // Manage Students (admins only)
+            _buildActionCard(context, Icons.manage_accounts, 'Manage Students', '$_totalStudents registered students', Colors.indigo,
+              permitted: isAdmin,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageStudentsScreen())),
             ),
+            // Events/Gallery Management (admins only)
+            _buildActionCard(context, Icons.photo_library, 'Event Gallery', 'Create events & upload photos', Colors.pink,
+              permitted: isAdmin,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageEventsScreen())),
+            ),
+            // Manage Lessons (all elevated)
             _buildActionCard(context, Icons.library_books, 'Manage Lessons', '$_totalLessons lessons archived', Colors.orange,
+              permitted: isTeacher,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExploreScreen())),
             ),
+            // Auth Codes (admins only)
             _buildActionCard(context, Icons.vpn_key, 'Auth Codes', 'Generate registration keys', Colors.purple,
+              permitted: isAdmin,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageAuthCodesScreen())),
             ),
+            // Timetable (all elevated)
             _buildActionCard(context, Icons.calendar_month, 'Timetable Manager', 'Add/edit schedule entries', Colors.cyan,
+              permitted: isTeacher,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminTimetableManagerScreen())),
             ),
+            // Manage Classes (admins only)
             _buildActionCard(context, Icons.class_, 'Manage Classes', 'Create & delete cohorts', Colors.deepOrange,
+              permitted: isAdmin,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageClassesScreen())),
             ),
+            // Lesson Verification (all elevated)
+            _buildActionCard(context, Icons.how_to_vote, 'Lesson Verification', 'View taught/not taught results by department', Colors.deepPurple,
+              permitted: isTeacher || isLeader,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LessonVerificationScreen())),
+            ),
+            // Manage Grades (teachers+)
             _buildActionCard(context, Icons.assignment, 'Manage Grades', 'Enter & view student grades', Colors.amber,
+              permitted: isTeacher,
               onTap: () => _selectClassAndNavigate(context),
             ),
+            // Manage Tickets (admins only)
             _buildActionCard(context, Icons.confirmation_number, 'Manage Tickets', 'Help requests, errors, feedback', Colors.teal,
+              permitted: isAdmin,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
             ),
+            // Forum Moderation (leaders+)
             _buildActionCard(context, Icons.gavel, 'Forum Moderation', '$_openTickets pending reports & tickets', Colors.red,
+              permitted: isTeacher || isLeader,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageTicketsScreen())),
             ),
+            // Announcements (teachers+)
             _buildActionCard(context, Icons.campaign, 'Announcements', 'Send push notifications', Colors.green,
+              permitted: isTeacher,
               onTap: () => _showAnnouncementDialog(context),
             ),
+            // Send Alert (admins only)
             _buildActionCard(context, Icons.notifications_active, 'Send Alert', 'Target user, class, or all', Colors.indigo,
+              permitted: isAdmin,
               onTap: () => _showAlertDialog(context),
             ),
+            // Manage Alerts (admins only)
             _buildActionCard(context, Icons.manage_history, 'Manage Alerts', 'View, edit & delete sent items', Colors.brown,
+              permitted: isAdmin,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageAlertsScreen())),
             ),
           ],
@@ -145,7 +190,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildActionCard(BuildContext context, IconData icon, String title, String subtitle, Color color, {VoidCallback? onTap}) {
+  Widget _buildActionCard(BuildContext context, IconData icon, String title, String subtitle, Color color, {bool permitted = true, VoidCallback? onTap}) {
+    if (!permitted) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: CircleAvatar(
+            backgroundColor: Colors.grey.withValues(alpha: 0.1),
+            child: Icon(icon, color: Colors.grey),
+          ),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+          subtitle: Text(subtitle, style: TextStyle(color: Colors.grey[400])),
+          trailing: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('You are not permitted to access this feature'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+      );
+    }
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -375,7 +445,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (user.isAdmin) {
       _showClassPicker(context, allClasses);
     } else {
-      final myClasses = user.enrolledClasses.where((c) => allClasses.contains(c)).toList();
+      final myClasses = user.enrolledClasses.where(allClasses.contains).toList();
       if (myClasses.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No classes assigned to your account')),

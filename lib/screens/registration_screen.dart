@@ -144,7 +144,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               
               if (widget.selectedRole != 'Student') ...[
                 DropdownButtonFormField<String>(
-                  value: _selectedDesignation,
+                  initialValue: _selectedDesignation,
                   decoration: InputDecoration(
                     labelText: widget.selectedRole == 'Teacher'
                         ? 'Department'

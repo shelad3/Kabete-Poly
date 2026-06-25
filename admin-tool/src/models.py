@@ -11,24 +11,49 @@ class GradeRecord:
     classId: str
     term: str
     academicYear: str
-    cat1Score: float = 0.0
-    cat1Max: float = 30.0
-    cat2Score: float = 0.0
-    cat2Max: float = 30.0
-    examScore: float = 0.0
-    examMax: float = 40.0
+    assessments: dict = field(default_factory=lambda: {'cat1': {'score': 0, 'max': 30}, 'cat2': {'score': 0, 'max': 30}, 'exam': {'score': 0, 'max': 100}})
     teacherId: str = ''
     teacherName: str = ''
     comments: str = ''
     doc_id: str = ''
 
     @property
+    def cat1Score(self) -> float:
+        return float(self.assessments.get('cat1', {}).get('score', 0))
+
+    @property
+    def cat1Max(self) -> float:
+        return float(self.assessments.get('cat1', {}).get('max', 30))
+
+    @property
+    def cat2Score(self) -> float:
+        return float(self.assessments.get('cat2', {}).get('score', 0))
+
+    @property
+    def cat2Max(self) -> float:
+        return float(self.assessments.get('cat2', {}).get('max', 30))
+
+    @property
+    def examScore(self) -> float:
+        return float(self.assessments.get('exam', {}).get('score', 0))
+
+    @property
+    def examMax(self) -> float:
+        return float(self.assessments.get('exam', {}).get('max', 100))
+
+    def get_score(self, name: str) -> float:
+        return float(self.assessments.get(name, {}).get('score', 0))
+
+    def get_max(self, name: str) -> float:
+        return float(self.assessments.get(name, {}).get('max', 0))
+
+    @property
     def total_score(self) -> float:
-        return self.cat1Score + self.cat2Score + self.examScore
+        return sum(a.get('score', 0) for a in self.assessments.values())
 
     @property
     def total_max(self) -> float:
-        return self.cat1Max + self.cat2Max + self.examMax
+        return sum(a.get('max', 0) for a in self.assessments.values())
 
     @property
     def percentage(self) -> float:
@@ -57,6 +82,19 @@ class GradeRecord:
     @staticmethod
     def from_doc(doc) -> 'GradeRecord':
         data = doc.to_dict()
+        assessments = data.get('assessments', {})
+        if not assessments:
+            # backward compat
+            assessments = {}
+            if float(data.get('cat1Score', 0)) > 0 or float(data.get('cat1Max', 30)) != 30:
+                assessments['cat1'] = {'score': float(data.get('cat1Score', 0)), 'max': float(data.get('cat1Max', 30))}
+            if float(data.get('cat2Score', 0)) > 0 or float(data.get('cat2Max', 30)) != 30:
+                assessments['cat2'] = {'score': float(data.get('cat2Score', 0)), 'max': float(data.get('cat2Max', 30))}
+            if float(data.get('examScore', 0)) > 0 or float(data.get('examMax', 40)) != 40:
+                assessments['exam'] = {'score': float(data.get('examScore', 0)), 'max': float(data.get('examMax', 100))}
+            if not assessments:
+                assessments = {'cat1': {'score': 0, 'max': 30}, 'cat2': {'score': 0, 'max': 30}, 'exam': {'score': 0, 'max': 100}}
+
         return GradeRecord(
             doc_id=doc.id,
             studentId=data.get('studentId', ''),
@@ -66,12 +104,7 @@ class GradeRecord:
             classId=data.get('classId', ''),
             term=data.get('term', ''),
             academicYear=data.get('academicYear', ''),
-            cat1Score=float(data.get('cat1Score', 0)),
-            cat1Max=float(data.get('cat1Max', 30)),
-            cat2Score=float(data.get('cat2Score', 0)),
-            cat2Max=float(data.get('cat2Max', 30)),
-            examScore=float(data.get('examScore', 0)),
-            examMax=float(data.get('examMax', 40)),
+            assessments=assessments,
             teacherId=data.get('teacherId', ''),
             teacherName=data.get('teacherName', ''),
             comments=data.get('comments', ''),

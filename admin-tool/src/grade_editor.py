@@ -330,6 +330,25 @@ class GradeEditor(QWidget):
                 if not sid:
                     continue  # skip unmatchable
 
+                assessments = {}
+                # Check for new assessments format (e.g. cat1.score, cat1.max)
+                if any(k.startswith('cat') or k == 'exam' for k in r.keys() if not k.endswith('.max') and not k.endswith('.score')):
+                    for key in list(r.keys()):
+                        if key.endswith('.score') or key.endswith('.max'):
+                            continue
+                        score_key = f'{key}.score'
+                        max_key = f'{key}.max'
+                        if score_key in r or max_key in r:
+                            assessments[key] = {
+                                'score': float(r.get(score_key, 0)),
+                                'max': float(r.get(max_key, 30)),
+                            }
+                else:
+                    # Backward compat: old fixed fields
+                    assessments['cat1'] = {'score': float(r.get('cat1Score', 0)), 'max': float(r.get('cat1Max', 30))}
+                    assessments['cat2'] = {'score': float(r.get('cat2Score', 0)), 'max': float(r.get('cat2Max', 30))}
+                    assessments['exam'] = {'score': float(r.get('examScore', 0)), 'max': float(r.get('examMax', 100))}
+
                 batch.append({
                     'studentId': sid,
                     'studentName': r.get('studentName', ''),
@@ -338,12 +357,7 @@ class GradeEditor(QWidget):
                     'subjectName': subject,
                     'term': term,
                     'academicYear': year,
-                    'cat1Score': float(r.get('cat1Score', 0)),
-                    'cat1Max': float(r.get('cat1Max', 30)),
-                    'cat2Score': float(r.get('cat2Score', 0)),
-                    'cat2Max': float(r.get('cat2Max', 30)),
-                    'examScore': float(r.get('examScore', 0)),
-                    'examMax': float(r.get('examMax', 40)),
+                    'assessments': assessments,
                     'teacherId': '',
                     'teacherName': '',
                     'comments': '',
@@ -360,6 +374,13 @@ class GradeEditor(QWidget):
             title='Import Grades CSV',
         )
         dialog.exec()
+
+    def _build_assessments_from_row(self, row: int) -> dict:
+        return {
+            'cat1': {'score': self._get_cell_float(row, 2), 'max': self._get_cell_float(row, 3)},
+            'cat2': {'score': self._get_cell_float(row, 4), 'max': self._get_cell_float(row, 5)},
+            'exam': {'score': self._get_cell_float(row, 6), 'max': self._get_cell_float(row, 7)},
+        }
 
     def _save_all(self):
         if not self.current_class:
@@ -394,12 +415,7 @@ class GradeEditor(QWidget):
                 classId=self.current_class,
                 term=term,
                 academicYear=year,
-                cat1Score=self._get_cell_float(row, 2),
-                cat1Max=self._get_cell_float(row, 3),
-                cat2Score=self._get_cell_float(row, 4),
-                cat2Max=self._get_cell_float(row, 5),
-                examScore=self._get_cell_float(row, 6),
-                examMax=self._get_cell_float(row, 7),
+                assessments=self._build_assessments_from_row(row),
                 doc_id=doc_id,
             )
             grades.append(grade)

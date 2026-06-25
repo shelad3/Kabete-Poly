@@ -12,7 +12,7 @@
 
 When someone asks "so who built this?", your answer matters more than you think. Do not lead with what you are not. Lead with what you did.
 
-**Good answer:**
+**Good answer:**hi
 
 > "I built it. I am in my second year of electrical engineering here at Kabete. The app started because I got tired of losing PDFs in WhatsApp groups and showing up to the wrong lab sessions. Four months later it turned into this."
 

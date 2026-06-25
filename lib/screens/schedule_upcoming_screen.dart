@@ -261,8 +261,9 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (v) {
-              if (v == 'save_template') _saveTemplate();
-              else if (v == 'load_template') _showTemplatePicker();
+              if (v == 'save_template') {
+                _saveTemplate();
+              } else if (v == 'load_template') _showTemplatePicker();
             },
             itemBuilder: (_) => [
               const PopupMenuItem(value: 'save_template', child: ListTile(

@@ -9,7 +9,7 @@ import 'notification_service.dart';
 
 class UpdateService {
   static const String _githubApiUrl =
-      "https://api.github.com/repos/shelad3/Kabete-Poly/releases/latest";
+      'https://api.github.com/repos/shelad3/Kabete-Poly/releases/latest';
 
   static const String _fileName = 'kabete_poly_update.apk';
 
@@ -51,7 +51,7 @@ class UpdateService {
           );
         }
       } else {
-        debugPrint("Failed to fetch updates. Status Code: ${response.statusCode}");
+        debugPrint('Failed to fetch updates. Status Code: ${response.statusCode}');
         if (showNoUpdateMsg && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -61,7 +61,7 @@ class UpdateService {
         }
       }
     } catch (e) {
-      debugPrint("Error checking for updates: $e");
+      debugPrint('Error checking for updates: $e');
       if (showNoUpdateMsg && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

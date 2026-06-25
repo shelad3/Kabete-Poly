@@ -132,8 +132,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
             final schedules = scheduleSnap.data ?? [];
 
             final List<FeedItem> feed = [
-              ...lessons.map((l) => FeedItem.lesson(l)),
-              ...schedules.map((s) => FeedItem.schedule(s)),
+              ...lessons.map(FeedItem.lesson),
+              ...schedules.map(FeedItem.schedule),
             ];
 
             feed.sort((a, b) => b.date.compareTo(a.date));

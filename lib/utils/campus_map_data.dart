@@ -139,7 +139,7 @@ IconData iconForType(LocationType type) {
 }
 
 final List<CampusLocation> campusLocations = [
-  CampusLocation(
+  const CampusLocation(
     id: 'bus_park',
     name: 'Bus Park / Entrance',
     description: 'Main entrance, bus drop-off, and security post at the north-west gate.',
@@ -148,7 +148,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72410,
     aliases: ['Bus Park', 'Bus Stop', 'Bus Terminal', 'Parking', 'Entrance', 'Gate'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'e_block',
     name: 'E Block (Engineering)',
     description: 'Engineering classrooms, lecture halls, and department offices.',
@@ -160,7 +160,7 @@ final List<CampusLocation> campusLocations = [
       'Engineering Block', 'Engineering',
     ],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'solar_lab',
     name: 'Solar Energy Lab',
     description: 'Solar energy research and practical training laboratory.',
@@ -169,7 +169,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72700,
     aliases: ['SOLAR LAB', 'Solar Lab', 'Solar Laboratory'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'staff_room',
     name: 'Staff Room',
     description: 'Common room and workspace for teaching staff.',
@@ -178,7 +178,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72772,
     aliases: ['Staff Room', 'Staffroom', 'Teachers Lounge'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'admin_block',
     name: 'Administration Block',
     description: 'Principal\'s office, Deputy Principal, HOD offices, and main administrative staff.',
@@ -187,7 +187,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72835,
     aliases: ['Admin Block', 'Admin Office', 'Administration'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'electronics_lab',
     name: 'Electronics Lab',
     description: 'Electronics and circuit design laboratory.',
@@ -196,7 +196,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72700,
     aliases: ['Electronics Lab', 'Electronics Laboratory'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'library',
     name: 'Library',
     description: 'Main campus library with books, journals, and study areas.',
@@ -205,7 +205,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72814,
     aliases: ['Library', 'Library Block'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'smart_lab',
     name: 'Smart Lab',
     description: 'Modern smart classroom with digital learning technology.',
@@ -214,7 +214,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72891,
     aliases: ['Smart Lab', 'Smart Laboratory'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'computer_lab',
     name: 'Computer Lab',
     description: 'Computer laboratory for ICT and programming practicals.',
@@ -223,7 +223,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72959,
     aliases: ['Computer Lab', 'Computer Laboratory', 'ICT Lab'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'hostel_a',
     name: 'Hostel A (Male)',
     description: 'Male students\' residential hostel.',
@@ -232,7 +232,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.73000,
     aliases: ['Hostel A', 'Male Hostel', 'Boys Hostel'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'main_hall',
     name: 'Main Hall',
     description: 'Multipurpose hall for assemblies, events, and examinations.',
@@ -241,7 +241,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72679,
     aliases: ['Hall', 'Main Hall', 'Assembly Hall', 'Exam Hall'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'electrical_workshop',
     name: 'Electrical Workshop',
     description: 'Hands-on electrical installation and wiring workshop.',
@@ -250,7 +250,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72710,
     aliases: ['Electrical Workshop', 'Workshop'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'machines_lab',
     name: 'Machines Laboratory',
     description: 'Electrical machines and equipment testing laboratory.',
@@ -259,7 +259,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72938,
     aliases: ['MACHINES LAB (E Block)', 'Machines Lab', 'Machine Lab'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'hostel_b',
     name: 'Hostel B (Female)',
     description: 'Female students\' residential hostel with courtyard.',
@@ -268,7 +268,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72824,
     aliases: ['Hostel B', 'Female Hostel', 'Girls Hostel'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'hod_offices',
     name: 'HOD Offices',
     description: 'Heads of Department offices for Engineering, ICT, and Business.',
@@ -277,7 +277,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72876,
     aliases: ['HOD', 'HOD Offices', 'Department Offices', 'Dept Office'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'med_bay',
     name: 'Med Bay',
     description: 'Campus health center providing first aid and basic medical care.',
@@ -286,7 +286,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72948,
     aliases: ['Med Bay', 'Medical Bay', 'Health Center', 'Clinic', 'Sick Bay'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'workshop_outside',
     name: 'Workshop (Outside Setup)',
     description: 'Outdoor practical workshop area for field installations.',
@@ -295,7 +295,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72514,
     aliases: ['Workshop (Outside Setup)', 'Outside Workshop', 'External Workshop'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'sports_field',
     name: 'Sports Field',
     description: 'Athletics oval track and football pitch with grass infield.',
@@ -304,7 +304,7 @@ final List<CampusLocation> campusLocations = [
     lng: 36.72400,
     aliases: ['Sports Field', 'Football Field', 'Pitch', 'Playground', 'Field', 'Track'],
   ),
-  CampusLocation(
+  const CampusLocation(
     id: 'cafeteria',
     name: 'Cafeteria',
     description: 'Student and staff dining area serving meals and refreshments.',

@@ -97,7 +97,7 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
 
         final users = snapshot.data!.docs
             .map((d) => UserProfile.fromJson(d.data() as Map<String, dynamic>))
-            .where((u) => _matchesSearch(u))
+            .where(_matchesSearch)
             .toList()
           ..sort((a, b) => a.fullName.compareTo(b.fullName));
 

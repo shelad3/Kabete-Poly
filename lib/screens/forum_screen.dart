@@ -227,7 +227,7 @@ class _ForumScreenState extends State<ForumScreen> {
       ),
       body: Selector<ClassProvider, String>(
         selector: (_, cp) => cp.currentClass,
-        builder: (_, currentClass, __) {
+        builder: (_, currentClass, _) {
           return _buildCurrentView(currentClass);
         },
       ),

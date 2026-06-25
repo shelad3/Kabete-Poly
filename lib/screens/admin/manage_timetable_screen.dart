@@ -132,7 +132,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
                   const Text('Add Timetable Entry', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedDay,
+                    initialValue: selectedDay,
                     decoration: const InputDecoration(labelText: 'Day', prefixIcon: Icon(Icons.calendar_today)),
                     items: _days.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
                     onChanged: (v) => setSheetState(() => selectedDay = v!),
@@ -197,7 +197,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
         content: const Text('Are you sure you want to delete this timetable entry?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete'), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white)),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white), child: const Text('Delete')),
         ],
       ),
     );

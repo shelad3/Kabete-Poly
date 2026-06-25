@@ -25,9 +25,9 @@ from models import GradeRecord
 
 class ReportCardWorker(QThread):
     progress = pyqtSignal(int, str)
-    done = pyqtSignal(int, int, str)
+    done = pyqtSignal(int, int, int, str)
 
-    def __init__(self, students, grades_by_student, class_id, term, year, output_dir, subjects):
+    def __init__(self, students, grades_by_student, class_id, term, year, output_dir, subjects, upload_to_firebase=False):
         super().__init__()
         self.students = students
         self.grades_by_student = grades_by_student
@@ -36,10 +36,14 @@ class ReportCardWorker(QThread):
         self.year = year
         self.output_dir = output_dir
         self.subjects = subjects
+        self.upload_to_firebase = upload_to_firebase
 
     def run(self):
         total = len(self.students)
         errors = 0
+        uploaded = 0
+
+        db = FirestoreClient.get() if self.upload_to_firebase else None
 
         for i, student in enumerate(self.students):
             try:
@@ -47,12 +51,19 @@ class ReportCardWorker(QThread):
                     student, self.grades_by_student.get(student.uid, []),
                     self.class_id, self.term, self.year, self.output_dir, self.subjects,
                 )
+                if self.upload_to_firebase and db:
+                    url = db.upload_report_pdf(
+                        path, student.uid, student.regNo,
+                        self.class_id, self.term, self.year,
+                    )
+                    if url:
+                        uploaded += 1
                 self.progress.emit(i + 1, f'{student.regNo} - {student.name}')
             except Exception as e:
                 errors += 1
                 self.progress.emit(i + 1, f'ERROR: {student.regNo} - {e}')
 
-        self.done.emit(total, errors, self.output_dir)
+        self.done.emit(total, errors, uploaded, self.output_dir)
 
 
 def generate_pdf(student, grades, class_id, term, year, output_dir, subjects):
@@ -85,20 +96,48 @@ def generate_pdf(student, grades, class_id, term, year, output_dir, subjects):
     for g in grades:
         grade_map[g.subjectName] = g
 
-    # ── Table ──
-    col_w = [52, 22, 22, 22, 24, 20, 28]
-    headers = ['Subject', 'CAT1', 'CAT2', 'Exam', 'Total', '%', 'Grade']
+    # ── Gather all unique assessment types across all grades ──
+    all_assessment_keys: list[str] = []
+    for g in grades:
+        for key in g.assessments.keys():
+            if key not in all_assessment_keys:
+                all_assessment_keys.append(key)
+    # Sort: cats first, then exam last
+    cat_keys = sorted([k for k in all_assessment_keys if k.startswith('cat') or k.startswith('CAT')],
+                      key=lambda x: int(''.join(filter(str.isdigit, x)) or 0))
+    other_keys = [k for k in all_assessment_keys if k not in cat_keys and k != 'exam']
+    exam_keys = ['exam'] if 'exam' in all_assessment_keys else []
+    sorted_keys = cat_keys + other_keys + exam_keys
+
+    # ── Build column layout ──
+    def assessment_label(key: str) -> str:
+        if key == 'exam':
+            return 'Exam'
+        if key.startswith('cat') or key.startswith('CAT'):
+            n = ''.join(filter(str.isdigit, key))
+            return f'CAT{n}' if n else key.upper()
+        return key.upper()
+
+    # Fixed: Subject(46) + assess columns(22 each) + Total(24) + %(18) + Grade(20)
+    num_assess = max(len(sorted_keys), 1)  # at least 1
+    assess_w = 22
+    subject_w = 46
+    total_w = 24
+    pct_w = 18
+    grade_w = 20
+    col_w = [subject_w] + [assess_w] * num_assess + [total_w, pct_w, grade_w]
+    headers = ['Subject'] + [assessment_label(k) for k in sorted_keys] + ['Total', '%', 'Grade']
 
     # Table header
     pdf.set_fill_color(26, 35, 126)
     pdf.set_text_color(255, 255, 255)
-    pdf.set_font('Helvetica', 'B', 9)
+    pdf.set_font('Helvetica', 'B', 8)
     for j, h in enumerate(headers):
         pdf.cell(col_w[j], 8, h, border=1, align='C', fill=True)
     pdf.ln()
 
     pdf.set_text_color(0, 0, 0)
-    pdf.set_font('Helvetica', '', 9)
+    pdf.set_font('Helvetica', '', 8)
 
     grand_total_score = 0.0
     grand_total_max = 0.0
@@ -119,13 +158,15 @@ def generate_pdf(student, grades, class_id, term, year, output_dir, subjects):
         grand_total_score += ts
         grand_total_max += tm
 
-        row = [subj[:20],
-               f'{g.cat1Score:.0f}/{g.cat1Max:.0f}' if g else '-',
-               f'{g.cat2Score:.0f}/{g.cat2Max:.0f}' if g else '-',
-               f'{g.examScore:.0f}/{g.examMax:.0f}' if g else '-',
-               f'{ts:.0f}/{tm:.0f}',
-               f'{pct:.0f}' if g else '-',
-               grade]
+        row = [subj[:18]]
+        for key in sorted_keys:
+            if g:
+                row.append(f'{g.get_score(key):.0f}/{g.get_max(key):.0f}')
+            else:
+                row.append('-')
+        row += [f'{ts:.0f}/{tm:.0f}',
+                f'{pct:.0f}' if g else '-',
+                grade]
 
         for j, val in enumerate(row):
             pdf.cell(col_w[j], 7, str(val), border=1, align='C')
@@ -134,9 +175,9 @@ def generate_pdf(student, grades, class_id, term, year, output_dir, subjects):
     # Total row
     overall_pct = (grand_total_score / grand_total_max * 100) if grand_total_max > 0 else 0
     overall_grade = _letter_grade(overall_pct)
-    total_row = ['TOTAL', '', '', '',
-                 f'{grand_total_score:.0f}/{grand_total_max:.0f}',
-                 f'{overall_pct:.0f}', overall_grade]
+    total_row = ['TOTAL'] + [''] * num_assess + [
+        f'{grand_total_score:.0f}/{grand_total_max:.0f}',
+        f'{overall_pct:.0f}', overall_grade]
     pdf.set_font('Helvetica', 'B', 9)
     pdf.set_fill_color(230, 230, 250)
     for j, val in enumerate(total_row):
@@ -230,6 +271,10 @@ class ReportCardGenerator(QWidget):
         self.load_btn.clicked.connect(self._load_data)
         self.load_btn.setStyleSheet('padding: 5px 15px;')
         controls.addWidget(self.load_btn)
+
+        self.upload_cb = QCheckBox('Auto-upload to Firestore')
+        self.upload_cb.setToolTip('Upload generated PDFs to Firebase Storage and save references in reports collection')
+        controls.addWidget(self.upload_cb)
 
         self.generate_btn = QPushButton('Generate All PDFs')
         self.generate_btn.clicked.connect(self._generate_all)
@@ -366,6 +411,7 @@ class ReportCardGenerator(QWidget):
 
         self._worker = ReportCardWorker(
             selected, self._grades_cache, class_id, term, year, output_dir, self._subjects,
+            upload_to_firebase=self.upload_cb.isChecked(),
         )
         self._worker.progress.connect(self._on_progress)
         self._worker.done.connect(self._on_done)
@@ -376,13 +422,14 @@ class ReportCardGenerator(QWidget):
             self.progress.setLabelText(text)
             self.progress.setValue(value)
 
-    def _on_done(self, total: int, errors: int, output_dir: str):
+    def _on_done(self, total: int, errors: int, uploaded: int, output_dir: str):
         self.progress.close()
         self.generate_btn.setEnabled(True)
+        upload_msg = f'\n{uploaded} uploaded to Firestore.' if uploaded else ''
         QMessageBox.information(
             self, 'Complete',
             f'{total} report card(s) generated.\n'
-            f'{errors} error(s).\n\n'
+            f'{errors} error(s).{upload_msg}\n\n'
             f'Saved to:\n{output_dir}'
         )
         self._worker = None

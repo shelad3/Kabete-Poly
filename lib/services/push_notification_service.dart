@@ -32,7 +32,7 @@ class PushNotificationService {
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     await _localNotif.initialize(
-      settings: InitializationSettings(android: androidSettings),
+      settings: const InitializationSettings(android: androidSettings),
     );
 
     _fcmToken = await _fcm.getToken();

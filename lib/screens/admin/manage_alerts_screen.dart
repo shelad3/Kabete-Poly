@@ -430,7 +430,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirm Delete'),
-        content: Text('Delete this ${type} permanently?'),
+        content: Text('Delete this $type permanently?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(

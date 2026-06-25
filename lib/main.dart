@@ -1,9 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
-import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'services/auth_provider.dart';
@@ -22,30 +22,29 @@ import 'screens/onboarding_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final GoogleMapsFlutterPlatform mapsPlatform = GoogleMapsFlutterPlatform.instance;
-  if (mapsPlatform is GoogleMapsFlutterAndroid) {
-    mapsPlatform.useAndroidViewSurface = false;
-  }
-
-  await Firebase.initializeApp();
-
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  try {
-    await FirebaseFirestore.instance.enableNetwork();
-  } catch (_) {
-    // offline — Firestore will use local cache
+  if (!kIsWeb) {
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+
+    try {
+      await FirebaseFirestore.instance.enableNetwork();
+    } catch (_) {
+      // offline — Firestore will use local cache
+    }
+
+    final NotificationService notificationService = NotificationService();
+    await notificationService.init();
+    await notificationService.requestPermissions();
+
+    final PushNotificationService pushService = PushNotificationService();
+    await pushService.init();
   }
-
-  final NotificationService notificationService = NotificationService();
-  await notificationService.init();
-  await notificationService.requestPermissions();
-
-  final PushNotificationService pushService = PushNotificationService();
-  await pushService.init();
 
   runApp(
     MultiProvider(

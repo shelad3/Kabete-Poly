@@ -10,7 +10,7 @@ import '../widgets/app_drawer.dart';
 import '../widgets/shimmer_loading.dart';
 
 class NotificationScreen extends StatefulWidget {
-  NotificationScreen({super.key});
+  const NotificationScreen({super.key});
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();

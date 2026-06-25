@@ -98,7 +98,7 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
                                 ),
                               ),
-                              ...dayItems.map((item) => _buildScheduleCard(item)),
+                              ...dayItems.map(_buildScheduleCard),
                               const SizedBox(height: 16),
                             ],
                           );

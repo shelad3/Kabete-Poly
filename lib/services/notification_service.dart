@@ -80,7 +80,7 @@ class NotificationService {
 
   /// Show notification that download is complete and ready to install
   Future<void> showDownloadCompleteNotification(String filePath) async {
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final AndroidNotificationDetails androidDetails = const AndroidNotificationDetails(
       'apk_downloads',
       'App Updates',
       channelDescription: 'APK download progress for app updates',

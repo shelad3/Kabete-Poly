@@ -143,11 +143,14 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1A237E), Color(0xFF283593)],
+            colors: [
+              Theme.of(context).primaryColor,
+              Color.lerp(Theme.of(context).primaryColor, Colors.black, 0.3)!,
+            ],
           ),
         ),
         child: SafeArea(
@@ -165,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 32),
               const Text(
-                'KNP Management System',
+                'Kabete National Polytechnique',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -175,7 +178,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Kabete National Polytechnique\nManagement System',
+                'Bidii Na Uanimifu',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,

@@ -1,11 +1,11 @@
 {
-    "name": "kabete2026eiteet",
-    "short_name": "kabete2026eiteet",
+    "name": "Kabete Poly",
+    "short_name": "Kabete Poly",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1A237E",
+    "theme_color": "#1A237E",
+    "description": "Kabete National Polytechnique - Class Archive App",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

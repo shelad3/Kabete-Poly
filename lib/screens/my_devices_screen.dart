@@ -82,7 +82,7 @@ class MyDevicesScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: isCurrent ? BorderSide(color: Colors.green, width: 2) : BorderSide.none,
+        side: isCurrent ? const BorderSide(color: Colors.green, width: 2) : BorderSide.none,
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

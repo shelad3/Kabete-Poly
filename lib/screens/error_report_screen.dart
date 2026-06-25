@@ -112,15 +112,15 @@ class _ErrorReportScreenState extends State<ErrorReportScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
-                        Icon(Icons.person, size: 16, color: Colors.grey),
+                        const Icon(Icons.person, size: 16, color: Colors.grey),
                         const SizedBox(width: 8),
-                        Text('${user?.fullName ?? "You"}', style: const TextStyle(color: Colors.grey)),
+                        Text(user?.fullName ?? "You", style: const TextStyle(color: Colors.grey)),
                       ]),
                       const SizedBox(height: 4),
                       Row(children: [
-                        Icon(Icons.email, size: 16, color: Colors.grey),
+                        const Icon(Icons.email, size: 16, color: Colors.grey),
                         const SizedBox(width: 8),
-                        Text('${user?.email ?? ""}', style: const TextStyle(color: Colors.grey)),
+                        Text(user?.email ?? "", style: const TextStyle(color: Colors.grey)),
                       ]),
                     ],
                   ),

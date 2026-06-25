@@ -8,7 +8,7 @@ import '../models/ticket.dart';
 class UnreadBadgeProvider extends ChangeNotifier {
   int _notificationCount = 0;
   int _alertCount = 0;
-  int _forumCount = 0;
+  final int _forumCount = 0;
 
   int get totalUnread => _notificationCount + _alertCount + _forumCount;
   int get unreadNotifications => _notificationCount;

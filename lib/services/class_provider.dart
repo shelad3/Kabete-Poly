@@ -17,7 +17,7 @@ class ClassProvider extends ChangeNotifier {
       final snapshot = await FirebaseFirestore.instance.collection('classes').get();
       _mergeFirestoreClasses(snapshot.docs.map((d) => d.id).toList());
     } catch (e) {
-      debugPrint("Class Provider failed to fetch dynamic classes: $e");
+      debugPrint('Class Provider failed to fetch dynamic classes: $e');
     }
   }
 

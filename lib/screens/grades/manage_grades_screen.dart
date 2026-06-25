@@ -25,122 +25,182 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
   }
 
   void _showGradeEditor(GradeRecord? existing, String studentId, String studentName) {
-    final cat1Ctrl = TextEditingController(text: existing?.cat1Score.toStringAsFixed(0) ?? '');
-    final cat2Ctrl = TextEditingController(text: existing?.cat2Score.toStringAsFixed(0) ?? '');
-    final examCtrl = TextEditingController(text: existing?.examScore.toStringAsFixed(0) ?? '');
-    final commentCtrl = TextEditingController(text: existing?.comments ?? '');
+    final subjectCtrl = TextEditingController(text: existing?.subjectName ?? '');
     final termCtrl = TextEditingController(text: existing?.term ?? 'Term 1');
     final yearCtrl = TextEditingController(text: existing?.academicYear ?? '2026');
-    final subjectCtrl = TextEditingController(text: existing?.subjectName ?? '');
+    final commentCtrl = TextEditingController(text: existing?.comments ?? '');
     final formKey = GlobalKey<FormState>();
+
+    // Dynamic assessment entries
+    final assessmentKeys = <String>[];
+    final scoreCtrls = <String, TextEditingController>{};
+    final maxCtrls = <String, TextEditingController>{};
+
+    if (existing != null) {
+      existing.assessments.forEach((key, entry) {
+        assessmentKeys.add(key);
+        scoreCtrls[key] = TextEditingController(text: entry.score.toStringAsFixed(0));
+        maxCtrls[key] = TextEditingController(text: entry.max.toStringAsFixed(0));
+      });
+    } else {
+      assessmentKeys.addAll(['cat1', 'cat2', 'exam']);
+      scoreCtrls['cat1'] = TextEditingController();
+      maxCtrls['cat1'] = TextEditingController(text: '30');
+      scoreCtrls['cat2'] = TextEditingController();
+      maxCtrls['cat2'] = TextEditingController(text: '30');
+      scoreCtrls['exam'] = TextEditingController();
+      maxCtrls['exam'] = TextEditingController(text: '100');
+    }
+
+    void rebuild() => setState(() {});
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(existing != null ? 'Edit Grade' : 'Add Grade'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Student: $studentName', style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: subjectCtrl,
-                  decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder()),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-                ),
-                const SizedBox(height: 12),
-                Row(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDState) {
+          return AlertDialog(
+            title: Text(existing != null ? 'Edit Grade' : 'Add Grade'),
+            content: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: cat1Ctrl,
-                        decoration: const InputDecoration(labelText: 'CAT 1 (0-30)', border: OutlineInputBorder()),
-                        keyboardType: TextInputType.number,
-                        validator: (v) => v != null && double.tryParse(v) == null ? 'Invalid' : null,
-                      ),
+                    Text('Student: $studentName', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: subjectCtrl,
+                      decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder()),
+                      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextFormField(
-                        controller: cat2Ctrl,
-                        decoration: const InputDecoration(labelText: 'CAT 2 (0-30)', border: OutlineInputBorder()),
-                        keyboardType: TextInputType.number,
-                        validator: (v) => v != null && double.tryParse(v) == null ? 'Invalid' : null,
-                      ),
+                    const SizedBox(height: 12),
+                    ...assessmentKeys.map((key) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 70,
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  labelText: 'Name',
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                                initialValue: key,
+                                enabled: false,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: TextFormField(
+                                controller: scoreCtrls[key],
+                                decoration: const InputDecoration(labelText: 'Score', border: OutlineInputBorder(), isDense: true),
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: TextFormField(
+                                controller: maxCtrls[key],
+                                decoration: const InputDecoration(labelText: 'Max', border: OutlineInputBorder(), isDense: true),
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            if (assessmentKeys.length > 1)
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle, color: Colors.red, size: 20),
+                                onPressed: () {
+                                  setDState(() {
+                                    assessmentKeys.remove(key);
+                                    scoreCtrls.remove(key);
+                                    maxCtrls.remove(key);
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                    TextButton.icon(
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Add Assessment (CAT, Exam, etc.)'),
+                      onPressed: () {
+                        final name = 'cat${assessmentKeys.length + 1}';
+                        setDState(() {
+                          assessmentKeys.add(name);
+                          scoreCtrls[name] = TextEditingController();
+                          maxCtrls[name] = TextEditingController(text: '30');
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: termCtrl,
+                            decoration: const InputDecoration(labelText: 'Term', border: OutlineInputBorder(), isDense: true),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: yearCtrl,
+                            decoration: const InputDecoration(labelText: 'Year', border: OutlineInputBorder(), isDense: true),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: commentCtrl,
+                      decoration: const InputDecoration(labelText: 'Comments (optional)', border: OutlineInputBorder()),
+                      maxLines: 2,
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: examCtrl,
-                  decoration: const InputDecoration(labelText: 'Exam Score (0-40)', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => v != null && double.tryParse(v) == null ? 'Invalid' : null,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: termCtrl,
-                        decoration: const InputDecoration(labelText: 'Term', border: OutlineInputBorder()),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextFormField(
-                        controller: yearCtrl,
-                        decoration: const InputDecoration(labelText: 'Year', border: OutlineInputBorder()),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: commentCtrl,
-                  decoration: const InputDecoration(labelText: 'Comments (optional)', border: OutlineInputBorder()),
-                  maxLines: 2,
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final grade = GradeRecord(
-                id: existing?.id ?? '',
-                studentId: studentId,
-                studentName: studentName,
-                subjectName: subjectCtrl.text,
-                classId: widget.classId,
-                term: termCtrl.text,
-                academicYear: yearCtrl.text,
-                cat1Score: double.tryParse(cat1Ctrl.text) ?? 0,
-                cat1Max: 30,
-                cat2Score: double.tryParse(cat2Ctrl.text) ?? 0,
-                cat2Max: 30,
-                examScore: double.tryParse(examCtrl.text) ?? 0,
-                examMax: 40,
-                teacherId: context.read<AuthProvider>().currentUserId,
-                teacherName: context.read<AuthProvider>().currentUser?.fullName ?? '',
-                comments: commentCtrl.text,
-              );
-              if (existing != null) {
-                await _service.saveGrade(grade);
-              } else {
-                await _service.createGrade(grade);
-              }
-              if (ctx.mounted) Navigator.pop(ctx);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+
+                  final assessments = <String, AssessmentEntry>{};
+                  for (final key in assessmentKeys) {
+                    final score = double.tryParse(scoreCtrls[key]?.text ?? '') ?? 0;
+                    final max = double.tryParse(maxCtrls[key]?.text ?? '') ?? 0;
+                    assessments[key] = AssessmentEntry(score: score, max: max);
+                  }
+
+                  final grade = GradeRecord(
+                    id: existing?.id ?? '',
+                    studentId: studentId,
+                    studentName: studentName,
+                    subjectName: subjectCtrl.text,
+                    classId: widget.classId,
+                    term: termCtrl.text,
+                    academicYear: yearCtrl.text,
+                    assessments: assessments,
+                    teacherId: context.read<AuthProvider>().currentUserId,
+                    teacherName: context.read<AuthProvider>().currentUser?.fullName ?? '',
+                    comments: commentCtrl.text,
+                  );
+                  if (existing != null) {
+                    await _service.saveGrade(grade);
+                  } else {
+                    await _service.createGrade(grade);
+                  }
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -237,15 +297,21 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                             subtitle: Text('$regNo · ${studentGrades.length} subjects${avg != null ? ' · Avg: ${avg.toStringAsFixed(1)}%' : ''}',
                                 style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                             children: [
-                              ...studentGrades.map((g) => ListTile(
-                                dense: true,
-                                title: Text(g.subjectName),
-                                subtitle: Text('${g.grade} · ${g.totalScore}/${g.totalMax} (${g.percentage.toStringAsFixed(1)}%) · ${g.term}'),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.edit, size: 18),
-                                  onPressed: () => _showGradeEditor(g, sid, name.toString()),
-                                ),
-                              )),
+                              ...studentGrades.map((g) {
+                                final assessmentsStr = g.assessments.entries.map((e) =>
+                                  '${e.key}: ${e.value.score.toStringAsFixed(0)}/${e.value.max.toStringAsFixed(0)}'
+                                ).join(' | ');
+                                return ListTile(
+                                  dense: true,
+                                  title: Text(g.subjectName),
+                                  subtitle: Text('$assessmentsStr\n${g.grade} · ${g.percentage.toStringAsFixed(1)}% · ${g.term} ${g.academicYear}'),
+                                  isThreeLine: true,
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.edit, size: 18),
+                                    onPressed: () => _showGradeEditor(g, sid, name.toString()),
+                                  ),
+                                );
+                              }),
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                                 child: TextButton.icon(

@@ -102,8 +102,9 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
           if (widget.lessonToEdit == null)
             PopupMenuButton<String>(
               onSelected: (v) {
-                if (v == 'save_template') _saveTemplate();
-                else if (v == 'load_template') _showTemplatePicker();
+                if (v == 'save_template') {
+                  _saveTemplate();
+                } else if (v == 'load_template') _showTemplatePicker();
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(value: 'save_template', child: ListTile(

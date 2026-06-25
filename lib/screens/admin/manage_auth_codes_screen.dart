@@ -46,7 +46,7 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<AuthCodeRule>(
-                  value: _selectedRule,
+                  initialValue: _selectedRule,
                   decoration: InputDecoration(
                     labelText: 'Code Rule',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -57,8 +57,9 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                     if (r.maxUses != null) desc.write('${r.maxUses} use${r.maxUses! > 1 ? 's' : ''}');
                     if (r.expiresAfter != null) {
                       if (desc.isNotEmpty) desc.write(', ');
-                      if (r.expiresAfter == Duration.zero) desc.write('immediate expiry');
-                      else if (r.expiresAfter!.inHours >= 24) desc.write('${r.expiresAfter!.inDays} days');
+                      if (r.expiresAfter == Duration.zero) {
+                        desc.write('immediate expiry');
+                      } else if (r.expiresAfter!.inHours >= 24) desc.write('${r.expiresAfter!.inDays} days');
                       else desc.write('${r.expiresAfter!.inHours} hours');
                     }
                     return DropdownMenuItem(

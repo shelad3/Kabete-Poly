@@ -4,6 +4,7 @@ import '../services/firestore_service.dart';
 import '../services/class_provider.dart';
 import '../services/auth_provider.dart';
 import '../models/schedule_item.dart';
+import '../services/lesson_verification_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import '../widgets/app_drawer.dart';
@@ -31,6 +32,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
   String? _highlightLabel;
 
   final FirestoreService _firestoreService = FirestoreService();
+  final LessonVerificationService _verificationService = LessonVerificationService();
+  final Map<String, bool?> _voteStates = {};
 
   @override
   void initState() {
@@ -110,9 +113,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
           indicatorColor: Theme.of(context).colorScheme.primary,
           indicatorWeight: 3,
           tabs: const [
-            Tab(text: "Mandatory", icon: Icon(Icons.assignment_turned_in)),
-            Tab(text: "Target Timeline", icon: Icon(Icons.timeline)),
-            Tab(text: "Map", icon: Icon(Icons.map)),
+            Tab(text: 'Mandatory', icon: Icon(Icons.assignment_turned_in)),
+            Tab(text: 'Target Timeline', icon: Icon(Icons.timeline)),
+            Tab(text: 'Map', icon: Icon(Icons.map)),
           ],
         ),
       ),
@@ -123,6 +126,111 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
           const MandatoryTimetableTab(),
           _buildTargetTimelineTab(),
           _buildMapTab(),
+        ],
+      ),
+    );
+  }
+
+  String _lessonKey(ScheduleItem item) {
+    final dateStr = '${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}';
+    return '${item.classId}_${item.subject}_$dateStr';
+  }
+
+  Future<void> _castVote(ScheduleItem item, bool taught) async {
+    final uid = context.read<AuthProvider>().currentUserId;
+    if (uid.isEmpty) return;
+
+    final dateStr = '${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}';
+    final key = _lessonKey(item);
+
+    try {
+      setState(() => _voteStates[key] = taught);
+      await _verificationService.vote(
+        item.classId, item.subject, dateStr,
+        item.startTime, item.endTime, uid, taught,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(taught ? 'Lesson confirmed as taught' : 'Marked as not taught'),
+            backgroundColor: taught ? Colors.green : Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _voteStates.remove(key));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Vote failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadVoteState(ScheduleItem item) async {
+    final uid = context.read<AuthProvider>().currentUserId;
+    if (uid.isEmpty) return;
+
+    final dateStr = '${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}';
+    final key = _lessonKey(item);
+
+    try {
+      final data = await _verificationService.getVerification(item.classId, item.subject, dateStr);
+      if (data != null) {
+        final votesFor = List.from(data['votesFor'] ?? []);
+        final votesAgainst = List.from(data['votesAgainst'] ?? []);
+        if (votesFor.contains(uid)) {
+          _voteStates[key] = true;
+        } else if (votesAgainst.contains(uid)) {
+          _voteStates[key] = false;
+        }
+      }
+    } catch (_) {}
+  }
+
+  Widget _buildVoteButtons(ScheduleItem item) {
+    final key = _lessonKey(item);
+    final myVote = _voteStates[key];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Was this lesson taught?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: myVote == true ? null : () => _castVote(item, true),
+                  icon: const Icon(Icons.check_circle, size: 20),
+                  label: const Text('Taught', style: TextStyle(fontSize: 14)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: myVote == true ? Colors.green : Colors.green.withValues(alpha: 0.1),
+                    foregroundColor: myVote == true ? Colors.white : Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: myVote == false ? null : () => _castVote(item, false),
+                  icon: const Icon(Icons.cancel, size: 20),
+                  label: const Text('Not Taught', style: TextStyle(fontSize: 14)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: myVote == false ? Colors.red : Colors.red.withValues(alpha: 0.1),
+                    foregroundColor: myVote == false ? Colors.white : Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -173,7 +281,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
                          ],
                        ),
                        const SizedBox(height: 12),
-                       ...schedule.where((i) => !i.isDefault).map((item) => _buildScheduleCard(item)),
+                       ...schedule.where((i) => !i.isDefault).map(_buildScheduleCard),
                        const Divider(height: 32, thickness: 2),
                     ],
                     
@@ -186,7 +294,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
                          ],
                        ),
                        const SizedBox(height: 12),
-                       ...schedule.where((i) => i.isDefault).map((item) => _buildScheduleCard(item)),
+                       ...schedule.where((i) => i.isDefault).map(_buildScheduleCard),
                     ],
                   ],
                   const SizedBox(height: 24),
@@ -218,6 +326,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
     final progress = item.getProgress(_now);
     final isCurrent = progress > 0 && progress < 1;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Load vote state for this lesson
+    if (isCurrent && !_voteStates.containsKey(_lessonKey(item))) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadVoteState(item));
+    }
 
     return GestureDetector(
       onTap: () => _showLessonDetail(item),
@@ -357,6 +470,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> with TickerProviderStat
                     minHeight: 8,
                   ),
                 ),
+                _buildVoteButtons(item),
               ],
             ],
           ),

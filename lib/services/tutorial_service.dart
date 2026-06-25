@@ -41,17 +41,17 @@ class TutorialService {
     tutorialCoachMark = TutorialCoachMark(
       targets: _createTargets(canAddContent: canAddContent),
       colorShadow: Colors.blueGrey,
-      textSkip: "SKIP",
+      textSkip: 'SKIP',
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-         debugPrint("Tutorial Finished");
+         debugPrint('Tutorial Finished');
       },
       onClickTarget: (target) {
          debugPrint('Clicked target logic: $target');
       },
       onSkip: () {
-         debugPrint("Tutorial Skipped");
+         debugPrint('Tutorial Skipped');
          return true;
       },
     );
@@ -64,19 +64,19 @@ class TutorialService {
     if (canAddContent) {
       targets.add(
         TargetFocus(
-          identify: "OmniFab",
+          identify: 'OmniFab',
           keyTarget: omniFabKey,
           alignSkip: Alignment.topRight,
           contents: [
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
-                return Column(
+                return const Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      "Upload Content Here",
+                      'Upload Content Here',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -84,7 +84,7 @@ class TutorialService {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      "Tap this button to post announcements, schedules, or directly attach PDF documents to the cloud.",
+                      'Tap this button to post announcements, schedules, or directly attach PDF documents to the cloud.',
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],
@@ -99,7 +99,7 @@ class TutorialService {
     // 2. Schedule Tab Target
     targets.add(
       TargetFocus(
-        identify: "ScheduleTab",
+        identify: 'ScheduleTab',
         keyTarget: scheduleTabKey,
         alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.RRect,
@@ -107,12 +107,12 @@ class TutorialService {
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: const [
+                children: [
                   Text(
-                    "View Timetables",
+                    'View Timetables',
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -120,7 +120,7 @@ class TutorialService {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "Check your official Mandatory department schedule or view live daily adjustments here.",
+                    'Check your official Mandatory department schedule or view live daily adjustments here.',
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ],
@@ -134,19 +134,19 @@ class TutorialService {
      // 3. Notification Logic
     targets.add(
       TargetFocus(
-        identify: "Notifications",
+        identify: 'Notifications',
         keyTarget: notificationIconKey,
         alignSkip: Alignment.bottomLeft,
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
-              return Column(
+              return const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
-                    "Stay Updated",
+                    'Stay Updated',
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -154,7 +154,7 @@ class TutorialService {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "All class alerts and urgent department broadcasts will appear here.",
+                    'All class alerts and urgent department broadcasts will appear here.',
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ],

@@ -3,7 +3,7 @@ import os
 from typing import Optional
 
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, storage as fb_storage
 
 from models import GradeRecord, TimetableEntry, UserProfile
 
@@ -11,17 +11,23 @@ from models import GradeRecord, TimetableEntry, UserProfile
 class FirestoreClient:
     _instance: Optional['FirestoreClient'] = None
 
-    def __init__(self, service_account_path: str):
+    def __init__(self, service_account_path: str, storage_bucket: str = ''):
         if not os.path.exists(service_account_path):
             raise FileNotFoundError(f'Service account not found: {service_account_path}')
 
         cred = credentials.Certificate(service_account_path)
-        firebase_admin.initialize_app(cred)
+
+        if not storage_bucket:
+            with open(service_account_path) as f:
+                sa = json.load(f)
+            storage_bucket = f'{sa["project_id"]}.appspot.com'
+
+        firebase_admin.initialize_app(cred, {'storageBucket': storage_bucket})
         self.db = firestore.client()
 
     @classmethod
-    def init_from_path(cls, path: str) -> 'FirestoreClient':
-        cls._instance = cls(path)
+    def init_from_path(cls, path: str, storage_bucket: str = '') -> 'FirestoreClient':
+        cls._instance = cls(path, storage_bucket)
         return cls._instance
 
     @classmethod
@@ -195,3 +201,31 @@ class FirestoreClient:
             batch.set(ref, g)
         batch.commit()
         return len(grades)
+
+    # ---- Report Auto-Upload ----
+
+    def upload_report_pdf(self, pdf_path: str, student_id: str, reg_no: str, class_id: str, term: str, year: str) -> str:
+        """Upload a report card PDF to Firebase Storage and save reference in reports collection."""
+        try:
+            bucket = fb_storage.bucket()
+            blob_name = f'reports/{class_id}/{term}_{year}/{reg_no}_{os.path.basename(pdf_path)}'
+            blob = bucket.blob(blob_name)
+            blob.upload_from_filename(pdf_path)
+            blob.make_public()
+            download_url = blob.public_url
+
+            # Save reference in reports collection
+            self.db.collection('reports').add({
+                'studentId': student_id,
+                'regNo': reg_no,
+                'classId': class_id,
+                'term': term,
+                'academicYear': year,
+                'downloadUrl': download_url,
+                'fileName': os.path.basename(pdf_path),
+                'createdAt': firestore.SERVER_TIMESTAMP,
+            })
+            return download_url
+        except Exception as e:
+            print(f'[WARN] Report upload skipped (Storage not configured): {e}')
+            return ''

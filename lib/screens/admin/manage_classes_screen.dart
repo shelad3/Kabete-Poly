@@ -118,8 +118,8 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
           ),
         ],
       ),

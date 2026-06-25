@@ -153,7 +153,7 @@ class _ThemeTile extends StatelessWidget {
       ),
       trailing: PopupMenuButton<AppThemeMode>(
         icon: const Icon(Icons.arrow_drop_down),
-        onSelected: (mode) => themeNotifier.setMode(mode),
+        onSelected: themeNotifier.setMode,
         itemBuilder: (_) => [
           PopupMenuItem(
             value: AppThemeMode.knp,

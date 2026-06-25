@@ -182,7 +182,7 @@ class AuthProvider extends ChangeNotifier {
       PushNotificationService().saveTokenToFirestore(user.uid);
       notifyListeners();
     } catch (e) {
-      debugPrint("Error fetching user profile: $e");
+      debugPrint('Error fetching user profile: $e');
       _currentUser = UserProfile(
         registrationNumber: 'UNKNOWN',
         fullName: 'Offline User',
@@ -252,40 +252,114 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _reserveField(String prefix, String value, String uid) async {
+    await _firestore.collection('field_indices').doc('${prefix}_$value').set({
+      'uid': uid,
+      'value': value,
+      'type': prefix,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> _releaseField(String prefix, String value) async {
+    try {
+      await _firestore.collection('field_indices').doc('${prefix}_$value').delete();
+    } catch (_) {}
+  }
+
   Future<void> register(UserProfile profile, String password) async {
     try {
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: profile.email,
-        password: password,
-      );
+      final regNo = profile.registrationNumber.toUpperCase().trim();
+      final phone = profile.mobileNumber.trim();
+      final email = profile.email.trim().toLowerCase();
 
-      final regNo = profile.registrationNumber.toUpperCase();
+      if (regNo.isEmpty) throw Exception('Registration number is required');
+      if (phone.isEmpty) throw Exception('Mobile number is required');
 
-      try {
-        final query = await _firestore
-            .collection('users')
-            .where('registrationNumber', isEqualTo: regNo)
-            .get();
+      // Atomic uniqueness check via field_indices collection
+      final regNoKey = 'regNo_$regNo';
+      final phoneKey = 'phone_$phone';
+      final emailKey = 'email_$email';
 
-        if (query.docs.isNotEmpty) {
-          throw Exception('Registration number already in use');
+      await _firestore.runTransaction((transaction) async {
+        final regNoRef = _firestore.collection('field_indices').doc(regNoKey);
+        final phoneRef = _firestore.collection('field_indices').doc(phoneKey);
+        final emailRef = _firestore.collection('field_indices').doc(emailKey);
+
+        final regNoSnap = await transaction.get(regNoRef);
+        if (regNoSnap.exists) {
+          throw Exception('Registration number "$regNo" is already registered');
         }
 
-        bool isActuallyAdmin = profile.email.toLowerCase() == 'sheldonramu8@gmail.com';
+        final phoneSnap = await transaction.get(phoneRef);
+        if (phoneSnap.exists) {
+          throw Exception('Phone number "$phone" is already registered');
+        }
+
+        final emailSnap = await transaction.get(emailRef);
+        if (emailSnap.exists) {
+          throw Exception('Email "$email" is already registered');
+        }
+
+        // Reserve all three in the transaction
+        transaction.set(regNoRef, {
+          'uid': '__pending__',
+          'value': regNo,
+          'type': 'regNo',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        transaction.set(phoneRef, {
+          'uid': '__pending__',
+          'value': phone,
+          'type': 'phone',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        transaction.set(emailRef, {
+          'uid': '__pending__',
+          'value': email,
+          'type': 'email',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      });
+
+      // Create Firebase Auth user
+      UserCredential credential;
+      try {
+        credential = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } catch (e) {
+        // Auth failed — release reserved indices
+        await _releaseField('regNo', regNo);
+        await _releaseField('phone', phone);
+        await _releaseField('email', email);
+        rethrow;
+      }
+
+      final uid = credential.user!.uid;
+
+      try {
+        bool isActuallyAdmin = email == 'sheldonramu8@gmail.com';
 
         final newUserProfile = UserProfile(
           registrationNumber: regNo,
           fullName: profile.fullName,
           profilePhotoUrl: profile.profilePhotoUrl,
-          mobileNumber: profile.mobileNumber,
-          email: profile.email,
+          mobileNumber: phone,
+          email: email,
           isHostelResident: profile.isHostelResident,
           role: isActuallyAdmin ? 'Official' : profile.role,
           designation: profile.designation,
           enrolledClasses: profile.enrolledClasses,
         );
 
-        await _firestore.collection('users').doc(credential.user!.uid).set(newUserProfile.toJson());
+        await _firestore.collection('users').doc(uid).set(newUserProfile.toJson());
+
+        // Update reserved indices with actual UID
+        await _firestore.collection('field_indices').doc(regNoKey).update({'uid': uid});
+        await _firestore.collection('field_indices').doc(phoneKey).update({'uid': uid});
+        await _firestore.collection('field_indices').doc(emailKey).update({'uid': uid});
 
         if (profile.enrolledClasses.isNotEmpty) {
           for (String classId in profile.enrolledClasses) {
@@ -296,12 +370,12 @@ class AuthProvider extends ChangeNotifier {
               await classRef.set({
                 'id': classId,
                 'createdAt': FieldValue.serverTimestamp(),
-                'members': [credential.user!.uid],
-                'createdBy': credential.user!.uid,
+                'members': [uid],
+                'createdBy': uid,
               });
             } else {
               await classRef.update({
-                'members': FieldValue.arrayUnion([credential.user!.uid])
+                'members': FieldValue.arrayUnion([uid])
               });
             }
           }
@@ -311,7 +385,11 @@ class AuthProvider extends ChangeNotifier {
         _isGuest = false;
         AnalyticsService().logSignUp('email');
       } catch (e) {
-        await credential.user?.delete();
+        // Cleanup on failure
+        try { await credential.user?.delete(); } catch (_) {}
+        await _releaseField('regNo', regNo);
+        await _releaseField('phone', phone);
+        await _releaseField('email', email);
         rethrow;
       }
 

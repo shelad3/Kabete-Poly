@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class KnpTheme {
-  static const Color primaryColor = Color(0xFF1A237E);
+  static const Color primaryColor = Color(0xFF276E15);
   static const Color accentColor = Color(0xFFFF8F00);
   static const Color backgroundColor = Color(0xFFF5F5F7);
   static const Color cardColor = Colors.white;
   static const Color errorColor = Color(0xFFD32F2F);
   static const Color successColor = Color(0xFF388E3C);
   static const Color surfaceLight = Color(0xFFE8EAF6);
-
+  static const Color selectedColor = Color(0xFFE8EAF6);
+  
   static ThemeData get theme {
     return ThemeData(
       useMaterial3: true,
@@ -35,7 +36,7 @@ class KnpTheme {
         backgroundColor: primaryColor,
         elevation: 2,
         centerTitle: false,
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.green,
         titleTextStyle: TextStyle(
           color: Colors.white,
           fontSize: 20,
@@ -85,8 +86,8 @@ class KnpTheme {
         backgroundColor: Colors.white,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
+        backgroundColor: primaryColor,
+        selectedItemColor: selectedColor,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         elevation: 8,

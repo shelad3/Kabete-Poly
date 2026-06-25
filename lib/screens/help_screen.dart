@@ -102,21 +102,21 @@ class _HelpScreenState extends State<HelpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
-                        Icon(Icons.person, size: 16, color: Colors.grey),
+                        const Icon(Icons.person, size: 16, color: Colors.grey),
                         const SizedBox(width: 8),
                         Text('From: ${user?.fullName ?? "You"}', style: const TextStyle(color: Colors.grey)),
                       ]),
                       const SizedBox(height: 4),
                       Row(children: [
-                        Icon(Icons.email, size: 16, color: Colors.grey),
+                        const Icon(Icons.email, size: 16, color: Colors.grey),
                         const SizedBox(width: 8),
-                        Text('${user?.email ?? ""}', style: const TextStyle(color: Colors.grey)),
+                        Text(user?.email ?? "", style: const TextStyle(color: Colors.grey)),
                       ]),
                       const SizedBox(height: 4),
                       Row(children: [
-                        Icon(Icons.badge, size: 16, color: Colors.grey),
+                        const Icon(Icons.badge, size: 16, color: Colors.grey),
                         const SizedBox(width: 8),
-                        Text('${user?.registrationNumber ?? ""}', style: const TextStyle(color: Colors.grey)),
+                        Text(user?.registrationNumber ?? "", style: const TextStyle(color: Colors.grey)),
                       ]),
                     ],
                   ),

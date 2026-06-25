@@ -1,9 +1,1 @@
-{
-    "firestore": {
-        "rules": "firestore.rules",
-        "indexes": "firestore.indexes.json"
-    },
-    "storage": {
-        "rules": "storage.rules"
-    }
-}
+{"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"},"storage":{"rules":"storage.rules"},"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"kabete-94936","configurations":{"web":"1:919389680073:web:44b6357c8171bfed05b818"}}}}}}

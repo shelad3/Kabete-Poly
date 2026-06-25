@@ -157,6 +157,56 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------- //
+    // Attendance Collection
+    // ---------------------------------------------------- //
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacherOrAbove();
+      allow update, delete: if isTeacherOrAbove();
+    }
+
+    // ---------------------------------------------------- //
+    // Field Indices (Uniqueness Enforcement)
+    // ---------------------------------------------------- //
+    match /field_indices/{indexId} {
+      // Only system writes from authenticated users (register/profile updates)
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
+    // Active QR Sessions (Teacher-controlled QR activation)
+    // ---------------------------------------------------- //
+    match /active_qr_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacherOrAbove();
+      allow update, delete: if isTeacherOrAbove();
+    }
+
+    // ---------------------------------------------------- //
+    // Lesson Verifications (Student vote taught/not taught)
+    // ---------------------------------------------------- //
+    match /lesson_verifications/{verificationId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();   // students create vote
+      allow update: if isAuthenticated();   // students update their vote
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
+    // Reports (Auto-uploaded report cards)
+    // ---------------------------------------------------- //
+    match /reports/{reportId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isTeacherOrAbove()
+      );
+      allow create: if isTeacherOrAbove();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
     // Class Change Requests Collection
     // ---------------------------------------------------- //
     match /class_change_requests/{requestId} {

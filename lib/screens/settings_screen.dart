@@ -16,6 +16,7 @@ import 'feedback_screen.dart';
 import '../services/update_service.dart';
 import '../services/class_provider.dart';
 import '../services/screenshot_service.dart';
+import '../services/qr_session_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -136,9 +137,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSettingItem(context, Icons.admin_panel_settings_outlined, 'Role', user?.role ?? 'User'),
               if (user?.role == 'Student' || user?.role == 'Leader')
                 _buildSettingItem(context, Icons.house_outlined, 'Hostel', user?.isHostelResident == true ? 'Resident' : 'Day Scholar'),
+              
+            ]),
+            _buildSettingsSection(context, 'Options', [
               ListTile(
-                leading: const Icon(Icons.class_, color: Colors.grey),
-                title: const Text('Enrolled Classes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                leading: const Icon(Icons.class_, color: Colors.blue),
+                title: const Text('Enrolled Classes ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
                 trailing: Text(
                   '${user?.enrolledClasses.length ?? 0} classes',
                   style: const TextStyle(color: Colors.grey, fontSize: 14),
@@ -170,7 +174,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             _buildSettingsSection(context, 'App Preferences', [
               ListTile(
-                leading: Icon(Icons.edit_outlined, color: Colors.teal),
+                leading: const Icon(Icons.edit_outlined, color: Colors.teal),
                 title: const Text('Edit Profile', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
                 trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
                 onTap: () => _showEditProfile(context, user),
@@ -212,7 +216,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
               ),
               ListTile(
-                leading: Icon(Icons.system_update_alt, color: Colors.blueAccent),
+                leading: const Icon(Icons.system_update_alt, color: Colors.blueAccent),
                 title: const Text('Check for Updates', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
                 trailing: const Icon(Icons.refresh, size: 18, color: Colors.blueAccent),
                 onTap: () {
@@ -557,7 +561,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: () => _pickAndUploadPhoto(),
+                  onTap: _pickAndUploadPhoto,
                   child: CircleAvatar(
                     radius: 48,
                     backgroundColor: Colors.grey[200],
@@ -904,6 +908,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _showQrCode(BuildContext context, user) async {
     final uid = context.read<AuthProvider>().currentUserId;
+
+    // Check if teacher has activated QR scanning for any enrolled class
+    final qrSession = QRSessionService();
+    final enrolledClasses = user?.enrolledClasses as List<dynamic>? ?? [];
+    bool anyActive = false;
+    for (final cls in enrolledClasses) {
+      if (await qrSession.isQrActiveForClass(cls.toString())) {
+        anyActive = true;
+        break;
+      }
+    }
+
+    if (!anyActive && enrolledClasses.isNotEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('QR scanning is not active yet. Wait for your teacher to activate it.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
     await ScreenshotService.enableSecure();
 
     // Timestamp rounded to 30-second intervals so QR refreshes periodically
@@ -935,7 +964,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(qrUrl, width: 250, height: 250,
-                    errorBuilder: (_, __, ___) =>
+                    errorBuilder: (_, _, _) =>
                         const Icon(Icons.qr_code, size: 200, color: Colors.grey)),
               ),
               const SizedBox(height: 12),

@@ -259,7 +259,7 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
                           )
                         else
                           ElevatedButton(
-                            onPressed: _submitted ? null : () => _submitQuiz(),
+                            onPressed: _submitted ? null : _submitQuiz,
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                             child: const Text('Submit'),
                           ),

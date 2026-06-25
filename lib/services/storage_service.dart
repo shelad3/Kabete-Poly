@@ -25,7 +25,7 @@ class StorageService {
       );
       return response.secureUrl;
     } catch (e) {
-      debugPrint("Error uploading image: $e");
+      debugPrint('Error uploading image: $e');
       return null;
     }
   }
@@ -59,7 +59,7 @@ class StorageService {
       );
       return response.secureUrl;
     } catch (e) {
-      debugPrint("Error uploading file: $e");
+      debugPrint('Error uploading file: $e');
       return null;
     }
   }

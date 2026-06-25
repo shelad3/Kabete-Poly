@@ -36,7 +36,7 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
           if (canEdit)
             IconButton(
               icon: Icon(_isEditing ? Icons.save : Icons.edit),
-              onPressed: _isEditing ? _saveInfo : () => _startEditing(),
+              onPressed: _isEditing ? _saveInfo : _startEditing,
             ),
         ],
       ),
@@ -109,7 +109,7 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.network(photoUrls[index], height: 200, width: 300, fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(height: 200, width: 300,
+                                      errorBuilder: (_, _, _) => Container(height: 200, width: 300,
                                         color: Colors.grey[200], child: const Icon(Icons.broken_image, size: 48))),
                                   ),
                                 ),
