@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/cube.dart';
+import '../../models/house.dart';
 import '../../models/cube_booking.dart';
 import '../../services/cube_service.dart';
 import '../../services/auth_provider.dart';
+import '../../utils/term_utils.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Cube cube;
-  const BookingFormScreen({super.key, required this.cube});
+  final House house;
+  const BookingFormScreen({super.key, required this.cube, required this.house});
 
   @override
   State<BookingFormScreen> createState() => _BookingFormScreenState();
@@ -15,49 +18,32 @@ class BookingFormScreen extends StatefulWidget {
 
 class _BookingFormScreenState extends State<BookingFormScreen> {
   final CubeService _service = CubeService();
-  DateTime _selectedDate = DateTime.now();
-  String _startTime = '08:00';
-  String _endTime = '10:00';
+  final int _term = TermUtils.getCurrentTerm();
+  final int _year = TermUtils.getCurrentYear();
   bool _isBooking = false;
-
-  static const _timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00', '17:00',
-  ];
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-    );
-    if (picked != null) setState(() => _selectedDate = picked);
-  }
+  bool _acceptedFee = false;
 
   Future<void> _submit() async {
-    final user = context.read<AuthProvider>().currentUser;
-    if (user == null) return;
-
-    final startIdx = _timeSlots.indexOf(_startTime);
-    final endIdx = _timeSlots.indexOf(_endTime);
-    if (startIdx >= endIdx) {
+    if (!_acceptedFee) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('End time must be after start time'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Please accept the fee terms to continue'), backgroundColor: Colors.red),
       );
       return;
     }
+
+    final user = context.read<AuthProvider>().currentUser;
+    if (user == null) return;
 
     setState(() => _isBooking = true);
 
     try {
       final available = await _service.isCubeAvailable(
-        widget.cube.id, _selectedDate, _startTime, _endTime,
+        widget.cube.id, widget.cube.maxOccupancy, _term, _year,
       );
       if (!available) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('This cubicle is already booked for that time'), backgroundColor: Colors.red),
+            const SnackBar(content: Text('This cubicle is fully booked'), backgroundColor: Colors.red),
           );
         }
         return;
@@ -69,11 +55,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         studentName: user.fullName,
         regNo: user.registrationNumber,
         cubeId: widget.cube.id,
-        houseName: widget.cube.houseName,
-        cubeLabel: widget.cube.label,
-        date: _selectedDate,
-        startTime: _startTime,
-        endTime: _endTime,
+        houseId: widget.house.id,
+        houseName: widget.house.name,
+        cubeNumber: widget.cube.cubeNumber,
+        term: _term,
+        year: _year,
       );
 
       await _service.createBooking(booking);
@@ -97,6 +83,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final fee = 8000;
     return Scaffold(
       appBar: AppBar(title: Text('Book ${widget.cube.label}')),
       body: Padding(
@@ -115,38 +102,50 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.cube.label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(widget.cube.houseName, style: TextStyle(color: Colors.grey[600])),
+                        Text(widget.house.name, style: TextStyle(color: Colors.grey[600])),
+                        Text('Max ${widget.cube.maxOccupancy} students', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
                       ],
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            ListTile(
-              leading: const Icon(Icons.calendar_today),
-              title: const Text('Date'),
-              subtitle: Text('${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
-              trailing: const Icon(Icons.edit),
-              onTap: _pickDate,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.schedule),
-              title: const Text('Start Time'),
-              trailing: DropdownButton<String>(
-                value: _startTime,
-                items: _timeSlots.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (v) => setState(() => _startTime = v!),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_month, size: 18, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        Text('${TermUtils.getCurrentTermLabel()} $_year',
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.payments, size: 18, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Text('KSH $fee per term (pay to accounts office)',
+                            style: TextStyle(color: Colors.grey[700])),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.schedule),
-              title: const Text('End Time'),
-              trailing: DropdownButton<String>(
-                value: _endTime,
-                items: _timeSlots.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (v) => setState(() => _endTime = v!),
+            const SizedBox(height: 12),
+            Card(
+              child: CheckboxListTile(
+                title: const Text('I acknowledge the KSH 8,000 term fee'),
+                subtitle: const Text('Pay at the accounts office and update payment status'),
+                value: _acceptedFee,
+                onChanged: (v) => setState(() => _acceptedFee = v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
               ),
             ),
             const Spacer(),

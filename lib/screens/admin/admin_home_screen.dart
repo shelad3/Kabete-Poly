@@ -5,10 +5,9 @@ import '../../services/class_provider.dart';
 import '../../services/unread_badge_provider.dart';
 import '../explore_screen.dart';
 import '../schedule_screen.dart';
-import '../forum_screen.dart';
+import '../community_screen.dart';
 import '../notification_screen.dart';
 import '../settings_screen.dart';
-import '../users/users_tab_screen.dart';
 import 'admin_dashboard_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -26,8 +25,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     const AdminDashboardScreen(),
     const ExploreScreen(),
     const ScheduleScreen(),
-    const UsersTabScreen(),
-    const ForumScreen(),
+    const CommunityScreen(),
     const NotificationScreen(),
     const SettingsScreen(),
   ];
@@ -62,7 +60,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() => _currentIndex = index);
-          if (index == 5) {
+          if (index == 4) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
           }
         },
@@ -82,12 +80,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             label: 'Schedule',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            label: 'Users',
-          ),
-          const BottomNavigationBarItem(
             icon: Icon(Icons.forum_outlined),
-            label: 'Forum',
+            label: 'Community',
           ),
           BottomNavigationBarItem(
             icon: badge.totalUnread > 0

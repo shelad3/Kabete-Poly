@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/cube_booking.dart';
 import '../../services/cube_service.dart';
+import '../../utils/term_utils.dart';
 
 class ManageCubeBookingsScreen extends StatefulWidget {
   const ManageCubeBookingsScreen({super.key});
@@ -25,15 +26,24 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
     }
   }
 
+  Color _paymentColor(String status) {
+    return status == 'paid' ? Colors.green : Colors.red;
+  }
+
   Future<void> _updateStatus(CubeBooking booking, String newStatus) async {
     await _service.updateBookingStatus(booking.id, newStatus);
+  }
+
+  Future<void> _togglePayment(CubeBooking booking) async {
+    final newStatus = booking.paymentStatus == 'paid' ? 'unpaid' : 'paid';
+    await _service.updatePaymentStatus(booking.id, newStatus);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Bookings'),
+        title: Text('Bookings — ${TermUtils.getCurrentTermLabel()}'),
         actions: [
           PopupMenuButton<String>(
             initialValue: _statusFilter,
@@ -111,13 +121,30 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                          GestureDetector(
+                            onTap: () => _togglePayment(b),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: _paymentColor(b.paymentStatus).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.payments, size: 12, color: _paymentColor(b.paymentStatus)),
+                                  const SizedBox(width: 4),
+                                  Text(b.paymentStatus.toUpperCase(),
+                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _paymentColor(b.paymentStatus))),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Icon(Icons.calendar_month, size: 14, color: Colors.grey[600]),
                           const SizedBox(width: 4),
-                          Text(DateFormat('d MMM yyyy').format(b.date), style: TextStyle(color: Colors.grey[700])),
-                          const SizedBox(width: 16),
-                          Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text('${b.startTime} - ${b.endTime}', style: TextStyle(color: Colors.grey[700])),
+                          Text('Term ${b.term} ${b.year}',
+                              style: TextStyle(color: Colors.grey[700], fontSize: 12)),
                         ],
                       ),
                       if (b.status == 'pending') ...[

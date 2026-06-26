@@ -8,7 +8,7 @@ import '../../services/firestore_service.dart';
 import '../notification_screen.dart';
 import '../explore_screen.dart';
 import '../cubes/my_bookings_screen.dart';
-import 'manage_cubes_screen.dart';
+import 'manage_houses_screen.dart';
 import 'manage_cube_bookings_screen.dart';
 import 'manage_auth_codes_screen.dart';
 import 'manage_students_screen.dart';
@@ -17,6 +17,7 @@ import 'admin_timetable_manager_screen.dart';
 import '../grades/manage_grades_screen.dart';
 import 'manage_alerts_screen.dart';
 import 'manage_classes_screen.dart';
+import 'manage_events_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -166,12 +167,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             _buildActionCard(
               context,
               Icons.workspaces,
-              'Manage Cubicles',
-              'Add/remove lab workstations',
+              'Manage Houses',
+              'Configure houses & cube capacities',
               Colors.indigo,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ManageCubesScreen()),
+                MaterialPageRoute(builder: (_) => const ManageHousesScreen()),
               ),
             ),
             _buildActionCard(
@@ -185,6 +186,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 MaterialPageRoute(
                   builder: (_) => const ManageCubeBookingsScreen(),
                 ),
+              ),
+            ),
+            _buildActionCard(
+              context,
+              Icons.photo_library,
+              'Event Gallery',
+              'Create & manage event photo galleries',
+              Colors.pink,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ManageEventsScreen()),
               ),
             ),
             _buildActionCard(

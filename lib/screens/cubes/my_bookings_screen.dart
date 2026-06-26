@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../services/cube_service.dart';
 import '../../services/auth_provider.dart';
 import '../../models/cube_booking.dart';
+import '../../utils/term_utils.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
@@ -26,6 +27,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     }
   }
 
+  Color _paymentColor(String status) {
+    switch (status) {
+      case 'paid': return Colors.green;
+      default: return Colors.red;
+    }
+  }
+
   IconData _statusIcon(String status) {
     switch (status) {
       case 'pending': return Icons.hourglass_empty;
@@ -42,7 +50,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final userId = context.read<AuthProvider>().currentUserId;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Bookings')),
+      appBar: AppBar(title: Text('My Bookings — ${TermUtils.getCurrentTermLabel()}')),
       body: StreamBuilder<List<CubeBooking>>(
         stream: _service.getMyBookingsStream(userId),
         builder: (context, snapshot) {
@@ -57,9 +65,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 children: [
                   Icon(Icons.book_online, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  Text('No bookings yet', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  Text('No bookings this term', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
                   const SizedBox(height: 8),
-                  Text('Book a cubicle from the Cubicles tab', style: TextStyle(color: Colors.grey[500])),
+                  Text('Book a cubicle from the Houses tab', style: TextStyle(color: Colors.grey[500])),
                 ],
               ),
             );
@@ -70,6 +78,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             itemBuilder: (_, i) => _BookingCard(
               booking: bookings[i],
               statusColor: _statusColor,
+              paymentColor: _paymentColor,
               statusIcon: _statusIcon,
               onCancel: bookings[i].status == 'pending' || bookings[i].status == 'confirmed'
                   ? () => _cancelBooking(bookings[i])
@@ -86,7 +95,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cancel Booking'),
-        content: Text('Cancel booking for ${booking.cubeLabel} on ${DateFormat('d MMM').format(booking.date)}?'),
+        content: Text('Cancel ${booking.cubeLabel} in ${booking.houseName}?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
           ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Yes, Cancel')),
@@ -107,12 +116,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 class _BookingCard extends StatelessWidget {
   final CubeBooking booking;
   final Color Function(String) statusColor;
+  final Color Function(String) paymentColor;
   final IconData Function(String) statusIcon;
   final VoidCallback? onCancel;
 
   const _BookingCard({
     required this.booking,
     required this.statusColor,
+    required this.paymentColor,
     required this.statusIcon,
     this.onCancel,
   });
@@ -156,13 +167,15 @@ class _BookingCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                Icon(Icons.payments, size: 14, color: paymentColor(booking.paymentStatus)),
                 const SizedBox(width: 4),
-                Text(DateFormat('d MMM yyyy').format(booking.date), style: TextStyle(color: Colors.grey[700])),
+                Text(booking.paymentStatus.toUpperCase(),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: paymentColor(booking.paymentStatus))),
                 const SizedBox(width: 16),
-                Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                Icon(Icons.calendar_month, size: 14, color: Colors.grey[600]),
                 const SizedBox(width: 4),
-                Text('${booking.startTime} - ${booking.endTime}', style: TextStyle(color: Colors.grey[700])),
+                Text('Term ${booking.term} ${booking.year}',
+                    style: TextStyle(color: Colors.grey[700], fontSize: 12)),
               ],
             ),
             if (onCancel != null) ...[

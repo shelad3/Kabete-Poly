@@ -251,7 +251,15 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------- //
-    // Cubes (Lab workstation booking)
+    // Houses (Buildings containing cubes)
+    // ---------------------------------------------------- //
+    match /houses/{houseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
+    // Cubes (Workstations within houses)
     // ---------------------------------------------------- //
     match /cubes/{cubeId} {
       allow read: if isAuthenticated();

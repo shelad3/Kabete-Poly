@@ -1,43 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/cube.dart';
 import '../models/cube_booking.dart';
+import '../utils/term_utils.dart';
 
 class CubeService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // ---- Cubes ----
 
-  Stream<List<Cube>> getCubesStream() =>
-    _db.collection('cubes').where('isActive', isEqualTo: true).snapshots().map(
-      (snap) => snap.docs.map((d) => Cube.fromJson(d.data(), d.id)).toList(),
-    );
-
-  Stream<List<Cube>> getCubesByHouseStream(String house) =>
+  Stream<List<Cube>> getCubesByHouseStream(String houseId) =>
     _db.collection('cubes')
-      .where('houseName', isEqualTo: house)
+      .where('houseId', isEqualTo: houseId)
       .where('isActive', isEqualTo: true)
+      .orderBy('cubeNumber')
       .snapshots().map(
         (snap) => snap.docs.map((d) => Cube.fromJson(d.data(), d.id)).toList(),
       );
 
-  Future<List<Cube>> getCubesByHouse(String house) async {
+  Future<List<Cube>> getCubesByHouse(String houseId) async {
     final snap = await _db.collection('cubes')
-      .where('houseName', isEqualTo: house)
+      .where('houseId', isEqualTo: houseId)
       .where('isActive', isEqualTo: true)
+      .orderBy('cubeNumber')
       .get();
     return snap.docs.map((d) => Cube.fromJson(d.data(), d.id)).toList();
   }
 
-  Future<List<String>> getDistinctHouses() async {
-    final snap = await _db.collection('cubes')
-      .where('isActive', isEqualTo: true)
-      .get();
-    final houses = snap.docs.map((d) => d['houseName'] as String? ?? '').toSet();
-    return houses.where((h) => h.isNotEmpty).toList()..sort();
+  Future<void> generateCubesForHouse(String houseId, String houseName, int count, {int defaultCapacity = 4}) async {
+    final batch = _db.batch();
+    for (int i = 1; i <= count; i++) {
+      final ref = _db.collection('cubes').doc();
+      batch.set(ref, {
+        'houseId': houseId,
+        'houseName': houseName,
+        'cubeNumber': i,
+        'maxOccupancy': defaultCapacity,
+        'isActive': true,
+      });
+    }
+    await batch.commit();
   }
-
-  Future<void> addCube(Cube cube) =>
-    _db.collection('cubes').add(cube.toJson());
 
   Future<void> updateCube(String id, Cube cube) =>
     _db.collection('cubes').doc(id).update(cube.toJson());
@@ -45,35 +47,29 @@ class CubeService {
   Future<void> deleteCube(String id) =>
     _db.collection('cubes').doc(id).update({'isActive': false});
 
-  // ---- Bookings ----
+  // ---- Availability ----
 
-  Future<bool> isCubeAvailable(String cubeId, DateTime date, String start, String end) async {
-    final bookings = await _db.collection('cube_bookings')
+  Future<int> getBookedCountForCube(String cubeId, int term, int year) async {
+    final snap = await _db.collection('cube_bookings')
       .where('cubeId', isEqualTo: cubeId)
-      .where('date', isEqualTo: Timestamp.fromDate(DateTime(date.year, date.month, date.day)))
+      .where('term', isEqualTo: term)
+      .where('year', isEqualTo: year)
       .where('status', whereIn: ['pending', 'confirmed', 'checked_in'])
       .get();
-
-    for (final doc in bookings.docs) {
-      final bStart = doc['startTime'] as String? ?? '';
-      final bEnd = doc['endTime'] as String? ?? '';
-      if (_timesOverlap(start, end, bStart, bEnd)) return false;
-    }
-    return true;
+    return snap.docs.length;
   }
 
-  bool _timesOverlap(String aStart, String aEnd, String bStart, String bEnd) {
-    final as = _toMinutes(aStart);
-    final ae = _toMinutes(aEnd);
-    final bs = _toMinutes(bStart);
-    final be = _toMinutes(bEnd);
-    return as < be && ae > bs;
+  Future<int> getAvailableSpots(String cubeId, int maxOccupancy, int term, int year) async {
+    final booked = await getBookedCountForCube(cubeId, term, year);
+    return maxOccupancy - booked;
   }
 
-  int _toMinutes(String time) {
-    final parts = time.split(':');
-    return (int.tryParse(parts[0]) ?? 0) * 60 + (int.tryParse(parts[1]) ?? 0);
+  Future<bool> isCubeAvailable(String cubeId, int maxOccupancy, int term, int year) async {
+    final available = await getAvailableSpots(cubeId, maxOccupancy, term, year);
+    return available > 0;
   }
+
+  // ---- Bookings ----
 
   Future<CubeBooking> createBooking(CubeBooking booking) async {
     final ref = await _db.collection('cube_bookings').add(booking.toJson());
@@ -86,20 +82,34 @@ class CubeService {
   Future<void> updateBookingStatus(String id, String status) =>
     _db.collection('cube_bookings').doc(id).update({'status': status});
 
-  Stream<List<CubeBooking>> getMyBookingsStream(String studentId) =>
-    _db.collection('cube_bookings')
-      .where('studentId', isEqualTo: studentId)
-      .orderBy('date', descending: true)
-      .snapshots().map(
-        (snap) => snap.docs.map((d) => CubeBooking.fromJson(d.data(), d.id)).toList(),
-      );
+  Future<void> updatePaymentStatus(String id, String paymentStatus) =>
+    _db.collection('cube_bookings').doc(id).update({'paymentStatus': paymentStatus});
 
-  Stream<List<CubeBooking>> getAllBookingsStream() =>
-    _db.collection('cube_bookings')
-      .orderBy('date', descending: true)
+  Stream<List<CubeBooking>> getMyBookingsStream(String studentId) {
+    final term = TermUtils.getCurrentTerm();
+    final year = TermUtils.getCurrentYear();
+    return _db.collection('cube_bookings')
+      .where('studentId', isEqualTo: studentId)
+      .where('term', isEqualTo: term)
+      .where('year', isEqualTo: year)
+      .orderBy('houseName')
       .snapshots().map(
         (snap) => snap.docs.map((d) => CubeBooking.fromJson(d.data(), d.id)).toList(),
       );
+  }
+
+  Stream<List<CubeBooking>> getAllBookingsStream({int? term, int? year}) {
+    final t = term ?? TermUtils.getCurrentTerm();
+    final y = year ?? TermUtils.getCurrentYear();
+    var query = _db.collection('cube_bookings')
+      .where('term', isEqualTo: t)
+      .where('year', isEqualTo: y)
+      .orderBy('houseName')
+      .orderBy('cubeNumber');
+    return query.snapshots().map(
+      (snap) => snap.docs.map((d) => CubeBooking.fromJson(d.data(), d.id)).toList(),
+    );
+  }
 
   Stream<List<CubeBooking>> getBookingsForCubeOnDate(String cubeId, DateTime date) {
     final dayStart = DateTime(date.year, date.month, date.day);
