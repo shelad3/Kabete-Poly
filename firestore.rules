@@ -234,6 +234,47 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------- //
+    // Events (Event Gallery)
+    // ---------------------------------------------------- //
+    match /events/{eventId} {
+      allow read: if true;  // public — visible to all including guests
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      // Photos subcollection
+      match /photos/{photoId} {
+        allow read: if true;
+        allow create: if isAdmin();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // ---------------------------------------------------- //
+    // Cubes (Lab workstation booking)
+    // ---------------------------------------------------- //
+    match /cubes/{cubeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
+    // Cube Bookings
+    // ---------------------------------------------------- //
+    match /cube_bookings/{bookingId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.studentId == request.auth.uid;
+      allow update: if isAdmin() || (
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == 'cancelled'
+      );
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------- //
     // Default: deny everything else
     // ---------------------------------------------------- //
     match /{document=**} {

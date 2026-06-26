@@ -9,9 +9,10 @@ import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
 import 'explore_screen.dart';
 import 'schedule_screen.dart';
-import 'community_screen.dart';
+import 'forum_screen.dart';
 import 'notification_screen.dart';
 import 'settings_screen.dart';
+import 'users/users_tab_screen.dart';
 import 'quiz/quiz_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   late final PageController _pageController;
+  bool _hasUsersTab = false;
 
   @override
   void initState() {
@@ -34,6 +36,11 @@ class _HomeScreenState extends State<HomeScreen> {
       final classProvider = context.read<ClassProvider>();
       final badgeProvider = context.read<UnreadBadgeProvider>();
       final user = authProvider.currentUser;
+
+      final elevated = user != null && (user.isTeacher || user.isLeader);
+      if (mounted && elevated != _hasUsersTab) {
+        setState(() => _hasUsersTab = elevated);
+      }
 
       // Sync ClassProvider with user's enrolled classes
       if (user != null && user.enrolledClasses.isNotEmpty) {
@@ -55,9 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
       OnboardingScreen.hasSeen().then((seen) {
         if (!seen && mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const OnboardingScreen()));
         }
       });
     });
@@ -67,20 +74,35 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  int get _notifIndex => 3;
+  int get _notifIndex => _hasUsersTab ? 4 : 3;
 
   List<Widget> _buildScreens() => [
     const ExploreScreen(),
     const ScheduleScreen(),
-    const CommunityScreen(),
-    NotificationScreen(),
+    if (_hasUsersTab) const UsersTabScreen(),
+    const ForumScreen(),
+    const NotificationScreen(),
     const SettingsScreen(),
   ];
 
   List<BottomNavigationBarItem> _buildNavItems(UnreadBadgeProvider badge) => [
-    const BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Explore'),
-    const BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: 'Schedule'),
-    const BottomNavigationBarItem(icon: Icon(Icons.forum_outlined), label: 'Community'),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.explore_outlined),
+      label: 'Explore',
+    ),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.calendar_month_outlined),
+      label: 'Schedule',
+    ),
+    if (_hasUsersTab)
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.people_outline),
+        label: 'Users',
+      ),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.forum_outlined),
+      label: 'Forum',
+    ),
     BottomNavigationBarItem(
       icon: badge.totalUnread > 0
           ? Badge(
@@ -93,7 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
           : const Icon(Icons.notifications_none_outlined),
       label: 'Alerts',
     ),
-    const BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
+    const BottomNavigationBarItem(
+      icon: Icon(Icons.settings_outlined),
+      label: 'Settings',
+    ),
   ];
 
   @override
@@ -104,6 +129,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+    final elevated = user != null && (user.isTeacher || user.isLeader);
+    if (elevated != _hasUsersTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _hasUsersTab = elevated);
+      });
+    }
+
     final badge = context.watch<UnreadBadgeProvider>();
     return Scaffold(
       body: PageView(
@@ -175,43 +209,65 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.blue, child: Icon(Icons.post_add, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    child: Icon(Icons.post_add, color: Colors.white),
+                  ),
                   title: const Text('Post Completed Lesson'),
                   subtitle: const Text('Upload notes, summary & lab reports'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AddLessonScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const AddLessonScreen(),
+                      ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.orange, child: Icon(Icons.calendar_today, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.orange,
+                    child: Icon(Icons.calendar_today, color: Colors.white),
+                  ),
                   title: const Text('Schedule Upcoming Theory'),
                   subtitle: const Text('Add to timetable & notify class'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ScheduleUpcomingScreen(isPractical: false)),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const ScheduleUpcomingScreen(isPractical: false),
+                      ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.purple, child: Icon(Icons.science, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.purple,
+                    child: Icon(Icons.science, color: Colors.white),
+                  ),
                   title: const Text('Schedule Upcoming Practical'),
-                  subtitle: const Text('Add laboratory schedule & notify class'),
+                  subtitle: const Text(
+                    'Add laboratory schedule & notify class',
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ScheduleUpcomingScreen(isPractical: true)),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const ScheduleUpcomingScreen(isPractical: true),
+                      ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.teal, child: Icon(Icons.quiz, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.teal,
+                    child: Icon(Icons.quiz, color: Colors.white),
+                  ),
                   title: const Text('Create Quiz'),
                   subtitle: const Text('Build multiple-choice assessments'),
                   onTap: () {

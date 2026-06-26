@@ -13,6 +13,8 @@ import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
 import 'quiz/quiz_list_screen.dart';
 import 'grades/grade_report_screen.dart';
+import 'cubes/cube_list_screen.dart';
+import 'cubes/my_bookings_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -89,6 +91,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const GradeReportScreen()),
+                  ),
+                ),
+              ),
+              Card(
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.indigo.withValues(alpha: 0.1),
+                    child: const Icon(Icons.workspaces, color: Colors.indigo),
+                  ),
+                  title: const Text('Book a Cubicle', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Reserve a lab workstation'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CubeListScreen()),
                   ),
                 ),
               ),

@@ -42,14 +42,22 @@ class _HelpScreenState extends State<HelpScreen> {
       await FirestoreService().submitHelpRequest(ticket);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Help request submitted! We will get back to you soon.'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text(
+              'Help request submitted! We will get back to you soon.',
+            ),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to submit: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -76,20 +84,33 @@ class _HelpScreenState extends State<HelpScreen> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: remaining > 0 ? Colors.blue.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                    color: remaining > 0
+                        ? Colors.blue.withValues(alpha: 0.1)
+                        : Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: remaining > 0 ? Colors.blue : Colors.orange),
+                    border: Border.all(
+                      color: remaining > 0 ? Colors.blue : Colors.orange,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(remaining > 0 ? Icons.info_outline : Icons.warning_amber, color: remaining > 0 ? Colors.blue : Colors.orange),
+                      Icon(
+                        remaining > 0
+                            ? Icons.info_outline
+                            : Icons.warning_amber,
+                        color: remaining > 0 ? Colors.blue : Colors.orange,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           remaining > 0
-                            ? 'You have $remaining class change(s) remaining. Use settings to change your class.'
-                            : 'You have used all class changes. Submit a request below for assistance.',
-                          style: TextStyle(color: remaining > 0 ? Colors.blue[800] : Colors.orange[800]),
+                              ? 'You have $remaining class change(s) remaining. Use settings to change your class.'
+                              : 'You have used all class changes. Submit a request below for assistance.',
+                          style: TextStyle(
+                            color: remaining > 0
+                                ? Colors.blue[800]
+                                : Colors.orange[800],
+                          ),
                         ),
                       ),
                     ],
@@ -101,23 +122,42 @@ class _HelpScreenState extends State<HelpScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(children: [
-                        const Icon(Icons.person, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text('From: ${user?.fullName ?? "You"}', style: const TextStyle(color: Colors.grey)),
-                      ]),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'From: ${user?.fullName ?? "You"}',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
-                      Row(children: [
-                        const Icon(Icons.email, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(user?.email ?? "", style: const TextStyle(color: Colors.grey)),
-                      ]),
+                      Row(
+                        children: [
+                          const Icon(Icons.email, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            user?.email ?? '',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
-                      Row(children: [
-                        const Icon(Icons.badge, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(user?.registrationNumber ?? "", style: const TextStyle(color: Colors.grey)),
-                      ]),
+                      Row(
+                        children: [
+                          const Icon(Icons.badge, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            user?.registrationNumber ?? '',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -125,15 +165,25 @@ class _HelpScreenState extends State<HelpScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _titleCtrl,
-                decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder()),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Enter a subject' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Subject',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Enter a subject' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _messageCtrl,
                 maxLines: 5,
-                decoration: const InputDecoration(labelText: 'Describe your issue', border: OutlineInputBorder(), alignLabelWithHint: true),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Describe your issue' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Describe your issue',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Describe your issue'
+                    : null,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -142,8 +192,12 @@ class _HelpScreenState extends State<HelpScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submit,
                   child: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Submit Request'),
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Submit Request'),
                 ),
               ),
             ],

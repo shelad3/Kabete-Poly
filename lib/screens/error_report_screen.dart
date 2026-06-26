@@ -27,7 +27,8 @@ class _ErrorReportScreenState extends State<ErrorReportScreen> {
 
   Future<void> _loadVersion() async {
     final info = await PackageInfo.fromPlatform();
-    if (mounted) setState(() => _appVersion = '${info.version}+${info.buildNumber}');
+    if (mounted)
+      setState(() => _appVersion = '${info.version}+${info.buildNumber}');
   }
 
   @override
@@ -56,14 +57,20 @@ class _ErrorReportScreenState extends State<ErrorReportScreen> {
       await FirestoreService().submitErrorReport(report);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error report submitted. Thank you!'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Error report submitted. Thank you!'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to submit: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -111,17 +118,31 @@ class _ErrorReportScreenState extends State<ErrorReportScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(children: [
-                        const Icon(Icons.person, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(user?.fullName ?? "You", style: const TextStyle(color: Colors.grey)),
-                      ]),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            user?.fullName ?? 'You',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
-                      Row(children: [
-                        const Icon(Icons.email, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(user?.email ?? "", style: const TextStyle(color: Colors.grey)),
-                      ]),
+                      Row(
+                        children: [
+                          const Icon(Icons.email, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            user?.email ?? '',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -129,8 +150,13 @@ class _ErrorReportScreenState extends State<ErrorReportScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _titleCtrl,
-                decoration: const InputDecoration(labelText: 'Error Title', border: OutlineInputBorder()),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Enter a brief title' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Error Title',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Enter a brief title'
+                    : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -140,9 +166,11 @@ class _ErrorReportScreenState extends State<ErrorReportScreen> {
                   labelText: 'What went wrong?',
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
-                  hintText: 'Describe what happened, steps to reproduce, and any error messages shown...',
+                  hintText:
+                      'Describe what happened, steps to reproduce, and any error messages shown...',
                 ),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Describe the error' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Describe the error' : null,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -151,9 +179,15 @@ class _ErrorReportScreenState extends State<ErrorReportScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isLoading ? null : _submit,
                   icon: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.send),
-                  label: Text(_isLoading ? 'Submitting...' : 'Submit Error Report'),
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send),
+                  label: Text(
+                    _isLoading ? 'Submitting...' : 'Submit Error Report',
+                  ),
                 ),
               ),
             ],

@@ -5,9 +5,10 @@ import '../../services/class_provider.dart';
 import '../../services/unread_badge_provider.dart';
 import '../explore_screen.dart';
 import '../schedule_screen.dart';
-import '../community_screen.dart';
+import '../forum_screen.dart';
 import '../notification_screen.dart';
 import '../settings_screen.dart';
+import '../users/users_tab_screen.dart';
 import 'admin_dashboard_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -25,8 +26,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     const AdminDashboardScreen(),
     const ExploreScreen(),
     const ScheduleScreen(),
-    const CommunityScreen(),
-    NotificationScreen(),
+    const UsersTabScreen(),
+    const ForumScreen(),
+    const NotificationScreen(),
     const SettingsScreen(),
   ];
 
@@ -60,22 +62,40 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() => _currentIndex = index);
-          if (index == 4) {
+          if (index == 5) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
           }
         },
         type: BottomNavigationBarType.fixed,
         unselectedItemColor: Colors.grey,
         items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.admin_panel_settings), label: 'Admin'),
-          const BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Explore'),
-          const BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: 'Schedule'),
-          const BottomNavigationBarItem(icon: Icon(Icons.forum_outlined), label: 'Community'),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.admin_panel_settings),
+            label: 'Admin',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.explore_outlined),
+            label: 'Explore',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month_outlined),
+            label: 'Schedule',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.people_outline),
+            label: 'Users',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.forum_outlined),
+            label: 'Forum',
+          ),
           BottomNavigationBarItem(
             icon: badge.totalUnread > 0
                 ? Badge(
                     label: Text(
-                      badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString(),
+                      badge.totalUnread > 99
+                          ? '99+'
+                          : badge.totalUnread.toString(),
                       style: const TextStyle(fontSize: 10, color: Colors.white),
                     ),
                     child: const Icon(Icons.notifications_none_outlined),
@@ -83,7 +103,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 : const Icon(Icons.notifications_none_outlined),
             label: 'Alerts',
           ),
-          const BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.settings_outlined),
+            label: 'Settings',
+          ),
         ],
       ),
     );
