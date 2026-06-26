@@ -126,6 +126,8 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
         return BitmapDescriptor.hueGreen;
       case LocationType.cafeteria:
         return BitmapDescriptor.hueYellow;
+      case LocationType.washroom:
+        return BitmapDescriptor.hueAzure;
       case LocationType.other:
         return BitmapDescriptor.hueBlue;
     }
