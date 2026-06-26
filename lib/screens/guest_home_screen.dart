@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
+import 'gallery_screen.dart';
 import 'schedule/campus_map_widget.dart';
 import 'school_info_screen.dart';
 
@@ -17,7 +18,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -45,6 +46,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> with TickerProviderSt
           tabs: const [
             Tab(icon: Icon(Icons.map), text: 'Map'),
             Tab(icon: Icon(Icons.layers), text: 'Legend'),
+            Tab(icon: Icon(Icons.photo_library), text: 'Gallery'),
             Tab(icon: Icon(Icons.info), text: 'About'),
           ],
         ),
@@ -55,6 +57,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> with TickerProviderSt
         children: const [
           CampusMapWidget(),
           CampusLegendTab(),
+          GalleryScreen(),
           SchoolInfoScreen(),
         ],
       ),

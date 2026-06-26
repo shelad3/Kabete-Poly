@@ -5,8 +5,8 @@ import '../../services/cube_service.dart';
 import 'booking_form_screen.dart';
 
 class CubeListScreen extends StatefulWidget {
-  final String? initialRoom;
-  const CubeListScreen({super.key, this.initialRoom});
+  final String? initialHouse;
+  const CubeListScreen({super.key, this.initialHouse});
 
   @override
   State<CubeListScreen> createState() => _CubeListScreenState();
@@ -14,21 +14,21 @@ class CubeListScreen extends StatefulWidget {
 
 class _CubeListScreenState extends State<CubeListScreen> {
   final CubeService _service = CubeService();
-  List<String> _rooms = [];
-  String? _selectedRoom;
+  List<String> _houses = [];
+  String? _selectedHouse;
 
   @override
   void initState() {
     super.initState();
-    _loadRooms();
+    _loadHouses();
   }
 
-  Future<void> _loadRooms() async {
-    final rooms = await _service.getDistinctRooms();
+  Future<void> _loadHouses() async {
+    final houses = await _service.getDistinctHouses();
     if (mounted) {
       setState(() {
-        _rooms = rooms;
-        _selectedRoom = widget.initialRoom ?? (rooms.isNotEmpty ? rooms.first : null);
+        _houses = houses;
+        _selectedHouse = widget.initialHouse ?? (houses.isNotEmpty ? houses.first : null);
       });
     }
   }
@@ -39,24 +39,24 @@ class _CubeListScreenState extends State<CubeListScreen> {
       appBar: AppBar(title: const Text('Book a Cubicle')),
       body: Column(
         children: [
-          if (_rooms.isNotEmpty)
+          if (_houses.isNotEmpty)
             Container(
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _rooms.length,
+                itemCount: _houses.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (_, i) => FilterChip(
-                  label: Text(_rooms[i]),
-                  selected: _selectedRoom == _rooms[i],
-                  onSelected: (_) => setState(() => _selectedRoom = _rooms[i]),
+                  label: Text(_houses[i]),
+                  selected: _selectedHouse == _houses[i],
+                  onSelected: (_) => setState(() => _selectedHouse = _houses[i]),
                 ),
               ),
             ),
-          if (_selectedRoom != null)
+          if (_selectedHouse != null)
             Expanded(
-              child: _buildCubeGrid(_selectedRoom!),
+              child: _buildCubeGrid(_selectedHouse!),
             )
           else
             Expanded(
@@ -76,9 +76,9 @@ class _CubeListScreenState extends State<CubeListScreen> {
     );
   }
 
-  Widget _buildCubeGrid(String room) {
+  Widget _buildCubeGrid(String house) {
     return StreamBuilder<List<model.Cube>>(
-      stream: _service.getCubesByRoomStream(room),
+      stream: _service.getCubesByHouseStream(house),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -86,7 +86,7 @@ class _CubeListScreenState extends State<CubeListScreen> {
         final cubes = snapshot.data ?? [];
         if (cubes.isEmpty) {
           return Center(
-            child: Text('No cubicles in $room', style: TextStyle(color: Colors.grey[600])),
+            child: Text('No cubicles in $house', style: TextStyle(color: Colors.grey[600])),
           );
         }
         return GridView.builder(
@@ -132,7 +132,7 @@ class _CubeTile extends StatelessWidget {
             Icon(Icons.workspaces, size: 32, color: Colors.blue[400]),
             const SizedBox(height: 6),
             Text(cube.label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            Text(cube.roomName, style: TextStyle(color: Colors.grey[600], fontSize: 11)),
+            Text(cube.houseName, style: TextStyle(color: Colors.grey[600], fontSize: 11)),
           ],
         ),
       ),

@@ -100,24 +100,41 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
       );
       return;
     }
-    if (_selectedPhotos.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at least one photo'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
     setState(() => _isUploading = true);
 
     try {
       final eventRef = FirebaseFirestore.instance.collection('events').doc();
 
-      // Upload cover photo
-      final coverFile = _selectedPhotos.first;
-      final coverExt = coverFile.name.split('.').last;
-      final coverRef = FirebaseStorage.instance.ref('events/${eventRef.id}/cover.$coverExt');
-      await coverRef.putData(await coverFile.readAsBytes());
-      final coverUrl = await coverRef.getDownloadURL();
+      String coverUrl = '';
+      int photoCount = 0;
+
+      if (_selectedPhotos.isNotEmpty) {
+        // Upload cover photo
+        final coverFile = _selectedPhotos.first;
+        final coverExt = coverFile.name.split('.').last;
+        final coverRef = FirebaseStorage.instance.ref('events/${eventRef.id}/cover.$coverExt');
+        await coverRef.putData(await coverFile.readAsBytes());
+        coverUrl = await coverRef.getDownloadURL();
+        photoCount = _selectedPhotos.length;
+
+        // Upload remaining photos to subcollection
+        final batch = FirebaseFirestore.instance.batch();
+        for (int i = 1; i < _selectedPhotos.length; i++) {
+          final photo = _selectedPhotos[i];
+          final ext = photo.name.split('.').last;
+          final photoRef = FirebaseStorage.instance.ref('events/${eventRef.id}/photos/photo_$i.$ext');
+          await photoRef.putData(await photo.readAsBytes());
+          final url = await photoRef.getDownloadURL();
+
+          final photoDocRef = eventRef.collection('photos').doc();
+          batch.set(photoDocRef, {
+            'url': url,
+            'caption': '',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      }
 
       // Set event doc
       await eventRef.set({
@@ -126,28 +143,10 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
         'date': Timestamp.fromDate(_eventDate),
         'visibility': _visibility,
         'coverUrl': coverUrl,
-        'photoCount': _selectedPhotos.length,
+        'photoCount': photoCount,
         'specialGuests': _specialGuests,
         'createdAt': FieldValue.serverTimestamp(),
       });
-
-      // Upload photos to subcollection
-      final batch = FirebaseFirestore.instance.batch();
-      for (int i = 1; i < _selectedPhotos.length; i++) {
-        final photo = _selectedPhotos[i];
-        final ext = photo.name.split('.').last;
-        final photoRef = FirebaseStorage.instance.ref('events/${eventRef.id}/photos/photo_$i.$ext');
-        await photoRef.putData(await photo.readAsBytes());
-        final url = await photoRef.getDownloadURL();
-
-        final photoDocRef = eventRef.collection('photos').doc();
-        batch.set(photoDocRef, {
-          'url': url,
-          'caption': '',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-      await batch.commit();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -268,7 +267,7 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
-                  child: Text('Tap "Add Photos" to select images', style: TextStyle(color: Colors.grey[500])),
+                  child: Text('No photos selected (optional)', style: TextStyle(color: Colors.grey[500])),
                 ),
               ),
             const SizedBox(height: 20),

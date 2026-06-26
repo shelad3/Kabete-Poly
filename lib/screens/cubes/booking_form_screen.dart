@@ -69,7 +69,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         studentName: user.fullName,
         regNo: user.registrationNumber,
         cubeId: widget.cube.id,
-        roomName: widget.cube.roomName,
+        houseName: widget.cube.houseName,
         cubeLabel: widget.cube.label,
         date: _selectedDate,
         startTime: _startTime,
@@ -115,7 +115,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.cube.label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(widget.cube.roomName, style: TextStyle(color: Colors.grey[600])),
+                        Text(widget.cube.houseName, style: TextStyle(color: Colors.grey[600])),
                       ],
                     ),
                   ],

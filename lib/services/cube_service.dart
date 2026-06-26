@@ -12,28 +12,28 @@ class CubeService {
       (snap) => snap.docs.map((d) => Cube.fromJson(d.data(), d.id)).toList(),
     );
 
-  Stream<List<Cube>> getCubesByRoomStream(String room) =>
+  Stream<List<Cube>> getCubesByHouseStream(String house) =>
     _db.collection('cubes')
-      .where('roomName', isEqualTo: room)
+      .where('houseName', isEqualTo: house)
       .where('isActive', isEqualTo: true)
       .snapshots().map(
         (snap) => snap.docs.map((d) => Cube.fromJson(d.data(), d.id)).toList(),
       );
 
-  Future<List<Cube>> getCubesByRoom(String room) async {
+  Future<List<Cube>> getCubesByHouse(String house) async {
     final snap = await _db.collection('cubes')
-      .where('roomName', isEqualTo: room)
+      .where('houseName', isEqualTo: house)
       .where('isActive', isEqualTo: true)
       .get();
     return snap.docs.map((d) => Cube.fromJson(d.data(), d.id)).toList();
   }
 
-  Future<List<String>> getDistinctRooms() async {
+  Future<List<String>> getDistinctHouses() async {
     final snap = await _db.collection('cubes')
       .where('isActive', isEqualTo: true)
       .get();
-    final rooms = snap.docs.map((d) => d['roomName'] as String? ?? '').toSet();
-    return rooms.where((r) => r.isNotEmpty).toList()..sort();
+    final houses = snap.docs.map((d) => d['houseName'] as String? ?? '').toSet();
+    return houses.where((h) => h.isNotEmpty).toList()..sort();
   }
 
   Future<void> addCube(Cube cube) =>

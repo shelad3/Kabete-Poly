@@ -4,7 +4,7 @@ class CubeBooking {
   final String studentName;
   final String regNo;
   final String cubeId;
-  final String roomName;
+  final String houseName;
   final String cubeLabel;
   final DateTime date;
   final String startTime;  // e.g. "08:00"
@@ -17,7 +17,7 @@ class CubeBooking {
     required this.studentName,
     required this.regNo,
     required this.cubeId,
-    required this.roomName,
+    required this.houseName,
     required this.cubeLabel,
     required this.date,
     required this.startTime,
@@ -37,7 +37,7 @@ class CubeBooking {
     studentName: json['studentName'] as String? ?? '',
     regNo: json['regNo'] as String? ?? '',
     cubeId: json['cubeId'] as String? ?? '',
-    roomName: json['roomName'] as String? ?? '',
+    houseName: json['houseName'] as String? ?? '',
     cubeLabel: json['cubeLabel'] as String? ?? '',
     date: (json['date'] as dynamic)?.toDate() ?? DateTime.now(),
     startTime: json['startTime'] as String? ?? '08:00',
@@ -50,7 +50,7 @@ class CubeBooking {
     'studentName': studentName,
     'regNo': regNo,
     'cubeId': cubeId,
-    'roomName': roomName,
+    'houseName': houseName,
     'cubeLabel': cubeLabel,
     'date': date,
     'startTime': startTime,

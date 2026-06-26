@@ -132,7 +132,7 @@ class _BookingCard extends StatelessWidget {
                 Icon(Icons.workspaces, color: Colors.blue[400], size: 20),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('${booking.cubeLabel} — ${booking.roomName}',
+                  child: Text('${booking.cubeLabel} — ${booking.houseName}',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 ),
                 Container(

@@ -78,6 +78,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 4),
               Card(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: ListTile(
@@ -94,6 +95,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 4),
               Card(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: ListTile(

@@ -92,7 +92,7 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text('${b.cubeLabel} — ${b.roomName}',
+                            child: Text('${b.cubeLabel} — ${b.houseName}',
                               style: const TextStyle(fontWeight: FontWeight.bold)),
                           ),
                           Container(

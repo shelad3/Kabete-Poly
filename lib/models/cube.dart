@@ -1,25 +1,25 @@
 class Cube {
   final String id;
-  final String roomName;
+  final String houseName;
   final String label;
   final bool isActive;
 
   Cube({
     required this.id,
-    required this.roomName,
+    required this.houseName,
     required this.label,
     this.isActive = true,
   });
 
   factory Cube.fromJson(Map<String, dynamic> json, String docId) => Cube(
     id: docId,
-    roomName: json['roomName'] as String? ?? '',
+    houseName: json['houseName'] as String? ?? '',
     label: json['label'] as String? ?? '',
     isActive: json['isActive'] as bool? ?? true,
   );
 
   Map<String, dynamic> toJson() => {
-    'roomName': roomName,
+    'houseName': houseName,
     'label': label,
     'isActive': isActive,
   };

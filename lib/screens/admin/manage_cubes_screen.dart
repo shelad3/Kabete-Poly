@@ -11,19 +11,19 @@ class ManageCubesScreen extends StatefulWidget {
 
 class _ManageCubesScreenState extends State<ManageCubesScreen> {
   final CubeService _service = CubeService();
-  final _roomCtrl = TextEditingController();
+  final _houseCtrl = TextEditingController();
   final _labelCtrl = TextEditingController();
   bool _isAdding = false;
 
   @override
   void dispose() {
-    _roomCtrl.dispose();
+    _houseCtrl.dispose();
     _labelCtrl.dispose();
     super.dispose();
   }
 
   void _showAddDialog() {
-    _roomCtrl.clear();
+    _houseCtrl.clear();
     _labelCtrl.clear();
     showDialog(
       context: context,
@@ -33,8 +33,8 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: _roomCtrl,
-              decoration: const InputDecoration(labelText: 'Room / Lab Name', border: OutlineInputBorder()),
+              controller: _houseCtrl,
+              decoration: const InputDecoration(labelText: 'House / Lab Name', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -47,10 +47,10 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              if (_roomCtrl.text.trim().isEmpty || _labelCtrl.text.trim().isEmpty) return;
+              if (_houseCtrl.text.trim().isEmpty || _labelCtrl.text.trim().isEmpty) return;
               await _service.addCube(model.Cube(
                 id: '',
-                roomName: _roomCtrl.text.trim(),
+                houseName: _houseCtrl.text.trim(),
                 label: _labelCtrl.text.trim().toUpperCase(),
               ));
               if (ctx.mounted) Navigator.pop(ctx);
@@ -128,7 +128,7 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
                     backgroundColor: Colors.blue.withValues(alpha: 0.1),
                     child: Icon(Icons.workspaces, color: Colors.blue[400]),
                   ),
-                  title: Text('${c.label} — ${c.roomName}'),
+                  title: Text('${c.label} — ${c.houseName}'),
                   subtitle: Text(c.isActive ? 'Active' : 'Inactive'),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
