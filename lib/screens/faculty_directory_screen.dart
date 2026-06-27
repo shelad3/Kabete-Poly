@@ -166,9 +166,11 @@ class _FacultyDirectoryScreenState extends State<FacultyDirectoryScreen> {
                                 children: [
                                   CircleAvatar(
                                     radius: 28,
-                                    backgroundImage: avatarUrl.isNotEmpty
-                                        ? NetworkImage(avatarUrl)
-                                        : const NetworkImage('https://i.pravatar.cc/150'),
+                                    backgroundColor: Colors.grey[200],
+                                    backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                                    child: avatarUrl.isEmpty
+                                        ? Text(name[0].toUpperCase(), style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold))
+                                        : null,
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(

@@ -1,10 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import '../../services/storage_service.dart';
 
 class ManageEventsScreen extends StatefulWidget {
   const ManageEventsScreen({super.key});
@@ -14,13 +13,179 @@ class ManageEventsScreen extends StatefulWidget {
 }
 
 class _ManageEventsScreenState extends State<ManageEventsScreen> {
+  void _deleteEvent(DocumentSnapshot doc) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Event'),
+        content: Text('Delete "${doc['title']}"? This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      try {
+        final photos = await doc.reference.collection('photos').get();
+        for (final p in photos.docs) {
+          await p.reference.delete();
+        }
+        await doc.reference.delete();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event deleted'), backgroundColor: Colors.green),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Delete failed: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Manage Events')),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('events').orderBy('date', descending: true).snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final events = snapshot.data?.docs ?? [];
+          if (events.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.event, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text('No events yet', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: () => _showEventForm(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Event'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: events.length + 1,
+            itemBuilder: (_, i) {
+              if (i == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showEventForm(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create New Event'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                  ),
+                );
+              }
+              final doc = events[i - 1];
+              final data = doc.data() as Map<String, dynamic>;
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: data['coverUrl'] != null && (data['coverUrl'] as String).isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(data['coverUrl'], width: 48, height: 48, fit: BoxFit.cover),
+                        )
+                      : CircleAvatar(child: Icon(Icons.image, color: Colors.grey[400])),
+                  title: Text(data['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    '${DateFormat('d MMM yyyy').format((data['date'] as Timestamp).toDate())} • ${data['visibility'] ?? 'public'}',
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 20),
+                        onPressed: () => _showEventForm(existingDoc: doc),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                        onPressed: () => _deleteEvent(doc),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  void _showEventForm({DocumentSnapshot? existingDoc}) {
+    final existingData = existingDoc?.data() as Map<String, dynamic>?;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _EventFormScreen(
+          existingDoc: existingDoc,
+          existingData: existingData,
+        ),
+      ),
+    );
+  }
+}
+
+class _EventFormScreen extends StatefulWidget {
+  final DocumentSnapshot? existingDoc;
+  final Map<String, dynamic>? existingData;
+  const _EventFormScreen({this.existingDoc, this.existingData});
+
+  @override
+  State<_EventFormScreen> createState() => _EventFormScreenState();
+}
+
+class _EventFormScreenState extends State<_EventFormScreen> {
+  final StorageService _storage = StorageService();
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
-  DateTime _eventDate = DateTime.now();
+  late DateTime _eventDate;
   String _visibility = 'public';
-  final List<Map<String, String>> _specialGuests = [];
+  List<Map<String, String>> _specialGuests = [];
   final List<XFile> _selectedPhotos = [];
   bool _isUploading = false;
+  bool get _isEdit => widget.existingDoc != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final data = widget.existingData;
+    if (data != null) {
+      _titleController.text = data['title'] ?? '';
+      _descController.text = data['description'] ?? '';
+      _eventDate = (data['date'] as Timestamp).toDate();
+      _visibility = data['visibility'] ?? 'public';
+      final guests = data['specialGuests'] as List<dynamic>?;
+      if (guests != null) {
+        _specialGuests = guests.map((g) => Map<String, String>.from(g as Map)).toList();
+      }
+    } else {
+      _eventDate = DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -65,7 +230,8 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
             const SizedBox(height: 8),
             TextField(
                 controller: roleCtrl,
-                decoration: const InputDecoration(labelText: 'Role (e.g. HOD, Principal)', border: OutlineInputBorder())),
+                decoration: const InputDecoration(
+                    labelText: 'Role (e.g. HOD, Principal)', border: OutlineInputBorder())),
             const SizedBox(height: 8),
             TextField(
                 controller: photoCtrl,
@@ -103,40 +269,38 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
     setState(() => _isUploading = true);
 
     try {
-      final eventRef = FirebaseFirestore.instance.collection('events').doc();
+      final db = FirebaseFirestore.instance;
+      final eventRef = _isEdit
+          ? widget.existingDoc!.reference
+          : db.collection('events').doc();
 
-      String coverUrl = '';
-      int photoCount = 0;
+      String coverUrl = widget.existingData?['coverUrl'] ?? '';
+      int photoCount = _selectedPhotos.length;
 
       if (_selectedPhotos.isNotEmpty) {
-        // Upload cover photo
-        final coverFile = _selectedPhotos.first;
-        final coverExt = coverFile.name.split('.').last;
-        final coverRef = FirebaseStorage.instance.ref('events/${eventRef.id}/cover.$coverExt');
-        await coverRef.putData(await coverFile.readAsBytes());
-        coverUrl = await coverRef.getDownloadURL();
-        photoCount = _selectedPhotos.length;
+        final eventId = eventRef.id;
+        final coverFile = File(_selectedPhotos.first.path);
+        final coverUploaded = await _storage.uploadImage(coverFile, 'events/$eventId/cover');
+        if (coverUploaded != null) coverUrl = coverUploaded;
 
-        // Upload remaining photos to subcollection
-        final batch = FirebaseFirestore.instance.batch();
+        final batch = db.batch();
         for (int i = 1; i < _selectedPhotos.length; i++) {
-          final photo = _selectedPhotos[i];
-          final ext = photo.name.split('.').last;
-          final photoRef = FirebaseStorage.instance.ref('events/${eventRef.id}/photos/photo_$i.$ext');
-          await photoRef.putData(await photo.readAsBytes());
-          final url = await photoRef.getDownloadURL();
-
-          final photoDocRef = eventRef.collection('photos').doc();
-          batch.set(photoDocRef, {
-            'url': url,
-            'caption': '',
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+          final photo = File(_selectedPhotos[i].path);
+          final url = await _storage.uploadImage(photo, 'events/$eventId/photo_$i');
+          if (url != null) {
+            final photoDocRef = eventRef.collection('photos').doc();
+            batch.set(photoDocRef, {
+              'url': url,
+              'caption': '',
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          }
         }
         await batch.commit();
+      } else if (!_isEdit) {
+        photoCount = 0;
       }
 
-      // Set event doc
       await eventRef.set({
         'title': title,
         'description': _descController.text.trim(),
@@ -146,18 +310,21 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
         'photoCount': photoCount,
         'specialGuests': _specialGuests,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Event created successfully!'), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(_isEdit ? 'Event updated!' : 'Event created!'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create event: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Failed to save event: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -168,7 +335,7 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Event Gallery')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit Event' : 'Create Event')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -204,7 +371,6 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            // Photos
             Row(
               children: [
                 const Text('Photos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -234,8 +400,7 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                             height: 100,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              width: 100,
-                              height: 100,
+                              width: 100, height: 100,
                               color: Colors.grey[300],
                               child: const Icon(Icons.broken_image),
                             ),
@@ -244,8 +409,7 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                       ),
                       if (i == 0)
                         Positioned(
-                          top: 4,
-                          left: 4,
+                          top: 4, left: 4,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -271,7 +435,6 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                 ),
               ),
             const SizedBox(height: 20),
-            // Special Guests
             Row(
               children: [
                 const Text('Special Guests', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -306,7 +469,9 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                 icon: _isUploading
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.upload),
-                label: Text(_isUploading ? 'Uploading...' : 'Create Event Gallery'),
+                label: Text(_isUploading
+                    ? 'Uploading...'
+                    : (_isEdit ? 'Update Event' : 'Create Event Gallery')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
@@ -319,5 +484,3 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
     );
   }
 }
-
-

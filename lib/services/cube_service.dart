@@ -72,8 +72,34 @@ class CubeService {
   // ---- Bookings ----
 
   Future<CubeBooking> createBooking(CubeBooking booking) async {
+    final term = booking.term;
+    final year = booking.year;
+    final existing = await _db.collection('cube_bookings')
+      .where('studentId', isEqualTo: booking.studentId)
+      .where('term', isEqualTo: term)
+      .where('year', isEqualTo: year)
+      .where('status', whereIn: ['pending', 'confirmed', 'checked_in'])
+      .limit(1)
+      .get();
+    if (existing.docs.isNotEmpty) {
+      throw Exception('You already have an active booking this term.');
+    }
     final ref = await _db.collection('cube_bookings').add(booking.toJson());
     return CubeBooking.fromJson({...booking.toJson(), 'id': ref.id}, ref.id);
+  }
+
+  Future<CubeBooking?> getMyActiveBooking(String studentId) async {
+    final term = TermUtils.getCurrentTerm();
+    final year = TermUtils.getCurrentYear();
+    final snap = await _db.collection('cube_bookings')
+      .where('studentId', isEqualTo: studentId)
+      .where('term', isEqualTo: term)
+      .where('year', isEqualTo: year)
+      .where('status', whereIn: ['pending', 'confirmed', 'checked_in'])
+      .limit(1)
+      .get();
+    if (snap.docs.isEmpty) return null;
+    return CubeBooking.fromJson(snap.docs.first.data(), snap.docs.first.id);
   }
 
   Future<void> cancelBooking(String id) =>

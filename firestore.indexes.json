@@ -243,6 +243,20 @@
               "order": "ASCENDING"
             }
           ]
+        },
+        {
+          "collectionGroup": "houses",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "category",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "name",
+              "order": "ASCENDING"
+            }
+          ]
         }
     ],
     "fieldOverrides": []

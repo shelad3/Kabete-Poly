@@ -23,6 +23,24 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _topicController = TextEditingController();
   final _roomController = TextEditingController();
+  final _teacherController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final user = context.read<AuthProvider>().currentUser;
+    if (user != null && user.fullName.isNotEmpty) {
+      _teacherController.text = user.fullName;
+    }
+  }
+
+  @override
+  void dispose() {
+    _topicController.dispose();
+    _roomController.dispose();
+    _teacherController.dispose();
+    super.dispose();
+  }
 
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
@@ -122,7 +140,7 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
         id: '',
         classId: classId,
         subject: _topicController.text.trim(),
-        teacher: 'me',
+        teacher: _teacherController.text.trim(),
         room: _roomController.text.trim(),
         startTime: startTimeStr,
         endTime: endTimeStr,
@@ -328,6 +346,12 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
               TextFormField(
                 controller: _roomController,
                 decoration: InputDecoration(labelText: widget.isPractical ? 'Lab Room' : 'Classroom', border: const OutlineInputBorder()),
+                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _teacherController,
+                decoration: const InputDecoration(labelText: 'Teacher Name', border: OutlineInputBorder()),
                 validator: (val) => val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 24),

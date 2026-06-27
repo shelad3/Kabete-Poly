@@ -262,6 +262,12 @@ class LessonDetailSheet extends StatelessWidget {
                   final uri = Uri.parse(lesson.attachmentUrls[i]);
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Could not open ${lesson.attachmentNames[i]}. Try downloading it first.'), backgroundColor: Colors.red),
+                      );
+                    }
                   }
                 },
               );

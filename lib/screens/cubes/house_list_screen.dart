@@ -60,6 +60,20 @@ class _HouseCategoryTab extends StatelessWidget {
     return StreamBuilder<List<House>>(
       stream: service.getHousesByCategoryStream(category),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print('BOOKING ERROR: ${snapshot.error}');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                const SizedBox(height: 8),
+                Text('Error loading houses', style: TextStyle(color: Colors.red[600])),
+                Text('${snapshot.error}', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+              ],
+            ),
+          );
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }

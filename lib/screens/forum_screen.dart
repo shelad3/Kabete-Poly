@@ -543,9 +543,11 @@ class _ForumScreenState extends State<ForumScreen> {
           if (!isMe)
             CircleAvatar(
               radius: 18,
-              backgroundImage: msg.senderAvatarUrl.isNotEmpty
-                  ? NetworkImage(msg.senderAvatarUrl)
-                  : const NetworkImage('https://i.pravatar.cc/100'),
+              backgroundColor: Colors.grey[200],
+              backgroundImage: msg.senderAvatarUrl.isNotEmpty ? NetworkImage(msg.senderAvatarUrl) : null,
+              child: msg.senderAvatarUrl.isEmpty
+                  ? Text(msg.senderName[0].toUpperCase(), style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 12))
+                  : null,
             ),
           if (!isMe) const SizedBox(width: 8),
           Column(

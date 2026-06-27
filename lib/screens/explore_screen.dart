@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/unread_badge_provider.dart';
+import '../services/cube_service.dart';
 import '../widgets/app_drawer.dart';
 import 'incoming_lessons_screen.dart';
 import 'full_timeline_screen.dart';
@@ -9,6 +10,7 @@ import 'quiz/quiz_list_screen.dart';
 import 'grades/grade_report_screen.dart';
 import 'cubes/house_list_screen.dart';
 import 'cubes/my_bookings_screen.dart';
+import 'cubes/booking_receipt_screen.dart';
 import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
 
@@ -124,10 +126,24 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     title: const Text('Book a Cubicle', style: TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: const Text('Reserve a lab workstation'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const HouseListScreen()),
-                    ),
+                    onTap: () async {
+                      final userId = context.read<AuthProvider>().currentUserId;
+                      final existing = await CubeService().getMyActiveBooking(userId);
+                      if (!context.mounted) return;
+                      if (existing != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingReceiptScreen(booking: existing),
+                          ),
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const HouseListScreen()),
+                        );
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(height: 4),

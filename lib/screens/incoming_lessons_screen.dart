@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/schedule_item.dart';
 import '../services/firestore_service.dart';
 import '../services/class_provider.dart';
+import 'schedule/lesson_detail_sheet.dart';
 
 class IncomingLessonsScreen extends StatefulWidget {
   const IncomingLessonsScreen({super.key});
@@ -116,6 +117,17 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
             subtitle: Text('$dateStr • ${item.startTime} - ${item.endTime} • ${item.teacher}',
                 style: const TextStyle(fontSize: 12)),
             trailing: const Icon(Icons.chevron_right, size: 18),
+            onTap: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              builder: (_) => LessonDetailSheet(
+                lesson: item,
+                onShowMap: ({locationId, teacherName}) {},
+              ),
+            ),
           ),
         );
       },
