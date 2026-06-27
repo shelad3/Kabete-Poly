@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/firestore_service.dart';
 import '../services/class_provider.dart';
-import '../services/auth_provider.dart';
+import '../models/lesson.dart';
 import '../models/schedule_item.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'dart:async';
 import '../widgets/app_drawer.dart';
 import '../widgets/shimmer_loading.dart';
 import 'notification_screen.dart';
 import 'tabs/mandatory_timetable_tab.dart';
-import 'quiz/quiz_list_screen.dart';
 import 'schedule/campus_map_widget.dart';
 import 'schedule/lesson_detail_sheet.dart';
 import '../utils/campus_map_data.dart';
@@ -24,8 +21,6 @@ class ScheduleScreen extends StatefulWidget {
 
 class _ScheduleScreenState extends State<ScheduleScreen>
     with TickerProviderStateMixin {
-  late Timer _timer;
-  DateTime _now = DateTime.now();
   late TabController _tabController;
 
   String? _highlightId;
@@ -37,18 +32,10 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (mounted) {
-        setState(() {
-          _now = DateTime.now();
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
-    _timer.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -106,9 +93,6 @@ class _ScheduleScreenState extends State<ScheduleScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Theme.of(context).colorScheme.primary,
           indicatorWeight: 3,
           tabs: const [
             Tab(text: 'Mandatory', icon: Icon(Icons.assignment_turned_in)),
@@ -139,81 +123,87 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   Widget _buildTargetTimelineTab() {
     return Consumer<ClassProvider>(
       builder: (context, classProvider, _) {
-        return StreamBuilder<List<ScheduleItem>>(
-          stream: _firestoreService.getScheduleStream(
-            classProvider.currentClass,
-            _now,
-          ),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return const Center(child: Text('Error loading schedule.'));
-            }
-
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const ShimmerScheduleList();
-            }
-
-            final schedule = snapshot.data ?? [];
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDayHeader(schedule.length),
-                  const SizedBox(height: 24),
-                  if (schedule.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 32),
-                      child: Center(
-                        child: Text('No classes scheduled for today.'),
-                      ),
-                    )
-                  else ...[
-                    if (schedule.any((i) => !i.isDefault)) ...[
-                      const Row(
-                        children: [
-                          Icon(Icons.bolt, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text(
-                            'Live Adjustments & Practicals',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      ...schedule
-                          .where((i) => !i.isDefault)
-                          .map(_buildScheduleCard),
-                      const Divider(height: 32, thickness: 2),
-                    ],
-
-                    if (schedule.any((i) => i.isDefault)) ...[
-                      const Row(
-                        children: [
-                          Icon(Icons.verified, color: Colors.blueGrey),
-                          SizedBox(width: 8),
-                          Text(
-                            'Official School Timetable',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      ...schedule
-                          .where((i) => i.isDefault)
-                          .map(_buildScheduleCard),
-                    ],
+        final classId = classProvider.currentClass;
+        return DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: TabBar(
+                  labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  unselectedLabelColor: Colors.grey,
+                  tabs: const [
+                    Tab(text: 'Past Lessons'),
+                    Tab(text: 'Upcoming Lessons'),
                   ],
-                  const SizedBox(height: 24),
-                  _buildExtraFeatures(),
-                ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildPastLessonsTab(classId),
+                    _buildUpcomingLessonsTab(classId),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPastLessonsTab(String classId) {
+    return StreamBuilder<List<Lesson>>(
+      stream: _firestoreService.getLessonsStream(classId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const ShimmerScheduleList();
+        }
+        final lessons = snapshot.data ?? [];
+        if (lessons.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.auto_stories_outlined, size: 48, color: Colors.grey),
+                SizedBox(height: 12),
+                Text('No completed lessons yet.', style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: lessons.length,
+          itemBuilder: (_, i) {
+            final lesson = lessons[i];
+            final isPractical = lesson.report.isNotEmpty || lesson.practicalPictures.isNotEmpty;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: isPractical ? Colors.purple.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                  child: Icon(
+                    isPractical ? Icons.science : Icons.auto_stories,
+                    color: isPractical ? Colors.purple : Colors.orange,
+                  ),
+                ),
+                title: Text(lesson.topic, style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(lesson.subtopic, style: const TextStyle(fontSize: 12)),
+                    const SizedBox(height: 2),
+                    Text('${lesson.teacher} • ${_formatDate(lesson.date)}${isPractical ? ' • Practical' : ''}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                  ],
+                ),
+                isThreeLine: false,
               ),
             );
           },
@@ -222,370 +212,107 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     );
   }
 
-  Widget _buildDayHeader(int count) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Target Timeline',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '$count timeline blocks scheduled',
-          style: const TextStyle(color: Colors.grey),
-        ),
-      ],
-    );
-  }
+  Widget _buildUpcomingLessonsTab(String classId) {
+    return StreamBuilder<List<ScheduleItem>>(
+      stream: _firestoreService.getScheduleTimelineStream(classId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const ShimmerScheduleList();
+        }
+        final allItems = snapshot.data ?? [];
+        final today = DateTime.now();
+        final startOfToday = DateTime(today.year, today.month, today.day);
 
-  Widget _buildScheduleCard(ScheduleItem item) {
-    final progress = item.getProgress(_now);
-    final isCurrent = progress > 0 && progress < 1;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+        final upcoming = allItems.where((item) {
+          if (item.isDefault) {
+            return item.dayOfWeek != null && item.dayOfWeek! >= today.weekday;
+          }
+          return item.date.isAfter(startOfToday.subtract(const Duration(seconds: 1)));
+        }).toList();
 
-    return GestureDetector(
-      onTap: () => _showLessonDetail(item),
-      onLongPress: () => _confirmDeleteSchedule(item),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: isCurrent
-              ? item.color.withValues(alpha: 0.1)
-              : (isDark ? const Color(0xFF2A2A3E) : Colors.white),
-          borderRadius: BorderRadius.circular(20),
-          border: isCurrent ? Border.all(color: item.color, width: 2) : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: item.color,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${item.startTime} - ${item.endTime}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (isCurrent)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.circle, color: Colors.red, size: 10),
-                          SizedBox(width: 6),
-                          Text(
-                            'LIVE NOW',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                item.subject,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(item.room, style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(width: 16),
-                  const Icon(
-                    Icons.person_outline,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    item.teacher,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-              if (item.attachmentUrls.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                const Text(
-                  'Attachments:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                ...List.generate(item.attachmentUrls.length, (i) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: InkWell(
-                      onTap: () async {
-                        final uri = Uri.parse(item.attachmentUrls[i]);
-                        final messenger = ScaffoldMessenger.of(context);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        } else {
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text('Could not open the attachment.'),
-                            ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.blue.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.download,
-                              size: 14,
-                              color: Colors.blue,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                i < item.attachmentNames.length
-                                    ? item.attachmentNames[i]
-                                    : 'Document ${i + 1}',
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+        upcoming.sort((a, b) => a.date.compareTo(b.date));
+
+        final practicals = upcoming.where((i) => i.description.contains('Practical')).toList();
+        final theory = upcoming.where((i) => !i.description.contains('Practical')).toList();
+
+        if (upcoming.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.calendar_month_outlined, size: 48, color: Colors.grey),
+                SizedBox(height: 12),
+                Text('No upcoming lessons.', style: TextStyle(color: Colors.grey)),
               ],
-              if (isCurrent) ...[
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ),
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.all(12),
+          children: [
+            if (practicals.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 8),
+                child: Row(
                   children: [
-                    Text(
-                      'Lesson Progress',
-                      style: TextStyle(color: Colors.grey[700], fontSize: 12),
-                    ),
-                    Text(
-                      '${(progress * 100).toInt()}%',
-                      style: TextStyle(
-                        color: item.color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Icon(Icons.science, size: 18, color: Colors.purple),
+                    const SizedBox(width: 6),
+                    Text('Upcoming Practicals (${practicals.length})',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.purple)),
                   ],
                 ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: item.color.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(item.color),
-                    minHeight: 8,
-                  ),
-                ),
-              ],
+              ),
+              ...practicals.map(_buildCompactScheduleCard),
+              const SizedBox(height: 12),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExtraFeatures() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildQuickAction(
-              Icons.assignment_outlined,
-              'Deadlines',
-              Colors.orange,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const QuizListScreen()),
-                );
-              },
-            ),
-            _buildQuickAction(Icons.school_outlined, 'Exams', Colors.red, () {
-              _showComingSoon(context, 'Exam schedule coming soon.');
-            }),
-            _buildQuickAction(
-              Icons.check_circle_outline,
-              'Attendance',
-              Colors.green,
-              () {
-                _showComingSoon(context, 'Attendance tracking coming soon.');
-              },
-            ),
-            _buildQuickAction(
-              Icons.volume_off_outlined,
-              'Quiet Mode',
-              Colors.blueGrey,
-              () {
-                _showComingSoon(context, 'Quiet mode coming soon.');
-              },
-            ),
+            if (theory.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.auto_stories, size: 18, color: Colors.orange),
+                    const SizedBox(width: 6),
+                    Text('Upcoming Theory (${theory.length})',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.orange)),
+                  ],
+                ),
+              ),
+              ...theory.map(_buildCompactScheduleCard),
+            ],
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCompactScheduleCard(ScheduleItem item) {
+    final isPractical = item.description.contains('Practical');
+    final color = isPractical ? Colors.purple : Colors.orange;
+    final dateStr = item.isDefault
+        ? 'Every ${['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][item.dayOfWeek ?? 0]}'
+        : _formatDate(item.date);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 6),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withValues(alpha: 0.1),
+          child: Icon(isPractical ? Icons.science : Icons.auto_stories, color: color, size: 20),
         ),
-      ],
-    );
-  }
-
-  void _confirmDeleteSchedule(ScheduleItem item) {
-    final user = context.read<AuthProvider>().currentUser;
-    if (user?.isTeacher != true) return;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Schedule Item'),
-        content: Text('Permanently delete "${item.subject}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              try {
-                await _firestoreService.deleteScheduleItem(item.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Schedule item deleted'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
+        title: Text(item.subject, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: Text('$dateStr • ${item.startTime} - ${item.endTime} • ${item.teacher}',
+            style: const TextStyle(fontSize: 12)),
+        trailing: const Icon(Icons.chevron_right, size: 18),
+        onTap: () => _showLessonDetail(item),
       ),
     );
   }
 
-  void _showComingSoon(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
-  }
-
-  Widget _buildQuickAction(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
+  String _formatDate(DateTime dt) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 }

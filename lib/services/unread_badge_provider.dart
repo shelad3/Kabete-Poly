@@ -8,12 +8,14 @@ import '../models/ticket.dart';
 class UnreadBadgeProvider extends ChangeNotifier {
   int _notificationCount = 0;
   int _alertCount = 0;
-  final int _forumCount = 0;
+  int _forumCount = 0;
+  int _updateCount = 0;
 
-  int get totalUnread => _notificationCount + _alertCount + _forumCount;
+  int get totalUnread => _notificationCount + _alertCount + _forumCount + _updateCount;
   int get unreadNotifications => _notificationCount;
   int get unreadAlerts => _alertCount;
   int get unreadForum => _forumCount;
+  int get unreadUpdates => _updateCount;
 
   StreamSubscription? _notifSub;
   StreamSubscription? _alertSub;
@@ -82,6 +84,27 @@ class UnreadBadgeProvider extends ChangeNotifier {
   void resetAlertCount() {
     _alertCount = 0;
     notifyListeners();
+  }
+
+  void resetUpdateCount() {
+    _updateCount = 0;
+    notifyListeners();
+  }
+
+  Future<void> checkForPendingUpdates() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasUpdate = prefs.getBool('update_available') ?? false;
+    if (hasUpdate) {
+      _updateCount = 1;
+      notifyListeners();
+    }
+  }
+
+  void setForumCount(int count) {
+    if (_forumCount != count) {
+      _forumCount = count;
+      notifyListeners();
+    }
   }
 
   @override

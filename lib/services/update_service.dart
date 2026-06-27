@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'notification_service.dart';
 
 class UpdateService {
@@ -39,6 +40,11 @@ class UpdateService {
           downloadUrl ??= data['html_url'];
 
           final releaseNotes = data['body'] ?? '';
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('update_available', true);
+          await prefs.setString('pending_update_version', latestVersionTag);
+          await prefs.setString('pending_update_notes', releaseNotes);
 
           if (context.mounted) {
             _showUpdateDialog(context, latestVersionTag, downloadUrl!, releaseNotes);
@@ -90,6 +96,28 @@ class UpdateService {
     } catch (e) {
       return latestVersion.compareTo(currentVersion) > 0;
     }
+  }
+
+  static Future<bool> hasPendingUpdate() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('update_available') ?? false;
+  }
+
+  static Future<Map<String, String>?> getPendingUpdateInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final available = prefs.getBool('update_available') ?? false;
+    if (!available) return null;
+    return {
+      'version': prefs.getString('pending_update_version') ?? '',
+      'notes': prefs.getString('pending_update_notes') ?? '',
+    };
+  }
+
+  static Future<void> clearPendingUpdate() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('update_available');
+    await prefs.remove('pending_update_version');
+    await prefs.remove('pending_update_notes');
   }
 
   static String _formatBytes(int bytes) {

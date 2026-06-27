@@ -1,10 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message.dart';
 import '../models/forum_channel.dart';
 import '../services/forum_service.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
+import '../services/unread_badge_provider.dart';
 import 'package:intl/intl.dart';
 import '../widgets/shimmer_loading.dart';
 
@@ -20,11 +24,69 @@ class _ForumScreenState extends State<ForumScreen> {
   final _textController = TextEditingController();
   String? _selectedChannelId;
   bool _showChannelList = true;
+  Map<String, DateTime> _lastSeen = {};
+  Map<String, DateTime> _latestMsg = {};
+  bool _seenLoaded = false;
 
   @override
   void dispose() {
     _textController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadLastSeen(String classId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('forum_last_seen_$classId');
+    if (raw != null) {
+      final map = Map<String, dynamic>.from(
+        const JsonDecoder().convert(raw) as Map,
+      );
+      _lastSeen = map.map((k, v) => MapEntry(k, DateTime.parse(v as String)));
+    }
+    _seenLoaded = true;
+  }
+
+  Future<void> _saveLastSeen(String classId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = const JsonEncoder().convert(
+      _lastSeen.map((k, v) => MapEntry(k, v.toIso8601String())),
+    );
+    await prefs.setString('forum_last_seen_$classId', raw);
+  }
+
+  Future<void> _markChannelSeen(String channelId, String classId) async {
+    _lastSeen[channelId] = DateTime.now();
+    await _saveLastSeen(classId);
+    _updateForumBadge();
+  }
+
+  void _updateForumBadge() {
+    final unread = _latestMsg.entries.where((e) {
+      final lastSeen = _lastSeen[e.key];
+      return lastSeen == null || e.value.isAfter(lastSeen);
+    }).length;
+    context.read<UnreadBadgeProvider>().setForumCount(unread);
+  }
+
+  Future<void> _loadLatestTimestamps(List<ForumChannel> channels) async {
+    final fs = FirebaseFirestore.instance;
+    for (final ch in channels) {
+      try {
+        final snap = await fs
+            .collection('messages')
+            .where('channelId', isEqualTo: ch.id)
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .get();
+        if (snap.docs.isNotEmpty) {
+          final ts = (snap.docs.first.data()['timestamp'] as Timestamp?)?.toDate();
+          if (ts != null) {
+            _latestMsg[ch.id] = ts;
+          }
+        }
+      } catch (_) {}
+    }
+    _updateForumBadge();
   }
 
   Future<void> _sendMessage() async {
@@ -228,6 +290,9 @@ class _ForumScreenState extends State<ForumScreen> {
       body: Selector<ClassProvider, String>(
         selector: (_, cp) => cp.currentClass,
         builder: (_, currentClass, _) {
+          if (!_seenLoaded) {
+            _loadLastSeen(currentClass);
+          }
           return _buildCurrentView(currentClass);
         },
       ),
@@ -245,6 +310,9 @@ class _ForumScreenState extends State<ForumScreen> {
           return Center(child: Text('Error loading channels: ${channelSnapshot.error}'));
         }
         final channels = channelSnapshot.data ?? [];
+        if (_latestMsg.isEmpty && channels.isNotEmpty) {
+          _loadLatestTimestamps(channels);
+        }
         final user = context.read<AuthProvider>().currentUser;
         if (_showChannelList) {
           return _buildChannelList(channels, user);
@@ -268,6 +336,9 @@ class _ForumScreenState extends State<ForumScreen> {
         final isAdmin = user?.isAdmin ?? false;
         final isTeacher = user?.isTeacher ?? false;
         final canEdit = isTeacher || isAdmin;
+        final lastSeen = _lastSeen[ch.id];
+        final latest = _latestMsg[ch.id];
+        final hasUnread = latest != null && (lastSeen == null || latest.isAfter(lastSeen));
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: ListTile(
@@ -275,12 +346,45 @@ class _ForumScreenState extends State<ForumScreen> {
               backgroundColor: ch.isAnnouncement
                   ? Colors.orange.withValues(alpha: 0.1)
                   : Colors.blue.withValues(alpha: 0.1),
-              child: Icon(
-                ch.isAnnouncement ? Icons.campaign : Icons.chat,
-                color: ch.isAnnouncement ? Colors.orange : Colors.blue,
+              child: Stack(
+                children: [
+                  Icon(
+                    ch.isAnnouncement ? Icons.campaign : Icons.chat,
+                    color: ch.isAnnouncement ? Colors.orange : Colors.blue,
+                  ),
+                  if (hasUnread)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-            title: Text(ch.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(ch.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                if (hasUnread)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(left: 6),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
             subtitle: Text(
               ch.isAnnouncement ? 'Announcements' : 'Open discussion',
               style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.grey[600]),
@@ -330,6 +434,8 @@ class _ForumScreenState extends State<ForumScreen> {
               ],
             ),
             onTap: () {
+              final classProvider = context.read<ClassProvider>();
+              _markChannelSeen(ch.id, classProvider.currentClass);
               setState(() {
                 _selectedChannelId = ch.id;
                 _showChannelList = false;
@@ -374,7 +480,10 @@ class _ForumScreenState extends State<ForumScreen> {
                     ),
                     selected: isSelected,
                     onSelected: (val) {
-                      if (val) setState(() => _selectedChannelId = ch.id);
+                      if (val) {
+                        _markChannelSeen(ch.id, currentClass);
+                        setState(() => _selectedChannelId = ch.id);
+                      }
                     },
                   ),
                 );
@@ -538,3 +647,5 @@ class _ForumScreenState extends State<ForumScreen> {
     );
   }
 }
+
+

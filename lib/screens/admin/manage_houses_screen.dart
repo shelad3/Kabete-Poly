@@ -18,9 +18,9 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
   void _showAddDialog() {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
+    final cubesCtrl = TextEditingController(text: '12');
+    final capacityCtrl = TextEditingController(text: '4');
     String category = 'boys';
-    int totalCubes = 12;
-    int defaultCapacity = 4;
 
     showDialog(
       context: context,
@@ -56,19 +56,17 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                   children: [
                     Expanded(
                       child: TextField(
+                        controller: cubesCtrl,
                         decoration: const InputDecoration(labelText: 'Total Cubes', border: OutlineInputBorder()),
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: totalCubes.toString()),
-                        onChanged: (v) => setDState(() => totalCubes = int.tryParse(v) ?? 12),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
+                        controller: capacityCtrl,
                         decoration: const InputDecoration(labelText: 'Max per Cube', border: OutlineInputBorder()),
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: defaultCapacity.toString()),
-                        onChanged: (v) => setDState(() => defaultCapacity = int.tryParse(v) ?? 4),
                       ),
                     ),
                   ],
@@ -81,16 +79,31 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
             ElevatedButton(
               onPressed: () async {
                 final name = nameCtrl.text.trim();
-                if (name.isEmpty) return;
-                final houseId = await _houseService.addHouse(House(
-                  id: '',
-                  name: name,
-                  category: category,
-                  totalCubes: totalCubes,
-                  description: descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
-                ));
-                await _cubeService.generateCubesForHouse(houseId, name, totalCubes, defaultCapacity: defaultCapacity);
-                if (ctx.mounted) Navigator.pop(ctx);
+                if (name.isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('House name is required')),
+                  );
+                  return;
+                }
+                final totalCubes = int.tryParse(cubesCtrl.text.trim()) ?? 12;
+                final defaultCapacity = int.tryParse(capacityCtrl.text.trim()) ?? 4;
+                try {
+                  final houseId = await _houseService.addHouse(House(
+                    id: '',
+                    name: name,
+                    category: category,
+                    totalCubes: totalCubes,
+                    description: descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
+                  ));
+                  await _cubeService.generateCubesForHouse(houseId, name, totalCubes, defaultCapacity: defaultCapacity);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                } catch (e) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text('Failed to add house: $e')),
+                    );
+                  }
+                }
               },
               child: const Text('Add'),
             ),
@@ -163,6 +176,7 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                       IconButton(
                         icon: const Icon(Icons.delete_outline, color: Colors.red),
                         onPressed: () async {
+                          if (!context.mounted) return;
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
@@ -175,7 +189,20 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                             ),
                           );
                           if (confirm == true) {
-                            await _houseService.deleteHouse(h.id);
+                            try {
+                              await _houseService.deleteHouse(h.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('House deleted'), backgroundColor: Colors.green),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Failed to delete house: $e'), backgroundColor: Colors.red),
+                                );
+                              }
+                            }
                           }
                         },
                       ),

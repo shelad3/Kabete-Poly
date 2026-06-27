@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/unread_badge_provider.dart';
 import 'forum_screen.dart';
 import 'gallery_screen.dart';
 
@@ -27,14 +29,28 @@ class _CommunityScreenState extends State<CommunityScreen>
 
   @override
   Widget build(BuildContext context) {
+    final badge = context.watch<UnreadBadgeProvider>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Community'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.forum_outlined), text: 'Forums'),
-            Tab(icon: Icon(Icons.photo_library_outlined), text: 'Gallery'),
+          tabs: [
+            Tab(
+              child: Badge(
+                isLabelVisible: badge.unreadForum > 0,
+                label: Text(
+                  badge.unreadForum > 99 ? '99+' : badge.unreadForum.toString(),
+                  style: const TextStyle(fontSize: 10, color: Colors.white),
+                ),
+                child: const Column(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.forum_outlined),
+                  SizedBox(height: 4),
+                  Text('Forums'),
+                ]),
+              ),
+            ),
+            const Tab(icon: Icon(Icons.photo_library_outlined), text: 'Gallery'),
           ],
         ),
       ),

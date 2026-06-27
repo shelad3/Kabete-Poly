@@ -50,6 +50,9 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
 
+      // Check for pending update for badge
+      badgeProvider.checkForPendingUpdates();
+
       // Auto-check for updates on startup
       UpdateService.checkForUpdates(context);
 

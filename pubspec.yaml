@@ -1,7 +1,7 @@
 name: kabete2026eiteet
 description: "A platform to store and share lesson materials for an electrical engineering course."
 publish_to: 'none'
-version: 2.8.2+1
+version: 2.8.3+1
 
 environment:
   sdk: ^3.10.0

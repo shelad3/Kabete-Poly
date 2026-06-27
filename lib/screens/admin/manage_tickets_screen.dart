@@ -132,32 +132,51 @@ class _ClassChangeRequestsTab extends StatelessWidget {
             final status = d['status'] ?? 'pending';
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: status == 'approved' ? Colors.green[100] : Colors.blue[100],
-                  child: Icon(
-                    status == 'approved' ? Icons.check_circle : Icons.swap_horiz,
-                    color: status == 'approved' ? Colors.green : Colors.blue,
-                  ),
-                ),
-                title: Text('${d['userName'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Column(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(d['userEmail'] ?? ''),
-                    Text('Wants: ${d['desiredClass'] ?? ''}'),
-                    if ((d['reason'] ?? '').isNotEmpty) Text('Reason: ${d['reason']}'),
+                    CircleAvatar(
+                      backgroundColor: status == 'approved' ? Colors.green[100] : Colors.blue[100],
+                      child: Icon(
+                        status == 'approved' ? Icons.check_circle : Icons.swap_horiz,
+                        color: status == 'approved' ? Colors.green : Colors.blue,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${d['userName'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 2),
+                          Text(d['userEmail'] ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          const SizedBox(height: 2),
+                          Text('Wants: ${d['desiredClass'] ?? ''}', style: const TextStyle(fontSize: 13)),
+                          if ((d['reason'] ?? '').isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text('Reason: ${d['reason']}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (status == 'pending')
+                      SizedBox(
+                        height: 36,
+                        child: ElevatedButton(
+                          onPressed: () => firestore.approveClassChangeRequest(
+                            doc.id, d['userId'], d['desiredClass']),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.symmetric(horizontal: 12)),
+                          child: const Text('Approve', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        ),
+                      )
+                    else
+                      const Icon(Icons.check, size: 22, color: Colors.green),
                   ],
                 ),
-                trailing: status == 'pending'
-                    ? ElevatedButton(
-                        onPressed: () => firestore.approveClassChangeRequest(
-                          doc.id, d['userId'], d['desiredClass']),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                        child: const Text('Approve', style: TextStyle(color: Colors.white, fontSize: 12)),
-                      )
-                    : const Icon(Icons.check, size: 18, color: Colors.green),
-                isThreeLine: true,
               ),
             );
           },
@@ -239,19 +258,35 @@ class _FeedbackTab extends StatelessWidget {
             final item = items[i];
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.amber[100],
-                  child: Text(item.rating != null ? '$item.rating' : '☆', style: const TextStyle(fontWeight: FontWeight.bold)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.amber[100],
+                      child: Text(item.rating != null ? '${item.rating}' : '☆', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(item.message, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (item.status == 'new')
+                      TextButton(
+                        onPressed: () => firestore.markFeedbackRead(item.id),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        child: const Text('Mark Read', style: TextStyle(fontSize: 12)),
+                      ),
+                  ],
                 ),
-                title: Text(item.userName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text(item.message, maxLines: 2, overflow: TextOverflow.ellipsis),
-                trailing: item.status == 'new'
-                  ? TextButton(
-                      onPressed: () => firestore.markFeedbackRead(item.id),
-                      child: const Text('Mark Read', style: TextStyle(fontSize: 12)),
-                    )
-                  : null,
               ),
             );
           },

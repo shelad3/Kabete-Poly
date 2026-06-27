@@ -283,6 +283,59 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------- //
+    // Quizzes Collection
+    // ---------------------------------------------------- //
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacherOrAbove();
+      allow update: if isTeacherOrAbove();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
+    // Questions Collection (top-level, linked by quizId)
+    // ---------------------------------------------------- //
+    match /questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacherOrAbove();
+      allow update: if isTeacherOrAbove();
+      allow delete: if isTeacherOrAbove();
+    }
+
+    // ---------------------------------------------------- //
+    // Quiz Submissions Collection
+    // ---------------------------------------------------- //
+    match /quiz_submissions/{submissionId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isTeacherOrAbove()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------- //
+    // Lesson Templates Collection
+    // ---------------------------------------------------- //
+    match /lesson_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacherOrAbove();
+      allow update: if isTeacherOrAbove();
+      allow delete: if isTeacherOrAbove();
+    }
+
+    // ---------------------------------------------------- //
+    // Schedule Templates Collection
+    // ---------------------------------------------------- //
+    match /schedule_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacherOrAbove();
+      allow update: if isTeacherOrAbove();
+      allow delete: if isTeacherOrAbove();
+    }
+
+    // ---------------------------------------------------- //
     // Default: deny everything else
     // ---------------------------------------------------- //
     match /{document=**} {

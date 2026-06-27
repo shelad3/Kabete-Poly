@@ -48,6 +48,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           classProv.currentClass,
         );
       }
+
+      badge.checkForPendingUpdates();
     });
   }
 
