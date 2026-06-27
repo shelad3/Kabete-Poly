@@ -46,7 +46,7 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<AuthCodeRule>(
-                  initialValue: _selectedRule,
+                  value: _selectedRule,
                   decoration: InputDecoration(
                     labelText: 'Code Rule',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

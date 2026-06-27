@@ -44,6 +44,17 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
     );
 
     if (result != null) {
+      const maxSize = 20 * 1024 * 1024;
+      for (final file in result.files) {
+        if (file.size > maxSize) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('File too large. Maximum size is 20MB.'), backgroundColor: Colors.red),
+            );
+          }
+          return;
+        }
+      }
       setState(() {
         for (final file in result.files) {
           if (file.path != null) {

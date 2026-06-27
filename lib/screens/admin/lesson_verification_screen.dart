@@ -28,7 +28,7 @@ class _LessonVerificationScreenState extends State<LessonVerificationScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: _departmentFilter,
+                    value: _departmentFilter,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),

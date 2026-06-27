@@ -144,7 +144,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               
               if (widget.selectedRole != 'Student') ...[
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedDesignation,
+                  value: _selectedDesignation,
                   decoration: InputDecoration(
                     labelText: widget.selectedRole == 'Teacher'
                         ? 'Department'
@@ -248,7 +248,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               
                if (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ...[
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCohort,
+                  value: _selectedCohort,
                   decoration: const InputDecoration(
                     labelText: 'Select Your Class Cohort *',
                     border: OutlineInputBorder(),

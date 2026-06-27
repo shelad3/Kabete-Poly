@@ -8,6 +8,8 @@ import '../models/template.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  static String _docKey(String value) => value.replaceAll('/', '-');
+
   // --- Lessons ---
   Stream<List<Lesson>> getLessonsStream([String? classId]) {
     Query query = _firestore.collection('lessons').orderBy('date', descending: true).limit(200);
@@ -150,13 +152,13 @@ class FirestoreService {
 
       if (newPhone.isNotEmpty && newPhone != oldPhone) {
         await _firestore.runTransaction((transaction) async {
-          final phoneRef = _firestore.collection('field_indices').doc('phone_$newPhone');
+          final phoneRef = _firestore.collection('field_indices').doc('phone_${_docKey(newPhone)}');
           final phoneSnap = await transaction.get(phoneRef);
           if (phoneSnap.exists && phoneSnap.data()?['uid'] != uid) {
             throw Exception('Phone number "$newPhone" is already registered');
           }
           if (oldPhone.isNotEmpty) {
-            transaction.delete(_firestore.collection('field_indices').doc('phone_$oldPhone'));
+            transaction.delete(_firestore.collection('field_indices').doc('phone_${_docKey(oldPhone)}'));
           }
           transaction.set(phoneRef, {
             'uid': uid, 'value': newPhone, 'type': 'phone',
@@ -173,13 +175,13 @@ class FirestoreService {
 
       if (newReg.isNotEmpty && newReg != oldReg) {
         await _firestore.runTransaction((transaction) async {
-          final regRef = _firestore.collection('field_indices').doc('regNo_$newReg');
+          final regRef = _firestore.collection('field_indices').doc('regNo_${_docKey(newReg)}');
           final regSnap = await transaction.get(regRef);
           if (regSnap.exists && regSnap.data()?['uid'] != uid) {
             throw Exception('Registration number "$newReg" is already registered');
           }
           if (oldReg.isNotEmpty) {
-            transaction.delete(_firestore.collection('field_indices').doc('regNo_$oldReg'));
+            transaction.delete(_firestore.collection('field_indices').doc('regNo_${_docKey(oldReg)}'));
           }
           transaction.set(regRef, {
             'uid': uid, 'value': newReg, 'type': 'regNo',
@@ -193,7 +195,7 @@ class FirestoreService {
   }
 
   Future<String> checkFieldUniqueness(String type, String value) async {
-    final doc = await _firestore.collection('field_indices').doc('${type}_$value').get();
+    final doc = await _firestore.collection('field_indices').doc('${type}_${_docKey(value)}').get();
     if (doc.exists) {
       final uid = doc.data()?['uid'] as String? ?? '';
       return uid; // returns the owner uid if taken, empty string if free

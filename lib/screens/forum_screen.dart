@@ -147,7 +147,7 @@ class _ForumScreenState extends State<ForumScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                initialValue: type,
+                value: type,
                 decoration: const InputDecoration(
                   labelText: 'Type',
                   border: OutlineInputBorder(),
@@ -219,7 +219,7 @@ class _ForumScreenState extends State<ForumScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                initialValue: type,
+                value: type,
                 decoration: const InputDecoration(
                   labelText: 'Type',
                   border: OutlineInputBorder(),

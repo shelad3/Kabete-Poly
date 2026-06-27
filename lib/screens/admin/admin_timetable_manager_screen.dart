@@ -124,7 +124,7 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: DropdownButtonFormField<String>(
-            initialValue: _currentClassId,
+            value: _currentClassId,
             decoration: const InputDecoration(
               labelText: 'Target Class',
               border: OutlineInputBorder(),
@@ -226,7 +226,7 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
-                      initialValue: selectedDay,
+                      value: selectedDay,
                       decoration: const InputDecoration(labelText: 'Day of Week', border: OutlineInputBorder()),
                       items: _weekdays.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
                       onChanged: (val) => setModalState(() => selectedDay = val!),

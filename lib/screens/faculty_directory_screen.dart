@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -14,9 +15,11 @@ class _FacultyDirectoryScreenState extends State<FacultyDirectoryScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
   String? _selectedDepartment;
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -112,7 +115,12 @@ class _FacultyDirectoryScreenState extends State<FacultyDirectoryScreen> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                  onChanged: (v) => setState(() => _searchQuery = v),
+                  onChanged: (v) {
+                    _debounce?.cancel();
+                    _debounce = Timer(const Duration(milliseconds: 300), () {
+                      setState(() => _searchQuery = v);
+                    });
+                  },
                 ),
               ),
               if (departments.length > 1)

@@ -132,7 +132,7 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
                   const Text('Add Timetable Entry', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedDay,
+                    value: selectedDay,
                     decoration: const InputDecoration(labelText: 'Day', prefixIcon: Icon(Icons.calendar_today)),
                     items: _days.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
                     onChanged: (v) => setSheetState(() => selectedDay = v!),

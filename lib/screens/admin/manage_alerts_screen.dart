@@ -310,7 +310,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  initialValue: selectedType,
+                  value: selectedType,
                   decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(value: 'general', child: Text('General Info')),
@@ -375,7 +375,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: alertType,
+                  value: alertType,
                   decoration: const InputDecoration(labelText: 'Alert Type', border: OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(value: 'info', child: Text('Information')),
@@ -386,7 +386,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: targetType,
+                  value: targetType,
                   decoration: const InputDecoration(labelText: 'Target', border: OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(value: 'all', child: Text('All Users')),

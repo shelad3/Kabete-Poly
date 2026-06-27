@@ -359,7 +359,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      initialValue: selectedType,
+                      value: selectedType,
                       decoration: const InputDecoration(
                         labelText: 'Type',
                         border: OutlineInputBorder(),
@@ -458,7 +458,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      initialValue: alertType,
+                      value: alertType,
                       decoration: const InputDecoration(
                         labelText: 'Alert Type',
                         border: OutlineInputBorder(),
@@ -481,7 +481,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      initialValue: targetType,
+                      value: targetType,
                       decoration: const InputDecoration(
                         labelText: 'Send To',
                         border: OutlineInputBorder(),

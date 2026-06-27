@@ -13,6 +13,8 @@ import 'analytics_service.dart';
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  static String _docKey(String value) => value.replaceAll('/', '-');
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   StreamSubscription<User?>? _authSubscription;
 
@@ -252,18 +254,9 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _reserveField(String prefix, String value, String uid) async {
-    await _firestore.collection('field_indices').doc('${prefix}_$value').set({
-      'uid': uid,
-      'value': value,
-      'type': prefix,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-  }
-
   Future<void> _releaseField(String prefix, String value) async {
     try {
-      await _firestore.collection('field_indices').doc('${prefix}_$value').delete();
+      await _firestore.collection('field_indices').doc('${prefix}_${_docKey(value)}').delete();
     } catch (_) {}
   }
 
@@ -277,9 +270,9 @@ class AuthProvider extends ChangeNotifier {
       if (phone.isEmpty) throw Exception('Mobile number is required');
 
       // Atomic uniqueness check via field_indices collection
-      final regNoKey = 'regNo_$regNo';
-      final phoneKey = 'phone_$phone';
-      final emailKey = 'email_$email';
+      final regNoKey = 'regNo_${_docKey(regNo)}';
+      final phoneKey = 'phone_${_docKey(phone)}';
+      final emailKey = 'email_${_docKey(email)}';
 
       await _firestore.runTransaction((transaction) async {
         final regNoRef = _firestore.collection('field_indices').doc(regNoKey);

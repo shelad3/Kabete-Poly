@@ -12,6 +12,8 @@ import 'services/notification_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/analytics_service.dart';
 import 'services/unread_badge_provider.dart';
+import 'services/connectivity_provider.dart';
+import 'widgets/offline_banner.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -22,43 +24,50 @@ import 'screens/onboarding_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (kIsWeb) {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
-  } else {
-    await Firebase.initializeApp();
-  }
+  FlutterError.onError = (details) {
+    debugPrint('Unhandled Flutter error: ${details.exception}');
+  };
 
-  if (!kIsWeb) {
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-    );
-
-    try {
-      await FirebaseFirestore.instance.enableNetwork();
-    } catch (_) {
-      // offline — Firestore will use local cache
+  try {
+    if (kIsWeb) {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
+    } else {
+      await Firebase.initializeApp();
     }
 
-    final NotificationService notificationService = NotificationService();
-    await notificationService.init();
-    await notificationService.requestPermissions();
+    if (!kIsWeb) {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
 
-    final PushNotificationService pushService = PushNotificationService();
-    await pushService.init();
+      try {
+        await FirebaseFirestore.instance.enableNetwork();
+      } catch (_) {}
+
+      final NotificationService notificationService = NotificationService();
+      await notificationService.init();
+      await notificationService.requestPermissions();
+
+      final PushNotificationService pushService = PushNotificationService();
+      await pushService.init();
+    }
+
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
+          ChangeNotifierProvider(create: (_) => ClassProvider()),
+          ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+          ChangeNotifierProvider(create: (_) => UnreadBadgeProvider()),
+          ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+        ],
+        child: const KabeteApp(),
+      ),
+    );
+  } catch (e, stack) {
+    debugPrint('Fatal error during startup: $e\n$stack');
   }
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ClassProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeNotifier()),
-        ChangeNotifierProvider(create: (_) => UnreadBadgeProvider()),
-      ],
-      child: const KabeteApp(),
-    ),
-  );
 }
 
 class KabeteApp extends StatelessWidget {
@@ -107,14 +116,17 @@ class KabeteApp extends StatelessWidget {
       darkTheme: darkTheme,
       themeMode: themeMode,
       navigatorObservers: [AnalyticsService().observer],
-      home: home,
+      home: OfflineBanner(child: home),
       builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF1A237E), Color(0xFF283593)],
+              colors: isDark
+                  ? [const Color(0xFF0D0D1A), const Color(0xFF1A1A2E)]
+                  : [const Color(0xFF1A237E), const Color(0xFF283593)],
             ),
           ),
           child: child,
