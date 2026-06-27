@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../models/cube_booking.dart';
+import '../../models/class_notification.dart';
 import '../../services/cube_service.dart';
+import '../../services/firestore_service.dart';
 import '../../utils/term_utils.dart';
 
 class ManageCubeBookingsScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class ManageCubeBookingsScreen extends StatefulWidget {
 
 class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
   final CubeService _service = CubeService();
+  final FirestoreService _firestore = FirestoreService();
   String _statusFilter = 'all';
 
   Color _statusColor(String status) {
@@ -31,7 +33,33 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
   }
 
   Future<void> _updateStatus(CubeBooking booking, String newStatus) async {
-    await _service.updateBookingStatus(booking.id, newStatus);
+    try {
+      await _service.updateBookingStatus(booking.id, newStatus);
+      if (newStatus == 'confirmed') {
+        _firestore.sendNotification(ClassNotification(
+          id: '',
+          classId: 'General',
+          title: 'Booking Confirmed',
+          message: 'Your booking for ${booking.cubeLabel} at ${booking.houseName} (Term ${booking.term} ${booking.year}) has been confirmed.',
+          type: 'general',
+          timestamp: DateTime.now(),
+        ));
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Booking ${newStatus.replaceAll('_', ' ')}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _togglePayment(CubeBooking booking) async {

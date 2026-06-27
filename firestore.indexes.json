@@ -199,6 +199,50 @@
               "order": "DESCENDING"
             }
           ]
+        },
+        {
+          "collectionGroup": "cube_bookings",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "studentId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "term",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "year",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "houseName",
+              "order": "ASCENDING"
+            }
+          ]
+        },
+        {
+          "collectionGroup": "cube_bookings",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "term",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "year",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "houseName",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "cubeNumber",
+              "order": "ASCENDING"
+            }
+          ]
         }
     ],
     "fieldOverrides": []
