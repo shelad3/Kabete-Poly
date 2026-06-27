@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/house.dart';
 import '../../models/cube.dart';
@@ -117,33 +118,40 @@ class _CubeTileState extends State<_CubeTile> {
   int _available = 0;
   bool _loading = true;
   bool _error = false;
+  StreamSubscription<int>? _sub;
 
   @override
   void initState() {
     super.initState();
-    _loadAvailability();
+    _sub = widget.service
+        .getAvailableCountStream(
+            widget.cube.id, widget.cube.maxOccupancy, widget.term, widget.year)
+        .listen(
+          (count) {
+            if (mounted) {
+              setState(() {
+                _available = count;
+                _loading = false;
+                _error = false;
+              });
+            }
+          },
+          onError: (e) {
+            debugPrint('Availability stream error: $e');
+            if (mounted) {
+              setState(() {
+                _loading = false;
+                _error = true;
+              });
+            }
+          },
+        );
   }
 
-  Future<void> _loadAvailability() async {
-    try {
-      final available = await widget.service.getAvailableSpots(
-        widget.cube.id, widget.cube.maxOccupancy, widget.term, widget.year,
-      );
-      if (mounted) {
-        setState(() {
-          _available = available;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Availability error: $e');
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error = true;
-        });
-      }
-    }
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   @override

@@ -279,6 +279,28 @@
               "order": "ASCENDING"
             }
           ]
+        },
+        {
+          "collectionGroup": "cube_bookings",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "studentId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "term",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "year",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "status",
+              "order": "ASCENDING"
+            }
+          ]
         }
     ],
     "fieldOverrides": []

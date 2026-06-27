@@ -59,6 +59,16 @@ class CubeService {
     return snap.docs.length;
   }
 
+  Stream<int> getAvailableCountStream(String cubeId, int maxOccupancy, int term, int year) {
+    return _db.collection('cube_bookings')
+      .where('cubeId', isEqualTo: cubeId)
+      .where('term', isEqualTo: term)
+      .where('year', isEqualTo: year)
+      .where('status', whereIn: ['pending', 'confirmed', 'checked_in'])
+      .snapshots()
+      .map((snap) => maxOccupancy - snap.docs.length);
+  }
+
   Future<int> getAvailableSpots(String cubeId, int maxOccupancy, int term, int year) async {
     final booked = await getBookedCountForCube(cubeId, term, year);
     return maxOccupancy - booked;
