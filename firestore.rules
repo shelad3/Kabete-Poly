@@ -255,7 +255,7 @@ service cloud.firestore {
     // ---------------------------------------------------- //
     match /houses/{houseId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isTeacherOrAbove();
     }
 
     // ---------------------------------------------------- //
@@ -263,7 +263,7 @@ service cloud.firestore {
     // ---------------------------------------------------- //
     match /cubes/{cubeId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow write: if isTeacherOrAbove();
     }
 
     // ---------------------------------------------------- //
@@ -271,11 +271,11 @@ service cloud.firestore {
     // ---------------------------------------------------- //
     match /cube_bookings/{bookingId} {
       allow read: if isAuthenticated() && (
-        resource.data.studentId == request.auth.uid || isAdmin()
+        resource.data.studentId == request.auth.uid || isTeacherOrAbove()
       );
       allow create: if isAuthenticated() &&
         request.resource.data.studentId == request.auth.uid;
-      allow update: if isAdmin() || (
+      allow update: if isTeacherOrAbove() || (
         request.resource.data.studentId == request.auth.uid &&
         request.resource.data.status == 'cancelled'
       );
