@@ -4,6 +4,7 @@ class House {
   final String category; // 'boys' or 'girls'
   final int totalCubes;
   final String? description;
+  final bool reservedForNewStudents;
 
   House({
     required this.id,
@@ -11,6 +12,7 @@ class House {
     required this.category,
     this.totalCubes = 12,
     this.description,
+    this.reservedForNewStudents = false,
   });
 
   factory House.fromJson(Map<String, dynamic> json, String docId) => House(
@@ -19,6 +21,7 @@ class House {
     category: json['category'] as String? ?? 'boys',
     totalCubes: (json['totalCubes'] as num?)?.toInt() ?? 12,
     description: json['description'] as String?,
+    reservedForNewStudents: json['reservedForNewStudents'] as bool? ?? false,
   );
 
   Map<String, dynamic> toJson() => {
@@ -26,5 +29,6 @@ class House {
     'category': category,
     'totalCubes': totalCubes,
     if (description != null) 'description': description,
+    'reservedForNewStudents': reservedForNewStudents,
   };
 }

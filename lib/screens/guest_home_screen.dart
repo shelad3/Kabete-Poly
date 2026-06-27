@@ -4,6 +4,7 @@ import '../services/auth_provider.dart';
 import 'gallery_screen.dart';
 import 'schedule/campus_map_widget.dart';
 import 'school_info_screen.dart';
+import '../widgets/guest_houses_widget.dart';
 
 class GuestHomeScreen extends StatefulWidget {
   const GuestHomeScreen({super.key});
@@ -18,7 +19,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -47,6 +48,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> with TickerProviderSt
             Tab(icon: Icon(Icons.map), text: 'Map'),
             Tab(icon: Icon(Icons.layers), text: 'Legend'),
             Tab(icon: Icon(Icons.photo_library), text: 'Gallery'),
+            Tab(icon: Icon(Icons.home_work), text: 'Houses'),
             Tab(icon: Icon(Icons.info), text: 'About'),
           ],
         ),
@@ -58,6 +60,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> with TickerProviderSt
           CampusMapWidget(),
           CampusLegendTab(),
           GalleryScreen(),
+          GuestHousesWidget(),
           SchoolInfoScreen(),
         ],
       ),

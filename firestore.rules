@@ -254,7 +254,7 @@ service cloud.firestore {
     // Houses (Buildings containing cubes)
     // ---------------------------------------------------- //
     match /houses/{houseId} {
-      allow read: if isAuthenticated();
+      allow read: if true;  // public — guests can see house info
       allow write: if isTeacherOrAbove();
     }
 
@@ -262,7 +262,7 @@ service cloud.firestore {
     // Cubes (Workstations within houses)
     // ---------------------------------------------------- //
     match /cubes/{cubeId} {
-      allow read: if isAuthenticated();
+      allow read: if true;  // public — guests can see cube info
       allow write: if isTeacherOrAbove();
     }
 

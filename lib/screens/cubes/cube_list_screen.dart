@@ -116,6 +116,7 @@ class _CubeTile extends StatefulWidget {
 class _CubeTileState extends State<_CubeTile> {
   int _available = 0;
   bool _loading = true;
+  bool _error = false;
 
   @override
   void initState() {
@@ -124,14 +125,24 @@ class _CubeTileState extends State<_CubeTile> {
   }
 
   Future<void> _loadAvailability() async {
-    final available = await widget.service.getAvailableSpots(
-      widget.cube.id, widget.cube.maxOccupancy, widget.term, widget.year,
-    );
-    if (mounted) {
-      setState(() {
-        _available = available;
-        _loading = false;
-      });
+    try {
+      final available = await widget.service.getAvailableSpots(
+        widget.cube.id, widget.cube.maxOccupancy, widget.term, widget.year,
+      );
+      if (mounted) {
+        setState(() {
+          _available = available;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Availability error: $e');
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
+      }
     }
   }
 
@@ -157,6 +168,8 @@ class _CubeTileState extends State<_CubeTile> {
             const SizedBox(height: 2),
             if (_loading)
               const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            else if (_error)
+              Text('Error', style: TextStyle(color: Colors.red[400], fontSize: 10, fontWeight: FontWeight.w600))
             else if (full)
               Text('Full', style: TextStyle(color: Colors.red[400], fontSize: 10, fontWeight: FontWeight.w600))
             else

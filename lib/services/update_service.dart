@@ -340,6 +340,7 @@ class UpdateService {
 
                                 if (result != null) {
                                   final (path, contentLength) = result;
+                                  await clearPendingUpdate();
                                   setDialogState(() {
                                     downloading = false;
                                     downloadComplete = true;

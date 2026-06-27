@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/house.dart';
 import '../../services/house_service.dart';
+import '../../services/auth_provider.dart';
 import 'cube_list_screen.dart';
 
 class HouseListScreen extends StatefulWidget {
@@ -11,7 +13,6 @@ class HouseListScreen extends StatefulWidget {
 }
 
 class _HouseListScreenState extends State<HouseListScreen> with TickerProviderStateMixin {
-  final HouseService _service = HouseService();
   late TabController _tabController;
 
   @override
@@ -28,6 +29,8 @@ class _HouseListScreenState extends State<HouseListScreen> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+    final isNew = user?.isNewStudent ?? true;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Book a Cubicle'),
@@ -42,8 +45,8 @@ class _HouseListScreenState extends State<HouseListScreen> with TickerProviderSt
       body: TabBarView(
         controller: _tabController,
         children: [
-          _HouseCategoryTab(category: 'boys'),
-          _HouseCategoryTab(category: 'girls'),
+          _HouseCategoryTab(category: 'boys', isNewStudent: isNew),
+          _HouseCategoryTab(category: 'girls', isNewStudent: isNew),
         ],
       ),
     );
@@ -52,7 +55,8 @@ class _HouseListScreenState extends State<HouseListScreen> with TickerProviderSt
 
 class _HouseCategoryTab extends StatelessWidget {
   final String category;
-  const _HouseCategoryTab({required this.category});
+  final bool isNewStudent;
+  const _HouseCategoryTab({required this.category, required this.isNewStudent});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +65,6 @@ class _HouseCategoryTab extends StatelessWidget {
       stream: service.getHousesByCategoryStream(category),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          print('BOOKING ERROR: ${snapshot.error}');
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -69,7 +72,6 @@ class _HouseCategoryTab extends StatelessWidget {
                 Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
                 const SizedBox(height: 8),
                 Text('Error loading houses', style: TextStyle(color: Colors.red[600])),
-                Text('${snapshot.error}', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
               ],
             ),
           );
@@ -77,7 +79,10 @@ class _HouseCategoryTab extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        final houses = snapshot.data ?? [];
+        var houses = snapshot.data ?? [];
+        if (!isNewStudent) {
+          houses = houses.where((h) => !h.reservedForNewStudents).toList();
+        }
         if (houses.isEmpty) {
           return Center(
             child: Column(
@@ -85,8 +90,14 @@ class _HouseCategoryTab extends StatelessWidget {
               children: [
                 Icon(category == 'boys' ? Icons.male : Icons.female, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
-                Text('No $category houses configured',
+                Text(isNewStudent ? 'No $category houses configured' : 'No $category houses available',
                     style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                if (!isNewStudent)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text('Houses reserved for new students are hidden',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                  ),
               ],
             ),
           );
@@ -100,7 +111,7 @@ class _HouseCategoryTab extends StatelessWidget {
             childAspectRatio: 1.2,
           ),
           itemCount: houses.length,
-          itemBuilder: (_, i) => _HouseCard(house: houses[i]),
+          itemBuilder: (_, i) => _HouseCard(house: houses[i], isNewStudent: isNewStudent),
         );
       },
     );
@@ -109,7 +120,8 @@ class _HouseCategoryTab extends StatelessWidget {
 
 class _HouseCard extends StatelessWidget {
   final House house;
-  const _HouseCard({required this.house});
+  final bool isNewStudent;
+  const _HouseCard({required this.house, required this.isNewStudent});
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +145,16 @@ class _HouseCard extends StatelessWidget {
               Text(house.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), textAlign: TextAlign.center),
               const SizedBox(height: 4),
               Text('${house.totalCubes} cubes', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              if (house.reservedForNewStudents)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text('New Students', style: TextStyle(color: Colors.orange[700], fontSize: 9, fontWeight: FontWeight.bold)),
+                ),
               if (house.description != null && house.description!.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(house.description!, style: TextStyle(color: Colors.grey[500], fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),

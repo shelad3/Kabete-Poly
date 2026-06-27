@@ -1,3 +1,5 @@
+import '../utils/term_utils.dart';
+
 class UserProfile {
   final String registrationNumber; // Also functions as Staff ID or Teacher TSC
   final String fullName;
@@ -9,6 +11,8 @@ class UserProfile {
   final String? designation; // e.g. 'Prefect', 'HOD'
   final List<String> enrolledClasses;
   final int classChangeCount;
+  final int enrolledTerm;
+  final int enrolledYear;
 
   UserProfile({
     required this.registrationNumber,
@@ -21,7 +25,16 @@ class UserProfile {
     this.designation,
     this.enrolledClasses = const [],
     this.classChangeCount = 0,
-  });
+    int? enrolledTerm,
+    int? enrolledYear,
+  })  : enrolledTerm = enrolledTerm ?? TermUtils.getCurrentTerm(),
+        enrolledYear = enrolledYear ?? TermUtils.getCurrentYear();
+
+  bool get isNewStudent {
+    final currentTerm = TermUtils.getCurrentTerm();
+    final currentYear = TermUtils.getCurrentYear();
+    return enrolledTerm == currentTerm && enrolledYear == currentYear;
+  }
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
@@ -35,6 +48,8 @@ class UserProfile {
       designation: json['designation'],
       enrolledClasses: List<String>.from(json['enrolledClasses'] ?? []),
       classChangeCount: json['classChangeCount'] ?? 0,
+      enrolledTerm: json['enrolledTerm'],
+      enrolledYear: json['enrolledYear'],
     );
   }
 
@@ -50,6 +65,8 @@ class UserProfile {
       'designation': designation,
       'enrolledClasses': enrolledClasses,
       'classChangeCount': classChangeCount,
+      'enrolledTerm': enrolledTerm,
+      'enrolledYear': enrolledYear,
     };
   }
 

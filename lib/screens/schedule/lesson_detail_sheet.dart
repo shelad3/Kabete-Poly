@@ -155,8 +155,9 @@ class LessonDetailSheet extends StatelessWidget {
               title: '${lesson.attachmentUrls.length} Attachment(s)',
               subtitle: 'Tap to view',
               onTap: () {
-                Navigator.pop(context);
-                _showAttachments(context);
+                final nav = Navigator.of(context);
+                nav.pop();
+                _showAttachments(nav.context);
               },
             ),
           ],
@@ -242,7 +243,7 @@ class LessonDetailSheet extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => Padding(
+      builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -262,12 +263,13 @@ class LessonDetailSheet extends StatelessWidget {
                   final uri = Uri.parse(lesson.attachmentUrls[i]);
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Could not open ${lesson.attachmentNames[i]}. Try downloading it first.'), backgroundColor: Colors.red),
-                      );
-                    }
+                  } else if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not open "${lesson.attachmentNames[i]}". The file may be unavailable.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 },
               );
