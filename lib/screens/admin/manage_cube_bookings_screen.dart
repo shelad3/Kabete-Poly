@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Kabete National Polytechnique
+
 import 'package:flutter/material.dart';
 import '../../models/cube_booking.dart';
 import '../../models/class_notification.dart';

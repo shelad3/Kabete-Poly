@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Kabete National Polytechnique
+
 #!/usr/bin/env python3
 """
 Kabete Poly Admin Tool — grade & timetable editor for Windows.

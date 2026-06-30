@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Kabete National Polytechnique
+
 """
 Analytics Dashboard — grade distribution, subject averages, pass/fail rates.
 Tab widget for the Kabete Poly Admin Tool.

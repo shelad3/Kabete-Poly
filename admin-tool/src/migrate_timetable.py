@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Kabete National Polytechnique
+
 """
 Upload the exported timetable_export.json to Firestore.
 Each class's timetable entries are written to classes/{classId}/timetable/{docId}.

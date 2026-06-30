@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Kabete National Polytechnique
+
 """
 QR Code Generator — batch generate student QR codes for attendance scanning.
 Usage: python src/qr_generator.py

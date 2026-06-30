@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Kabete National Polytechnique
+
 class Question {
   final String id;
   final String quizId;

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Kabete National Polytechnique
+
 """
 Firebase Auth REST API client for email/password sign-in.
 No client SDK needed — uses the Firebase Auth REST endpoint.

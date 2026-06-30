@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Kabete National Polytechnique
+
 """
 CSV Import Dialog — column mapping + duplicate detection preview.
 Works for both grades and timetable imports.

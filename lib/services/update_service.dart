@@ -1,16 +1,20 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Kabete National Polytechnique
+
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'notification_service.dart';
 
 class UpdateService {
-  static const String _githubApiUrl =
-      'https://api.github.com/repos/shelad3/Kabete-Poly/releases/latest';
+  /// Reads latest version info from Firestore instead of GitHub API.
+  /// This allows the repo to stay private while APKs are hosted externally.
+  static const String _updateDocPath = 'app_updates/latest';
 
   static const String _fileName = 'kabete_poly_update.apk';
 
@@ -22,49 +26,44 @@ class UpdateService {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
 
-      final response = await http.get(Uri.parse(_githubApiUrl)).timeout(const Duration(seconds: 15));
+      final doc = await FirebaseFirestore.instance
+          .doc(_updateDocPath)
+          .get(const GetOptions(source: Source.serverAndCache))
+          .timeout(const Duration(seconds: 15));
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        String latestVersionTag = data['tag_name'];
-
-        if (latestVersionTag.startsWith('v') || latestVersionTag.startsWith('V')) {
-          latestVersionTag = latestVersionTag.substring(1);
-        }
-
-        if (_isUpdateAvailable(currentVersion, latestVersionTag)) {
-          String? downloadUrl;
-          if (data['assets'] != null && data['assets'].isNotEmpty) {
-            downloadUrl = data['assets'][0]['browser_download_url'];
-          }
-          downloadUrl ??= data['html_url'];
-
-          final releaseNotes = data['body'] ?? '';
-
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('update_available', true);
-          await prefs.setString('pending_update_version', latestVersionTag);
-          await prefs.setString('pending_update_notes', releaseNotes);
-
-          if (context.mounted) {
-            _showUpdateDialog(context, latestVersionTag, downloadUrl!, releaseNotes);
-          }
-        } else if (showNoUpdateMsg && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('You are already on the latest version!'),
-                backgroundColor: Colors.green),
-          );
-        }
-      } else {
-        debugPrint('Failed to fetch updates. Status Code: ${response.statusCode}');
+      if (!doc.exists) {
         if (showNoUpdateMsg && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Unable to connect to GitHub Update Servers.'),
-                backgroundColor: Colors.red),
+                content: Text('Update server not configured.'),
+                backgroundColor: Colors.orange),
           );
         }
+        return;
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      final latestVersion = (data['version'] as String?) ?? '';
+      final downloadUrl = (data['downloadUrl'] as String?) ?? '';
+      final releaseNotes = (data['releaseNotes'] as String?) ?? '';
+
+      if (latestVersion.isEmpty || downloadUrl.isEmpty) return;
+
+      if (_isUpdateAvailable(currentVersion, latestVersion)) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('update_available', true);
+        await prefs.setString('pending_update_version', latestVersion);
+        await prefs.setString('pending_update_notes', releaseNotes);
+
+        if (context.mounted) {
+          _showUpdateDialog(context, latestVersion, downloadUrl, releaseNotes);
+        }
+      } else if (showNoUpdateMsg && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('You are already on the latest version!'),
+              backgroundColor: Colors.green),
+        );
       }
     } catch (e) {
       debugPrint('Error checking for updates: $e');
