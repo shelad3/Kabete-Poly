@@ -137,30 +137,35 @@ class AuthProvider extends ChangeNotifier {
         .collection('sessions')
         .orderBy('loginAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) {
-          final s = UserSession.fromJson(d.data(), d.id);
-          return UserSession(
-            id: s.id,
-            userId: s.userId,
-            deviceName: s.deviceName,
-            deviceType: s.deviceType,
-            ipAddress: s.ipAddress,
-            location: s.location,
-            loginAt: s.loginAt,
-            lastActiveAt: s.lastActiveAt,
-            isCurrentDevice: d.id == _currentSessionId,
-          );
-        }).toList());
+        .map(
+          (snap) => snap.docs.map((d) {
+            final s = UserSession.fromJson(d.data(), d.id);
+            return UserSession(
+              id: s.id,
+              userId: s.userId,
+              deviceName: s.deviceName,
+              deviceType: s.deviceType,
+              ipAddress: s.ipAddress,
+              location: s.location,
+              loginAt: s.loginAt,
+              lastActiveAt: s.lastActiveAt,
+              isCurrentDevice: d.id == _currentSessionId,
+            );
+          }).toList(),
+        );
   }
 
   Future<void> _fetchUserProfile(User user) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (doc.exists) {
         _currentUser = UserProfile.fromJson(doc.data() as Map<String, dynamic>);
 
         if (_currentUser?.email.toLowerCase() == 'sheldonramu8@gmail.com') {
-           _currentUser = UserProfile(
+          _currentUser = UserProfile(
             registrationNumber: _currentUser!.registrationNumber,
             fullName: _currentUser!.fullName,
             profilePhotoUrl: _currentUser!.profilePhotoUrl,
@@ -170,7 +175,6 @@ class AuthProvider extends ChangeNotifier {
             role: 'Official',
           );
         }
-
       } else {
         _currentUser = UserProfile(
           registrationNumber: 'PENDING-${user.uid.substring(0, 5)}',
@@ -179,7 +183,9 @@ class AuthProvider extends ChangeNotifier {
           mobileNumber: '',
           email: user.email ?? '',
           isHostelResident: false,
-          role: (user.email?.toLowerCase() == 'sheldonramu8@gmail.com') ? 'Official' : 'Student',
+          role: (user.email?.toLowerCase() == 'sheldonramu8@gmail.com')
+              ? 'Official'
+              : 'Student',
           enrolledClasses: [],
         );
       }
@@ -220,7 +226,8 @@ class AuthProvider extends ChangeNotifier {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -238,7 +245,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      throw Exception('Failed to send password reset email. Please verify if the email is correct.');
+      throw Exception(
+        'Failed to send password reset email. Please verify if the email is correct.',
+      );
     }
   }
 
@@ -259,7 +268,10 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _releaseField(String prefix, String value) async {
     try {
-      await _firestore.collection('field_indices').doc('${prefix}_${_docKey(value)}').delete();
+      await _firestore
+          .collection('field_indices')
+          .doc('${prefix}_${_docKey(value)}')
+          .delete();
     } catch (_) {}
   }
 
@@ -350,12 +362,21 @@ class AuthProvider extends ChangeNotifier {
           enrolledClasses: profile.enrolledClasses,
         );
 
-        await _firestore.collection('users').doc(uid).set(newUserProfile.toJson());
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .set(newUserProfile.toJson());
 
         // Update reserved indices with actual UID
-        await _firestore.collection('field_indices').doc(regNoKey).update({'uid': uid});
-        await _firestore.collection('field_indices').doc(phoneKey).update({'uid': uid});
-        await _firestore.collection('field_indices').doc(emailKey).update({'uid': uid});
+        await _firestore.collection('field_indices').doc(regNoKey).update({
+          'uid': uid,
+        });
+        await _firestore.collection('field_indices').doc(phoneKey).update({
+          'uid': uid,
+        });
+        await _firestore.collection('field_indices').doc(emailKey).update({
+          'uid': uid,
+        });
 
         if (profile.enrolledClasses.isNotEmpty) {
           for (String classId in profile.enrolledClasses) {
@@ -371,7 +392,7 @@ class AuthProvider extends ChangeNotifier {
               });
             } else {
               await classRef.update({
-                'members': FieldValue.arrayUnion([uid])
+                'members': FieldValue.arrayUnion([uid]),
               });
             }
           }
@@ -382,13 +403,14 @@ class AuthProvider extends ChangeNotifier {
         AnalyticsService().logSignUp('email');
       } catch (e) {
         // Cleanup on failure
-        try { await credential.user?.delete(); } catch (_) {}
+        try {
+          await credential.user?.delete();
+        } catch (_) {}
         await _releaseField('regNo', regNo);
         await _releaseField('phone', phone);
         await _releaseField('email', email);
         rethrow;
       }
-
     } catch (e) {
       if (e is FirebaseAuthException) {
         throw Exception(e.message ?? 'Registration failed');

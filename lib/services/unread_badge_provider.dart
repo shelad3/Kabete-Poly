@@ -14,7 +14,8 @@ class UnreadBadgeProvider extends ChangeNotifier {
   int _forumCount = 0;
   int _updateCount = 0;
 
-  int get totalUnread => _notificationCount + _alertCount + _forumCount + _updateCount;
+  int get totalUnread =>
+      _notificationCount + _alertCount + _forumCount + _updateCount;
   int get unreadNotifications => _notificationCount;
   int get unreadAlerts => _alertCount;
   int get unreadForum => _forumCount;
@@ -25,7 +26,12 @@ class UnreadBadgeProvider extends ChangeNotifier {
   Set<String> _seenNotifIds = {};
   List<String> _currentNotifIds = [];
 
-  Future<void> init(String userId, String regNo, List<String> enrolledClasses, String? classId) async {
+  Future<void> init(
+    String userId,
+    String regNo,
+    List<String> enrolledClasses,
+    String? classId,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     _seenNotifIds = prefs.getStringList('seen_notifications')?.toSet() ?? {};
 
@@ -37,7 +43,9 @@ class UnreadBadgeProvider extends ChangeNotifier {
     });
 
     if (userId.isNotEmpty) {
-      _alertSub = _getAlertStream(userId, regNo, enrolledClasses).listen((alerts) {
+      _alertSub = _getAlertStream(userId, regNo, enrolledClasses).listen((
+        alerts,
+      ) {
         _alertCount = alerts.length;
         notifyListeners();
       });
@@ -46,30 +54,52 @@ class UnreadBadgeProvider extends ChangeNotifier {
 
   Stream<List<ClassNotification>> _getNotificationStream(String? classId) {
     final fs = FirebaseFirestore.instance;
-    Query<Map<String, dynamic>> query = fs.collection('notifications').orderBy('timestamp', descending: true);
-    if (classId != null && classId.isNotEmpty && classId != 'Global / General Assembly') {
+    Query<Map<String, dynamic>> query = fs
+        .collection('notifications')
+        .orderBy('timestamp', descending: true);
+    if (classId != null &&
+        classId.isNotEmpty &&
+        classId != 'Global / General Assembly') {
       query = query.where('classId', whereIn: [classId, 'General']);
     }
-    return query.limit(50).snapshots().map((s) =>
-      s.docs.map((d) => ClassNotification.fromJson(d.data(), d.id)).toList());
+    return query
+        .limit(50)
+        .snapshots()
+        .map(
+          (s) => s.docs
+              .map((d) => ClassNotification.fromJson(d.data(), d.id))
+              .toList(),
+        );
   }
 
-  Stream<List<Alert>> _getAlertStream(String userId, String regNo, List<String> enrolledClasses) {
+  Stream<List<Alert>> _getAlertStream(
+    String userId,
+    String regNo,
+    List<String> enrolledClasses,
+  ) {
     final fs = FirebaseFirestore.instance;
-    return fs.collection('alerts')
+    return fs
+        .collection('alerts')
         .where('targetType', whereIn: ['all', 'user', 'class', 'regNo'])
         .orderBy('timestamp', descending: true)
         .limit(50)
         .snapshots()
-        .map((QuerySnapshot<Map<String, dynamic>> s) => s.docs
-          .map((d) => Alert.fromJson(d.data(), d.id))
-          .where((a) =>
-            a.targetType == 'all' ||
-            (a.targetType == 'user' && a.targetId == userId) ||
-            (a.targetType == 'regNo' && regNo.isNotEmpty && a.targetId == regNo) ||
-            (a.targetType == 'class' && enrolledClasses.contains(a.targetId)))
-          .where((a) => !a.readBy.contains(userId))
-          .toList());
+        .map(
+          (QuerySnapshot<Map<String, dynamic>> s) => s.docs
+              .map((d) => Alert.fromJson(d.data(), d.id))
+              .where(
+                (a) =>
+                    a.targetType == 'all' ||
+                    (a.targetType == 'user' && a.targetId == userId) ||
+                    (a.targetType == 'regNo' &&
+                        regNo.isNotEmpty &&
+                        a.targetId == regNo) ||
+                    (a.targetType == 'class' &&
+                        enrolledClasses.contains(a.targetId)),
+              )
+              .where((a) => !a.readBy.contains(userId))
+              .toList(),
+        );
   }
 
   Future<void> markNotificationsSeen(List<String> ids) async {

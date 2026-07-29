@@ -9,7 +9,7 @@ class DataSeeder {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Manually extracted from: V2_JAN-APRIL 2026_ELECTRICAL TIMETABLE.pdf
-  // Targeting: "Jan 2026 EIT" cohort (acting as E-1E / E-1F) 
+  // Targeting: "Jan 2026 EIT" cohort (acting as E-1E / E-1F)
   static final List<Map<String, dynamic>> _jan2026EitSchedule = [
     // Monday
     {
@@ -42,7 +42,7 @@ class DataSeeder {
       'color': Colors.orange,
       'description': 'Official Timetable',
     },
-    
+
     // Tuesday
     {
       'subject': 'Apply Analog Electronics I',
@@ -64,7 +64,7 @@ class DataSeeder {
       'color': Colors.indigo,
       'description': 'Official Timetable',
     },
-    
+
     // Wednesday
     {
       'subject': 'Apply Basic Electrical Principles',
@@ -91,13 +91,13 @@ class DataSeeder {
   static Future<void> seedScheduleForClass(String classId) async {
     final batch = _firestore.batch();
     final collection = _firestore.collection('schedules');
-    
+
     // Select the dataset
     List<Map<String, dynamic>> targetData = [];
     if (classId == 'Jan 2026 EIT') {
       targetData = _jan2026EitSchedule;
     }
-    
+
     if (targetData.isEmpty) {
       return;
     }
@@ -114,11 +114,12 @@ class DataSeeder {
         endTime: data['endTime'],
         color: data['color'] as Color,
         description: data['description'],
-        date: DateTime.now(), // Irrelevant for default items, but required by model
+        date:
+            DateTime.now(), // Irrelevant for default items, but required by model
         isDefault: true,
         dayOfWeek: data['dayOfWeek'],
       );
-      
+
       batch.set(docRef, item.toJson());
     }
 

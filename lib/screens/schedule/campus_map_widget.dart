@@ -10,11 +10,7 @@ class CampusMapWidget extends StatefulWidget {
   final String? highlightId;
   final String? highlightLabel;
 
-  const CampusMapWidget({
-    super.key,
-    this.highlightId,
-    this.highlightLabel,
-  });
+  const CampusMapWidget({super.key, this.highlightId, this.highlightLabel});
 
   @override
   State<CampusMapWidget> createState() => _CampusMapWidgetState();
@@ -178,7 +174,10 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
               ),
               child: Text(
                 labelForType(loc.type),
-                style: TextStyle(color: colorForType(loc.type), fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: colorForType(loc.type),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -220,8 +219,7 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
             setState(() => _currentHighlightLabel = null);
           },
         ),
-        if (!_mapReady)
-          const Center(child: CircularProgressIndicator()),
+        if (!_mapReady) const Center(child: CircularProgressIndicator()),
         if (_mapReady && !_locationGranted)
           Positioned(
             right: 16,
@@ -245,7 +243,10 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
             heroTag: 'legend_toggle',
             backgroundColor: Colors.white,
             onPressed: () => setState(() => _legendOpen = !_legendOpen),
-            child: Icon(_legendOpen ? Icons.map : Icons.layers, color: Colors.blueGrey),
+            child: Icon(
+              _legendOpen ? Icons.map : Icons.layers,
+              color: Colors.blueGrey,
+            ),
           ),
         ),
         if (_legendOpen)
@@ -265,20 +266,34 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
                 child: Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.05),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.map, size: 20),
                           const SizedBox(width: 8),
-                          const Text('Campus Map Legend', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          const Text(
+                            'Campus Map Legend',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                           const Spacer(),
                           IconButton(
                             icon: const Icon(Icons.close, size: 20),
-                            onPressed: () => setState(() => _legendOpen = false),
+                            onPressed: () =>
+                                setState(() => _legendOpen = false),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                           ),
@@ -310,7 +325,10 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     const Icon(Icons.location_on, color: Colors.red),
@@ -323,7 +341,8 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, size: 18),
-                      onPressed: () => setState(() => _currentHighlightLabel = null),
+                      onPressed: () =>
+                          setState(() => _currentHighlightLabel = null),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -368,28 +387,34 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
             ],
           ),
         ),
-        ...grouped[type]!.map((loc) => InkWell(
-          onTap: () {
-            setState(() {
-              _currentHighlightLabel = loc.name;
-              _legendOpen = false;
-            });
-            _zoomToLocation(loc.id);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 6),
-            child: Row(
-              children: [
-                Icon(Icons.circle, size: 8, color: colorForType(type).withValues(alpha: 0.5)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(loc.name, style: const TextStyle(fontSize: 13)),
-                ),
-                Icon(Icons.zoom_in, size: 14, color: Colors.grey[400]),
-              ],
+        ...grouped[type]!.map(
+          (loc) => InkWell(
+            onTap: () {
+              setState(() {
+                _currentHighlightLabel = loc.name;
+                _legendOpen = false;
+              });
+              _zoomToLocation(loc.id);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 6),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.circle,
+                    size: 8,
+                    color: colorForType(type).withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(loc.name, style: const TextStyle(fontSize: 13)),
+                  ),
+                  Icon(Icons.zoom_in, size: 14, color: Colors.grey[400]),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
         const SizedBox(height: 4),
       ],
     ];

@@ -64,7 +64,10 @@ class _ExploreCardShimmer extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const CircleAvatar(radius: 12, backgroundColor: Colors.white),
+                      const CircleAvatar(
+                        radius: 12,
+                        backgroundColor: Colors.white,
+                      ),
                       const SizedBox(width: 8),
                       Container(
                         height: 14,
@@ -253,13 +256,18 @@ class _MessageBubbleShimmer extends StatelessWidget {
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isMe) const CircleAvatar(radius: 18, backgroundColor: Colors.white),
+          if (!isMe)
+            const CircleAvatar(radius: 18, backgroundColor: Colors.white),
           if (!isMe) const SizedBox(width: 8),
           Column(
-            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               if (!isMe)
                 Container(

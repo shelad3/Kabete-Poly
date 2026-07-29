@@ -18,8 +18,14 @@ class BookingReceiptScreen extends StatelessWidget {
           children: [
             Icon(Icons.check_circle, size: 72, color: Colors.green[400]),
             const SizedBox(height: 8),
-            Text('Booking ${booking.status == 'confirmed' ? 'Confirmed' : 'Pending'}',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green[700])),
+            Text(
+              'Booking ${booking.status == 'confirmed' ? 'Confirmed' : 'Pending'}',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[700],
+              ),
+            ),
             const SizedBox(height: 24),
             Container(
               width: double.infinity,
@@ -28,7 +34,11 @@ class BookingReceiptScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -42,11 +52,26 @@ class BookingReceiptScreen extends StatelessWidget {
                   const Divider(height: 24),
                   _row(context, Icons.badge, 'Reg No', booking.regNo),
                   const Divider(height: 24),
-                  _row(context, Icons.calendar_month, 'Term', 'Term ${booking.term} ${booking.year}'),
+                  _row(
+                    context,
+                    Icons.calendar_month,
+                    'Term',
+                    'Term ${booking.term} ${booking.year}',
+                  ),
                   const Divider(height: 24),
-                  _row(context, Icons.payments, 'Payment', booking.paymentStatus.toUpperCase()),
+                  _row(
+                    context,
+                    Icons.payments,
+                    'Payment',
+                    booking.paymentStatus.toUpperCase(),
+                  ),
                   const Divider(height: 24),
-                  _row(context, Icons.info_outline, 'Status', booking.status.replaceAll('_', ' ').toUpperCase()),
+                  _row(
+                    context,
+                    Icons.info_outline,
+                    'Status',
+                    booking.status.replaceAll('_', ' ').toUpperCase(),
+                  ),
                 ],
               ),
             ),
@@ -87,10 +112,16 @@ class BookingReceiptScreen extends StatelessWidget {
         const SizedBox(width: 12),
         SizedBox(
           width: 80,
-          child: Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+          child: Text(
+            label,
+            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+          ),
         ),
         Expanded(
-          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          ),
         ),
       ],
     );

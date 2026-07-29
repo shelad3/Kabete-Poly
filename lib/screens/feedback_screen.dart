@@ -44,14 +44,20 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       await FirestoreService().submitFeedback(feedback);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thank you for your feedback!'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Thank you for your feedback!'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to submit: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -75,7 +81,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 decoration: BoxDecoration(
                   color: Colors.amber.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: const Row(
                   children: [
@@ -91,7 +99,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('Rate your experience', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+              const Text(
+                'Rate your experience',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +114,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       color: Colors.amber,
                       size: 36,
                     ),
-                    onPressed: () => setState(() => _rating = _rating == starIdx ? 0 : starIdx),
+                    onPressed: () => setState(
+                      () => _rating = _rating == starIdx ? 0 : starIdx,
+                    ),
                   );
                 }),
               ),
@@ -117,7 +130,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   alignLabelWithHint: true,
                   hintText: 'Tell us what you think...',
                 ),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your feedback' : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please enter your feedback'
+                    : null,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -126,8 +141,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isLoading ? null : _submit,
                   icon: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.send),
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send),
                   label: Text(_isLoading ? 'Submitting...' : 'Send Feedback'),
                 ),
               ),

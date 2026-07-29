@@ -47,29 +47,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _pickAndUploadPhoto() async {
-    final file = await _picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
+    final file = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
     if (file == null) return;
     try {
       final authProvider = context.read<AuthProvider>();
       final user = authProvider.currentUser;
       if (user == null) return;
       final regNo = user.registrationNumber;
-      final path = 'profiles/img_${regNo}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final uploadedUrl = await _storageService.uploadImage(File(file.path), path);
+      final path =
+          'profiles/img_${regNo}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final uploadedUrl = await _storageService.uploadImage(
+        File(file.path),
+        path,
+      );
       if (uploadedUrl != null) {
         final uid = authProvider.currentUserId;
-        await FirestoreService().updateUserProfile(uid, {'profilePhotoUrl': uploadedUrl});
+        await FirestoreService().updateUserProfile(uid, {
+          'profilePhotoUrl': uploadedUrl,
+        });
         await authProvider.refreshUserProfile();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile photo updated!'), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text('Profile photo updated!'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -80,12 +96,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear Cache?'),
-        content: const Text('This will remove temporary files and cached images. Your data will not be affected.'),
+        content: const Text(
+          'This will remove temporary files and cached images. Your data will not be affected.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Clear'),
           ),
         ],
@@ -105,13 +129,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cleared $count temporary files'), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text('Cleared $count temporary files'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cache clear error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Cache clear error: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -125,7 +155,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: const Text('Profile & Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Profile & Settings',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -135,17 +168,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildIDCard(context, user),
             const SizedBox(height: 24),
             _buildSettingsSection(context, 'Account Details', [
-              _buildSettingItem(context, Icons.email_outlined, 'Email', user?.email ?? '-'),
-              _buildSettingItem(context, Icons.phone_android_outlined, 'Mobile', user?.mobileNumber ?? '-'),
-              _buildSettingItem(context, Icons.admin_panel_settings_outlined, 'Role', user?.role ?? 'User'),
+              _buildSettingItem(
+                context,
+                Icons.email_outlined,
+                'Email',
+                user?.email ?? '-',
+              ),
+              _buildSettingItem(
+                context,
+                Icons.phone_android_outlined,
+                'Mobile',
+                user?.mobileNumber ?? '-',
+              ),
+              _buildSettingItem(
+                context,
+                Icons.admin_panel_settings_outlined,
+                'Role',
+                user?.role ?? 'User',
+              ),
               if (user?.role == 'Student' || user?.role == 'Leader')
-                _buildSettingItem(context, Icons.house_outlined, 'Hostel', user?.isHostelResident == true ? 'Resident' : 'Day Scholar'),
-              
+                _buildSettingItem(
+                  context,
+                  Icons.house_outlined,
+                  'Hostel',
+                  user?.isHostelResident == true ? 'Resident' : 'Day Scholar',
+                ),
             ]),
             _buildSettingsSection(context, 'Options', [
               ListTile(
                 leading: const Icon(Icons.class_, color: Colors.blue),
-                title: const Text('Enrolled Classes ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                title: const Text(
+                  'Enrolled Classes ',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
                 trailing: Text(
                   '${user?.enrolledClasses.length ?? 0} classes',
                   style: const TextStyle(color: Colors.grey, fontSize: 14),
@@ -154,21 +209,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.qr_code, color: Colors.indigo),
-                title: const Text('My QR Code', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                subtitle: const Text('Show for attendance scanning', style: TextStyle(fontSize: 12)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                title: const Text(
+                  'My QR Code',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                subtitle: const Text(
+                  'Show for attendance scanning',
+                  style: TextStyle(fontSize: 12),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
                 onTap: () => _showQrCode(context, user),
               ),
             ]),
             _buildSettingsSection(context, 'Appearance', [
               ListTile(
-                leading: const Icon(Icons.palette_outlined, color: Colors.purple),
-                title: const Text('Theme', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                leading: const Icon(
+                  Icons.palette_outlined,
+                  color: Colors.purple,
+                ),
+                title: const Text(
+                  'Theme',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
                 trailing: SegmentedButton<AppThemeMode>(
                   segments: const [
-                    ButtonSegment(value: AppThemeMode.knp, icon: Icon(Icons.palette, size: 18), label: Text('KNP', style: TextStyle(fontSize: 12))),
-                    ButtonSegment(value: AppThemeMode.light, icon: Icon(Icons.light_mode, size: 18), label: Text('Light', style: TextStyle(fontSize: 12))),
-                    ButtonSegment(value: AppThemeMode.dark, icon: Icon(Icons.dark_mode, size: 18), label: Text('Dark', style: TextStyle(fontSize: 12))),
+                    ButtonSegment(
+                      value: AppThemeMode.knp,
+                      icon: Icon(Icons.palette, size: 18),
+                      label: Text('KNP', style: TextStyle(fontSize: 12)),
+                    ),
+                    ButtonSegment(
+                      value: AppThemeMode.light,
+                      icon: Icon(Icons.light_mode, size: 18),
+                      label: Text('Light', style: TextStyle(fontSize: 12)),
+                    ),
+                    ButtonSegment(
+                      value: AppThemeMode.dark,
+                      icon: Icon(Icons.dark_mode, size: 18),
+                      label: Text('Dark', style: TextStyle(fontSize: 12)),
+                    ),
                   ],
                   selected: {themeNotifier.mode},
                   onSelectionChanged: (s) => themeNotifier.setMode(s.first),
@@ -178,52 +261,140 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSettingsSection(context, 'App Preferences', [
               ListTile(
                 leading: const Icon(Icons.edit_outlined, color: Colors.teal),
-                title: const Text('Edit Profile', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                title: const Text(
+                  'Edit Profile',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
                 onTap: () => _showEditProfile(context, user),
               ),
               ListTile(
-                leading: Icon(Icons.lock_reset, color: Theme.of(context).primaryColor),
-                title: const Text('Change Password', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                leading: Icon(
+                  Icons.lock_reset,
+                  color: Theme.of(context).primaryColor,
+                ),
+                title: const Text(
+                  'Change Password',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
                 onTap: () => _showPasswordResetDialog(context, user?.email),
               ),
               ListTile(
-                leading: const Icon(Icons.notifications_outlined, color: Colors.cyan),
-                title: const Text('Notification Preferences', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                leading: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.cyan,
+                ),
+                title: const Text(
+                  'Notification Preferences',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
                 onTap: () => _showNotificationPrefs(context),
               ),
               ListTile(
-                leading: const Icon(Icons.delete_sweep_outlined, color: Colors.orange),
-                title: const Text('Clear Cache', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                leading: const Icon(
+                  Icons.delete_sweep_outlined,
+                  color: Colors.orange,
+                ),
+                title: const Text(
+                  'Clear Cache',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
                 onTap: _clearCache,
               ),
               ListTile(
-                leading: const Icon(Icons.support_agent_outlined, color: Colors.indigo),
-                title: const Text('Help & Support', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpScreen())),
+                leading: const Icon(
+                  Icons.support_agent_outlined,
+                  color: Colors.indigo,
+                ),
+                title: const Text(
+                  'Help & Support',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HelpScreen()),
+                ),
               ),
               ListTile(
-                leading: const Icon(Icons.bug_report_outlined, color: Colors.redAccent),
-                title: const Text('Report an Error', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ErrorReportScreen())),
+                leading: const Icon(
+                  Icons.bug_report_outlined,
+                  color: Colors.redAccent,
+                ),
+                title: const Text(
+                  'Report an Error',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ErrorReportScreen()),
+                ),
               ),
               ListTile(
-                leading: const Icon(Icons.feedback_outlined, color: Colors.amber),
-                title: const Text('Send Feedback', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
+                leading: const Icon(
+                  Icons.feedback_outlined,
+                  color: Colors.amber,
+                ),
+                title: const Text(
+                  'Send Feedback',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                ),
               ),
               ListTile(
-                leading: const Icon(Icons.system_update_alt, color: Colors.blueAccent),
-                title: const Text('Check for Updates', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.refresh, size: 18, color: Colors.blueAccent),
+                leading: const Icon(
+                  Icons.system_update_alt,
+                  color: Colors.blueAccent,
+                ),
+                title: const Text(
+                  'Check for Updates',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.refresh,
+                  size: 18,
+                  color: Colors.blueAccent,
+                ),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Checking latest release...')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Checking latest release...')),
+                  );
                   UpdateService.checkForUpdates(context, showNoUpdateMsg: true);
                 },
               ),
@@ -231,20 +402,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
             _buildSettingsSection(context, 'Institution', [
               ListTile(
-                leading: const Icon(Icons.contact_phone_outlined, color: Colors.grey),
-                title: const Text('Faculty & Staff Directory', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+                leading: const Icon(
+                  Icons.contact_phone_outlined,
+                  color: Colors.grey,
+                ),
+                title: const Text(
+                  'Faculty & Staff Directory',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey,
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const FacultyDirectoryScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const FacultyDirectoryScreen(),
+                    ),
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.info_outline, color: Colors.grey),
-                title: const Text('About Kabete Poly App', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                trailing: Text(_appVersion, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                title: const Text(
+                  'About Kabete Poly App',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: Text(
+                  _appVersion,
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                ),
                 onTap: () => _showAboutDialog(context),
               ),
             ]),
@@ -258,9 +447,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: Colors.red.withValues(alpha: 0.05),
                   foregroundColor: Colors.redAccent,
                   side: const BorderSide(color: Colors.redAccent, width: 2),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                child: const Text('Secure Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                child: const Text(
+                  'Secure Logout',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 48),
@@ -292,22 +490,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Current Classes:', style: TextStyle(fontWeight: FontWeight.w600)),
+                const Text(
+                  'Current Classes:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 8),
                 if (user.enrolledClasses.isEmpty)
                   const Padding(
                     padding: EdgeInsets.only(left: 16),
-                    child: Text('No classes enrolled.', style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      'No classes enrolled.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   )
                 else
-                  ...user.enrolledClasses.map<Widget>((c) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                    child: Row(children: [
-                      const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                      const SizedBox(width: 8),
-                      Text(c),
-                    ]),
-                  )),
+                  ...user.enrolledClasses.map<Widget>(
+                    (c) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            size: 16,
+                            color: Colors.green,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(c),
+                        ],
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 if (canChange) ...[
                   Container(
@@ -315,7 +530,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: Colors.blue.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -324,7 +541,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Expanded(
                           child: Text(
                             'You can change your class $remaining more time(s).',
-                            style: TextStyle(fontSize: 13, color: Colors.blue[800]),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.blue[800],
+                            ),
                           ),
                         ),
                       ],
@@ -348,12 +568,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.warning_amber, size: 16, color: Colors.orange[700]),
+                        Icon(
+                          Icons.warning_amber,
+                          size: 16,
+                          color: Colors.orange[700],
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -361,12 +587,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               Text(
                                 'Class change limit reached.',
-                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.orange[800]),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: Colors.orange[800],
+                                ),
                               ),
                               const SizedBox(height: 4),
                               const Text(
                                 'Submit a help request to request a class change.',
-                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ],
                           ),
@@ -390,14 +623,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
+          ],
         ),
       ),
     );
   }
 
   void _showClassSelector(BuildContext context, user) {
-    final classes = context.read<ClassProvider>().availableClasses
+    final classes = context
+        .read<ClassProvider>()
+        .availableClasses
         .where((c) => c != 'Global / General Assembly')
         .toList();
     String? selected;
@@ -413,7 +653,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Choose your new class:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                const Text(
+                  'Choose your new class:',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
                 const SizedBox(height: 12),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 300),
@@ -421,18 +664,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: ListView(
                       shrinkWrap: true,
                       children: [
-                        ...classes.map((c) => RadioListTile<String>(
-                          title: Text(c, style: const TextStyle(fontSize: 13)),
-                          value: c,
-                          groupValue: selected,
-                          onChanged: (v) {
-                            setDState(() {
-                              selected = v;
-                              customCtrl.clear();
-                            });
-                          },
-                          dense: true,
-                        )),
+                        ...classes.map(
+                          (c) => RadioListTile<String>(
+                            title: Text(
+                              c,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            value: c,
+                            groupValue: selected,
+                            onChanged: (v) {
+                              setDState(() {
+                                selected = v;
+                                customCtrl.clear();
+                              });
+                            },
+                            dense: true,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -440,7 +688,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(),
                 TextField(
                   controller: customCtrl,
-                  decoration: const InputDecoration(labelText: 'Or type a class name', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Or type a class name',
+                    border: OutlineInputBorder(),
+                  ),
                   onChanged: (v) {
                     if (v.isNotEmpty) setDState(() => selected = null);
                   },
@@ -449,7 +700,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 final newClass = selected ?? customCtrl.text.trim();
@@ -465,13 +719,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (ctx.mounted) Navigator.pop(ctx);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Class changed to $newClass'), backgroundColor: Colors.green),
+                      SnackBar(
+                        content: Text('Class changed to $newClass'),
+                        backgroundColor: Colors.green,
+                      ),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                      SnackBar(
+                        content: Text('Failed: $e'),
+                        backgroundColor: Colors.red,
+                      ),
                     );
                   }
                 }
@@ -503,19 +763,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: titleCtrl,
-                decoration: const InputDecoration(labelText: 'Desired Class', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Desired Class',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: messageCtrl,
                 maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Reason (optional)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Reason (optional)',
+                  border: OutlineInputBorder(),
+                ),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               final cls = titleCtrl.text.trim();
@@ -532,13 +801,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Request submitted. Admin will review it.'), backgroundColor: Colors.green),
+                    const SnackBar(
+                      content: Text('Request submitted. Admin will review it.'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+                    SnackBar(
+                      content: Text('Failed: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
@@ -572,26 +847,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ? NetworkImage(user.profilePhotoUrl)
                         : null,
                     child: user.profilePhotoUrl.isEmpty
-                        ? const Icon(Icons.camera_alt, size: 32, color: Colors.grey)
+                        ? const Icon(
+                            Icons.camera_alt,
+                            size: 32,
+                            color: Colors.grey,
+                          )
                         : null,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: phoneCtrl,
-                  decoration: const InputDecoration(labelText: 'Mobile Number', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Mobile Number',
+                    border: OutlineInputBorder(),
+                  ),
                   keyboardType: TextInputType.phone,
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
@@ -605,13 +893,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (ctx.mounted) {
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Profile updated'), backgroundColor: Colors.green),
+                      const SnackBar(
+                        content: Text('Profile updated'),
+                        backgroundColor: Colors.green,
+                      ),
                     );
                   }
                 } catch (e) {
                   if (ctx.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Update failed: $e'), backgroundColor: Colors.red),
+                      SnackBar(
+                        content: Text('Update failed: $e'),
+                        backgroundColor: Colors.red,
+                      ),
                     );
                   }
                 }
@@ -650,7 +944,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Manage what notifications you receive:', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    const Text(
+                      'Manage what notifications you receive:',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
                     const SizedBox(height: 16),
                     SwitchListTile(
                       title: const Text('New Lessons'),
@@ -694,7 +991,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done'))],
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Done'),
+                  ),
+                ],
               );
             },
           );
@@ -710,7 +1012,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: Theme.of(context).primaryColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Theme.of(context).primaryColor.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: Stack(
@@ -718,7 +1024,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Positioned(
             right: -20,
             top: -20,
-            child: Icon(Icons.school, size: 150, color: Colors.white.withValues(alpha: 0.1)),
+            child: Icon(
+              Icons.school,
+              size: 150,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(24.0),
@@ -737,12 +1047,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: CircleAvatar(
                           radius: 40,
                           backgroundColor: Colors.white24,
-                          backgroundImage: user?.profilePhotoUrl.isNotEmpty == true 
-                            ? NetworkImage(user!.profilePhotoUrl) 
-                            : null,
-                          child: user?.profilePhotoUrl.isEmpty == true 
-                            ? const Icon(Icons.person, size: 40, color: Colors.white) 
-                            : null,
+                          backgroundImage:
+                              user?.profilePhotoUrl.isNotEmpty == true
+                              ? NetworkImage(user!.profilePhotoUrl)
+                              : null,
+                          child: user?.profilePhotoUrl.isEmpty == true
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.white,
+                                )
+                              : null,
                         ),
                       ),
                     ),
@@ -754,18 +1069,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const SizedBox(height: 8),
                           Text(
                             user?.fullName ?? 'Student Name',
-                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               user?.registrationNumber ?? 'EE-XXXX-XXX',
-                              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
                             ),
                           ),
                         ],
@@ -791,18 +1118,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildIDStat(String label, String value, {Color color = Colors.white}) {
+  Widget _buildIDStat(
+    String label,
+    String value, {
+    Color color = Colors.white,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSettingsSection(BuildContext context, String title, List<Widget> items) {
+  Widget _buildSettingsSection(
+    BuildContext context,
+    String title,
+    List<Widget> items,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -838,11 +1188,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSettingItem(BuildContext context, IconData icon, String label, String value) {
+  Widget _buildSettingItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return ListTile(
       leading: Icon(icon, color: Colors.grey[700]),
-      title: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-      trailing: Text(value, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+      title: Text(
+        label,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+      ),
+      trailing: Text(
+        value,
+        style: const TextStyle(color: Colors.grey, fontSize: 14),
+      ),
     );
   }
 
@@ -862,13 +1223,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 try {
-                  await context.read<AuthProvider>().sendPasswordResetEmail(email!);
+                  await context.read<AuthProvider>().sendPasswordResetEmail(
+                    email!,
+                  );
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password reset email sent. Check your inbox.')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Password reset email sent. Check your inbox.',
+                        ),
+                      ),
+                    );
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
                 }
               },
@@ -895,15 +1266,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Version: $_appVersion', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'Version: $_appVersion',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
-            const Text('Kabete Poly App provides students and faculty with scheduling, document sharing, and real-time alerts.'),
+            const Text(
+              'Kabete Poly App provides students and faculty with scheduling, document sharing, and real-time alerts.',
+            ),
             const SizedBox(height: 10),
-            const Text('Built with Flutter & Firebase.', style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey)),
+            const Text(
+              'Built with Flutter & Firebase.',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );
@@ -927,7 +1313,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('QR scanning is not active yet. Wait for your teacher to activate it.'),
+            content: Text(
+              'QR scanning is not active yet. Wait for your teacher to activate it.',
+            ),
             backgroundColor: Colors.orange,
             duration: Duration(seconds: 3),
           ),
@@ -943,7 +1331,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final rounded = (now ~/ 30000) * 30000;
     final qrData = '$uid|$rounded';
 
-    final qrUrl = 'https://api.qrserver.com/v1/create-qr-code/'
+    final qrUrl =
+        'https://api.qrserver.com/v1/create-qr-code/'
         '?size=300x300&data=${Uri.encodeComponent(qrData)}';
 
     if (!context.mounted) {
@@ -961,25 +1350,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Show this to your teacher for scanning',
-                  style: TextStyle(color: Colors.grey, fontSize: 12), textAlign: TextAlign.center),
+              const Text(
+                'Show this to your teacher for scanning',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 16),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(qrUrl, width: 250, height: 250,
-                    errorBuilder: (_, _, _) =>
-                        const Icon(Icons.qr_code, size: 200, color: Colors.grey)),
+                child: Image.network(
+                  qrUrl,
+                  width: 250,
+                  height: 250,
+                  errorBuilder: (_, _, _) =>
+                      const Icon(Icons.qr_code, size: 200, color: Colors.grey),
+                ),
               ),
               const SizedBox(height: 12),
-              Text(user?.fullName ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(user?.registrationNumber ?? '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              Text(
+                user?.fullName ?? '',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                user?.registrationNumber ?? '',
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
               const SizedBox(height: 8),
-              Text('QR refreshes every 30s',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 10)),
+              Text(
+                'QR refreshes every 30s',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+              ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
           ],
         ),
       ),

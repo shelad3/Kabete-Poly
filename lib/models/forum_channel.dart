@@ -5,7 +5,8 @@ class ForumChannel {
   final String id;
   final String classId;
   final String name;
-  final String type; // 'announcement' (admin-only post) or 'chat' (everyone can post)
+  final String
+  type; // 'announcement' (admin-only post) or 'chat' (everyone can post)
   final String createdBy;
   final DateTime createdAt;
 
@@ -29,8 +30,8 @@ class ForumChannel {
       createdBy: json['createdBy'] ?? '',
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is String
-              ? DateTime.parse(json['createdAt'])
-              : (json['createdAt'] as dynamic).toDate() as DateTime)
+                ? DateTime.parse(json['createdAt'])
+                : (json['createdAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
     );
   }

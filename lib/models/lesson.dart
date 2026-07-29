@@ -34,16 +34,20 @@ class Lesson {
     required this.date,
     List<String>? attachmentUrls,
     List<String>? attachmentNames,
-  })  : attachmentUrls = attachmentUrls ?? [],
-        attachmentNames = attachmentNames ?? [];
+  }) : attachmentUrls = attachmentUrls ?? [],
+       attachmentNames = attachmentNames ?? [];
 
   factory Lesson.fromJson(Map<String, dynamic> json) {
     final urls = json['attachmentUrls'] != null
         ? List<String>.from(json['attachmentUrls'])
-        : (json['attachmentUrl'] != null ? [json['attachmentUrl'] as String] : <String>[]);
+        : (json['attachmentUrl'] != null
+              ? [json['attachmentUrl'] as String]
+              : <String>[]);
     final names = json['attachmentNames'] != null
         ? List<String>.from(json['attachmentNames'])
-        : (json['attachmentName'] != null ? [json['attachmentName'] as String] : <String>[]);
+        : (json['attachmentName'] != null
+              ? [json['attachmentName'] as String]
+              : <String>[]);
     return Lesson(
       id: json['id'],
       classId: json['classId'] ?? 'General',
@@ -59,8 +63,8 @@ class Lesson {
       nb2: json['nb2'] ?? '',
       date: json['date'] != null
           ? (json['date'] is String
-              ? DateTime.parse(json['date'])
-              : (json['date'] as dynamic).toDate() as DateTime)
+                ? DateTime.parse(json['date'])
+                : (json['date'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       attachmentUrls: urls,
       attachmentNames: names,

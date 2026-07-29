@@ -25,7 +25,8 @@ class LessonDetailScreen extends StatelessWidget {
           actions: [
             Consumer<AuthProvider>(
               builder: (context, auth, _) {
-                if (auth.currentUser?.isTeacher != true) return const SizedBox.shrink();
+                if (auth.currentUser?.isTeacher != true)
+                  return const SizedBox.shrink();
                 return PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'edit') {
@@ -40,8 +41,23 @@ class LessonDetailScreen extends StatelessWidget {
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit), title: Text('Edit'))),
-                    const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete, color: Colors.red), title: Text('Delete', style: TextStyle(color: Colors.red)))),
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: ListTile(
+                        leading: Icon(Icons.edit),
+                        title: Text('Edit'),
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: ListTile(
+                        leading: Icon(Icons.delete, color: Colors.red),
+                        title: Text(
+                          'Delete',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
@@ -78,7 +94,10 @@ class LessonDetailScreen extends StatelessWidget {
         title: const Text('Delete Lesson'),
         content: Text('Permanently delete "${lesson.topic}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -86,7 +105,10 @@ class LessonDetailScreen extends StatelessWidget {
                 await FirestoreService().deleteLesson(lesson.id);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Lesson deleted'), backgroundColor: Colors.green),
+                    const SnackBar(
+                      content: Text('Lesson deleted'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                   onDelete?.call();
                   Navigator.pop(context);
@@ -94,12 +116,18 @@ class LessonDetailScreen extends StatelessWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -135,7 +163,10 @@ class LessonDetailScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   lesson.subtopic,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -156,7 +187,10 @@ class LessonDetailScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.attach_file, color: Colors.blue, size: 20),
                       SizedBox(width: 8),
-                      Text('Attachments', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Attachments',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -165,12 +199,20 @@ class LessonDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         children: [
-                          const Icon(Icons.picture_as_pdf, color: Colors.blue, size: 24),
+                          const Icon(
+                            Icons.picture_as_pdf,
+                            color: Colors.blue,
+                            size: 24,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              i < lesson.attachmentNames.length ? lesson.attachmentNames[i] : 'Document ${i + 1}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              i < lesson.attachmentNames.length
+                                  ? lesson.attachmentNames[i]
+                                  : 'Document ${i + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -179,16 +221,24 @@ class LessonDetailScreen extends StatelessWidget {
                             onPressed: () async {
                               final url = Uri.parse(lesson.attachmentUrls[i]);
                               if (await canLaunchUrl(url)) {
-                                await launchUrl(url, mode: LaunchMode.externalApplication);
+                                await launchUrl(
+                                  url,
+                                  mode: LaunchMode.externalApplication,
+                                );
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               minimumSize: const Size(0, 32),
                             ),
-                            child: const Text('Open', style: TextStyle(fontSize: 12)),
+                            child: const Text(
+                              'Open',
+                              style: TextStyle(fontSize: 12),
+                            ),
                           ),
                         ],
                       ),
@@ -222,7 +272,11 @@ class LessonDetailScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.summarize_outlined, size: 48, color: Colors.amber),
+              const Icon(
+                Icons.summarize_outlined,
+                size: 48,
+                color: Colors.amber,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Key Takeaways',
@@ -232,7 +286,10 @@ class LessonDetailScreen extends StatelessWidget {
               Text(
                 lesson.summary,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
           ),
@@ -320,7 +377,11 @@ class LessonDetailScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
           Text(content, style: const TextStyle(fontSize: 15)),

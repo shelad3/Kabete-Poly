@@ -39,7 +39,10 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
     final validQuestions = _questions.where((q) => q.isValid).toList();
     if (validQuestions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add at least one question'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Add at least one question'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -79,9 +82,9 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
     await _service.updateQuiz(quizId, {'questionIds': questionIds});
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Quiz created!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Quiz created!')));
       Navigator.pop(context);
     }
   }
@@ -109,8 +112,15 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
           TextButton(
             onPressed: _isSaving ? null : _save,
             child: _isSaving
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text(
+                    'Save',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
           ),
         ],
       ),
@@ -121,19 +131,28 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
           children: [
             TextFormField(
               controller: _titleCtrl,
-              decoration: const InputDecoration(labelText: 'Quiz Title', hintText: 'e.g. Chapter 5 Quiz'),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+              decoration: const InputDecoration(
+                labelText: 'Quiz Title',
+                hintText: 'e.g. Chapter 5 Quiz',
+              ),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _descCtrl,
-              decoration: const InputDecoration(labelText: 'Description (optional)', hintText: 'Brief description'),
+              decoration: const InputDecoration(
+                labelText: 'Description (optional)',
+                hintText: 'Brief description',
+              ),
               maxLines: 2,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _durationCtrl,
-              decoration: const InputDecoration(labelText: 'Duration (minutes)'),
+              decoration: const InputDecoration(
+                labelText: 'Duration (minutes)',
+              ),
               keyboardType: TextInputType.number,
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Required';
@@ -145,7 +164,12 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
             const SizedBox(height: 24),
             Row(
               children: [
-                Text('Questions', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'Questions',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _addQuestion,
@@ -163,7 +187,10 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Center(
-                  child: Text('Tap "Add" to create questions', style: TextStyle(color: Colors.grey[500])),
+                  child: Text(
+                    'Tap "Add" to create questions',
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
                 ),
               ),
             const SizedBox(height: 32),
@@ -185,10 +212,16 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
               children: [
                 CircleAvatar(
                   radius: 14,
-                  child: Text('${index + 1}', style: const TextStyle(fontSize: 13)),
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                Text('Question ${index + 1}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  'Question ${index + 1}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close, size: 18, color: Colors.red),
@@ -225,7 +258,13 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                         decoration: InputDecoration(
                           hintText: 'Option ${oi + 1}',
                           border: const OutlineInputBorder(),
-                          suffixIcon: isCorrect ? const Icon(Icons.check_circle, color: Colors.green, size: 20) : null,
+                          suffixIcon: isCorrect
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 20,
+                                )
+                              : null,
                         ),
                       ),
                     ),
@@ -242,8 +281,13 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
 
 class _QuestionForm {
   final TextEditingController controller = TextEditingController();
-  final List<TextEditingController> options = List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> options = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   int correctIndex = 0;
 
-  bool get isValid => controller.text.trim().isNotEmpty && options.every((o) => o.text.trim().isNotEmpty);
+  bool get isValid =>
+      controller.text.trim().isNotEmpty &&
+      options.every((o) => o.text.trim().isNotEmpty);
 }

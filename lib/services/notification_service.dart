@@ -28,8 +28,8 @@ class NotificationService {
 
     // v18+ named parameter strict signature (now called setup or something, wait. flutter analyze said 'settings')
     await _flutterLocalNotificationsPlugin.initialize(
-       settings: initializationSettings,
-       onDidReceiveNotificationResponse: _onSelectNotification,
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse: _onSelectNotification,
     );
   }
 
@@ -59,19 +59,20 @@ class NotificationService {
     required int id,
     required int progress,
   }) async {
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'apk_downloads',
-      'App Updates',
-      channelDescription: 'APK download progress for app updates',
-      importance: Importance.low,
-      priority: Priority.defaultPriority,
-      onlyAlertOnce: true,
-      showProgress: true,
-      maxProgress: 100,
-      progress: progress,
-      ongoing: true,
-      autoCancel: false,
-    );
+    final AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'apk_downloads',
+          'App Updates',
+          channelDescription: 'APK download progress for app updates',
+          importance: Importance.low,
+          priority: Priority.defaultPriority,
+          onlyAlertOnce: true,
+          showProgress: true,
+          maxProgress: 100,
+          progress: progress,
+          ongoing: true,
+          autoCancel: false,
+        );
 
     await _flutterLocalNotificationsPlugin.show(
       id: id,
@@ -83,17 +84,18 @@ class NotificationService {
 
   /// Show notification that download is complete and ready to install
   Future<void> showDownloadCompleteNotification(String filePath) async {
-    final AndroidNotificationDetails androidDetails = const AndroidNotificationDetails(
-      'apk_downloads',
-      'App Updates',
-      channelDescription: 'APK download progress for app updates',
-      importance: Importance.high,
-      priority: Priority.high,
-      onlyAlertOnce: true,
-      showProgress: false,
-      ongoing: false,
-      autoCancel: true,
-    );
+    final AndroidNotificationDetails androidDetails =
+        const AndroidNotificationDetails(
+          'apk_downloads',
+          'App Updates',
+          channelDescription: 'APK download progress for app updates',
+          importance: Importance.high,
+          priority: Priority.high,
+          onlyAlertOnce: true,
+          showProgress: false,
+          ongoing: false,
+          autoCancel: true,
+        );
 
     await _flutterLocalNotificationsPlugin.show(
       id: 9998,
@@ -119,8 +121,10 @@ class NotificationService {
   /// Request permissions on Android 13+
   Future<void> requestPermissions() async {
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-        _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
 
     if (androidImplementation != null) {
       await androidImplementation.requestNotificationsPermission();
@@ -138,15 +142,14 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
-    
     // Create the Daily 08:00 AM Agenda Alert
     await _scheduleWeeklyAtDayAndTime(
-        id: id * 10,
-        title: 'Daily Class Briefing',
-        body: 'You have $className today in $room.',
-        dayOfWeek: dayOfWeek,
-        hour: 8,
-        minute: 0,
+      id: id * 10,
+      title: 'Daily Class Briefing',
+      body: 'You have $className today in $room.',
+      dayOfWeek: dayOfWeek,
+      hour: 8,
+      minute: 0,
     );
 
     // Create the 30-Minute prior 'Urgent' alert
@@ -158,12 +161,12 @@ class NotificationService {
     }
 
     await _scheduleWeeklyAtDayAndTime(
-        id: (id * 10) + 1,
-        title: 'Class Starting Soon!',
-        body: '$className begins in 30 minutes at $room.',
-        dayOfWeek: dayOfWeek,
-        hour: reminderHour,
-        minute: reminderMinute,
+      id: (id * 10) + 1,
+      title: 'Class Starting Soon!',
+      body: '$className begins in 30 minutes at $room.',
+      dayOfWeek: dayOfWeek,
+      hour: reminderHour,
+      minute: reminderMinute,
     );
   }
 
@@ -204,8 +207,14 @@ class NotificationService {
 
   tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }

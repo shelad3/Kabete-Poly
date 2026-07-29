@@ -21,11 +21,17 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
   Future<void> _generateCode(String role) async {
     setState(() => _isGenerating = true);
     final user = context.read<AuthProvider>().currentUser;
-    await _service.generateCode(role, user?.email ?? 'admin', rule: _selectedRule);
+    await _service.generateCode(
+      role,
+      user?.email ?? 'admin',
+      rule: _selectedRule,
+    );
     if (mounted) {
       setState(() => _isGenerating = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$role code generated (${_selectedRule.label})')),
+        SnackBar(
+          content: Text('$role code generated (${_selectedRule.label})'),
+        ),
       );
     }
   }
@@ -34,9 +40,7 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Authentication Codes'),
-      ),
+      appBar: AppBar(title: const Text('Authentication Codes')),
       body: Column(
         children: [
           Container(
@@ -45,34 +49,60 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Generate Registration Codes',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'Generate Registration Codes',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<AuthCodeRule>(
                   value: _selectedRule,
                   decoration: InputDecoration(
                     labelText: 'Code Rule',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                   items: AuthCodeRule.predefined.map((r) {
                     final desc = StringBuffer();
-                    if (r.maxUses != null) desc.write('${r.maxUses} use${r.maxUses! > 1 ? 's' : ''}');
+                    if (r.maxUses != null)
+                      desc.write(
+                        '${r.maxUses} use${r.maxUses! > 1 ? 's' : ''}',
+                      );
                     if (r.expiresAfter != null) {
                       if (desc.isNotEmpty) desc.write(', ');
                       if (r.expiresAfter == Duration.zero) {
                         desc.write('immediate expiry');
-                      } else if (r.expiresAfter!.inHours >= 24) desc.write('${r.expiresAfter!.inDays} days');
-                      else desc.write('${r.expiresAfter!.inHours} hours');
+                      } else if (r.expiresAfter!.inHours >= 24)
+                        desc.write('${r.expiresAfter!.inDays} days');
+                      else
+                        desc.write('${r.expiresAfter!.inHours} hours');
                     }
                     return DropdownMenuItem(
                       value: r,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(r.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                          Text(
+                            r.label,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
                           if (desc.isNotEmpty)
-                            Text(desc.toString(), style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                            Text(
+                              desc.toString(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                              ),
+                            ),
                         ],
                       ),
                     );
@@ -99,10 +129,17 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Text('Generated Codes',
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  'Generated Codes',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
-                Text('Tap to revoke', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                Text(
+                  'Tap to revoke',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                ),
               ],
             ),
           ),
@@ -115,7 +152,9 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snap.hasError) {
-                  return Center(child: Text('Error loading codes: ${snap.error}'));
+                  return Center(
+                    child: Text('Error loading codes: ${snap.error}'),
+                  );
                 }
                 final codes = snap.data ?? [];
                 if (codes.isEmpty) {
@@ -126,40 +165,71 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                   itemCount: codes.length,
                   itemBuilder: (context, index) {
                     final code = codes[index];
-                    final rule = AuthCodeRule.predefined.where((r) => r.id == code.ruleId).firstOrNull;
+                    final rule = AuthCodeRule.predefined
+                        .where((r) => r.id == code.ruleId)
+                        .firstOrNull;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: _roleColor(code.role).withValues(alpha: 0.1),
-                          child: Icon(Icons.vpn_key, color: _roleColor(code.role), size: 20),
+                          backgroundColor: _roleColor(
+                            code.role,
+                          ).withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.vpn_key,
+                            color: _roleColor(code.role),
+                            size: 20,
+                          ),
                         ),
-                        title: Text(code.code,
-                            style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2)),
+                        title: Text(
+                          code.code,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${code.role} · ${code.isUsed ? "Used by ${code.usedBy ?? 'unknown'}" : (code.isExpired ? "Expired" : code.isExhausted ? "Exhausted" : "Available")}',
+                              '${code.role} · ${code.isUsed ? "Used by ${code.usedBy ?? 'unknown'}" : (code.isExpired
+                                        ? "Expired"
+                                        : code.isExhausted
+                                        ? "Exhausted"
+                                        : "Available")}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: code.isUsed || code.isExpired || code.isExhausted ? Colors.grey : Colors.green,
+                                color:
+                                    code.isUsed ||
+                                        code.isExpired ||
+                                        code.isExhausted
+                                    ? Colors.grey
+                                    : Colors.green,
                               ),
                             ),
                             if (rule != null)
                               Text(
                                 rule.label,
-                                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                             if (code.useCount > 0 || code.maxUses != null)
                               Text(
                                 'Used ${code.useCount}x${code.maxUses != null ? ' / ${code.maxUses}x max' : ''}',
-                                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                           ],
                         ),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _confirmRevoke(code.id),
                         ),
                       ),
@@ -184,7 +254,14 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
           minimumSize: const Size(0, 44),
         ),
         child: _isGenerating
-            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
             : Text(role, style: const TextStyle(fontSize: 13)),
       ),
     );
@@ -208,15 +285,23 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Revoke Code'),
-        content: const Text('This will permanently delete this code. Continue?'),
+        content: const Text(
+          'This will permanently delete this code. Continue?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
               _service.revokeCode(codeId);
               Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Revoke'),
           ),
         ],

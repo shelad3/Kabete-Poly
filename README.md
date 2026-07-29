@@ -368,7 +368,7 @@ A: Add a document to the `classes` collection in Firestore with a `createdAt` ti
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+GNU AGPL v3 — see [LICENSE](LICENSE).
 
 ---
 

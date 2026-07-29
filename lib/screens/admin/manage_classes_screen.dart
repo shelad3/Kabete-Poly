@@ -31,7 +31,8 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('classes').snapshots(),
         builder: (context, snapshot) {
-          final firestoreClasses = (snapshot.data?.docs.map((d) => d.id).toList() ?? [])..sort();
+          final firestoreClasses =
+              (snapshot.data?.docs.map((d) => d.id).toList() ?? [])..sort();
           if (firestoreClasses.isEmpty) {
             return const Center(child: Text('No classes found'));
           }
@@ -46,15 +47,26 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Colors.blue.withValues(alpha: 0.15),
-                    child: const Icon(Icons.school, color: Colors.blue, size: 20),
+                    child: const Icon(
+                      Icons.school,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
                   ),
-                  title: Text(className, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  title: Text(
+                    className,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: const Text(
                     'Firestore-managed',
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                      size: 20,
+                    ),
                     tooltip: 'Delete class & all timetable data',
                     onPressed: () => _deleteClass(context, className),
                   ),
@@ -62,7 +74,8 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ManageTimetableScreen(className: className),
+                        builder: (_) =>
+                            ManageTimetableScreen(className: className),
                       ),
                     );
                   },
@@ -91,14 +104,18 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               final name = nameCtrl.text.trim();
               if (name.isEmpty) return;
-              await FirebaseFirestore.instance.collection('classes').doc(name).set({
-                'createdAt': FieldValue.serverTimestamp(),
-              });
+              await FirebaseFirestore.instance
+                  .collection('classes')
+                  .doc(name)
+                  .set({'createdAt': FieldValue.serverTimestamp()});
               if (ctx.mounted) {
                 Navigator.pop(ctx);
                 context.read<ClassProvider>().refreshClasses();
@@ -116,12 +133,20 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Class'),
-        content: Text('This will permanently delete "$className" and all its timetable entries. Continue?'),
+        content: Text(
+          'This will permanently delete "$className" and all its timetable entries. Continue?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -139,13 +164,18 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
     for (final doc in timetableDocs.docs) {
       batch.delete(doc.reference);
     }
-    batch.delete(FirebaseFirestore.instance.collection('classes').doc(className));
+    batch.delete(
+      FirebaseFirestore.instance.collection('classes').doc(className),
+    );
     await batch.commit();
 
     if (mounted) {
       context.read<ClassProvider>().refreshClasses();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"$className" deleted'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text('"$className" deleted'),
+          backgroundColor: Colors.green,
+        ),
       );
     }
   }

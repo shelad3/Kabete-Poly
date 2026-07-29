@@ -76,48 +76,66 @@ class _NotificationScreenState extends State<NotificationScreen>
         title: const Text('Notification Center'),
         bottom: TabBar(
           controller: _tabCtrl,
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
           tabs: [
             Tab(
               child: Badge(
                 isLabelVisible: badge.unreadNotifications > 0,
                 label: Text(
-                  badge.unreadNotifications > 99 ? '99+' : badge.unreadNotifications.toString(),
+                  badge.unreadNotifications > 99
+                      ? '99+'
+                      : badge.unreadNotifications.toString(),
                   style: const TextStyle(fontSize: 10, color: Colors.white),
                 ),
-                child: const Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.notifications_none_outlined),
-                  SizedBox(height: 4),
-                  Text('Notifications'),
-                ]),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.notifications_none_outlined),
+                    SizedBox(height: 4),
+                    Text('Notifications'),
+                  ],
+                ),
               ),
             ),
             Tab(
               child: Badge(
                 isLabelVisible: badge.unreadAlerts > 0,
                 label: Text(
-                  badge.unreadAlerts > 99 ? '99+' : badge.unreadAlerts.toString(),
+                  badge.unreadAlerts > 99
+                      ? '99+'
+                      : badge.unreadAlerts.toString(),
                   style: const TextStyle(fontSize: 10, color: Colors.white),
                 ),
-                child: const Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.warning_amber_outlined),
-                  SizedBox(height: 4),
-                  Text('Alerts'),
-                ]),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.warning_amber_outlined),
+                    SizedBox(height: 4),
+                    Text('Alerts'),
+                  ],
+                ),
               ),
             ),
             Tab(
               child: Badge(
                 isLabelVisible: badge.unreadUpdates > 0,
                 label: Text(
-                  badge.unreadUpdates > 99 ? '99+' : badge.unreadUpdates.toString(),
+                  badge.unreadUpdates > 99
+                      ? '99+'
+                      : badge.unreadUpdates.toString(),
                   style: const TextStyle(fontSize: 10, color: Colors.white),
                 ),
-                child: const Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.system_update_outlined),
-                  SizedBox(height: 4),
-                  Text('Updates'),
-                ]),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.system_update_outlined),
+                    SizedBox(height: 4),
+                    Text('Updates'),
+                  ],
+                ),
               ),
             ),
           ],
@@ -138,7 +156,10 @@ class _NotificationScreenState extends State<NotificationScreen>
     return Consumer2<AuthProvider, ClassProvider>(
       builder: (context, authProvider, classProvider, _) {
         return StreamBuilder<List<ClassNotification>>(
-          stream: _firestoreService.getNotificationsStream(classProvider.currentClass),
+          stream: _firestoreService.getNotificationsStream(
+            classProvider.currentClass,
+            studentId: authProvider.currentUserId,
+          ),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return const Center(child: Text('Error loading notifications.'));
@@ -177,7 +198,11 @@ class _NotificationScreenState extends State<NotificationScreen>
         }
 
         return StreamBuilder<List<Alert>>(
-          stream: _firestoreService.getAlertsForUser(userId, regNo, user.enrolledClasses),
+          stream: _firestoreService.getAlertsForUser(
+            userId,
+            regNo,
+            user.enrolledClasses,
+          ),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const ShimmerNotificationList();
@@ -233,13 +258,28 @@ class _NotificationScreenState extends State<NotificationScreen>
                   children: [
                     const Icon(Icons.info_outline, color: Colors.blue),
                     const SizedBox(width: 8),
-                    const Text('Current Version', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text(
+                      'Current Version',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('v${_packageInfo!.version}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w300)),
+                Text(
+                  'v${_packageInfo!.version}',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('Build ${_packageInfo!.buildNumber}', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                Text(
+                  'Build ${_packageInfo!.buildNumber}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                ),
               ],
             ),
           ),
@@ -257,22 +297,45 @@ class _NotificationScreenState extends State<NotificationScreen>
                     children: [
                       const Icon(Icons.system_update, color: Colors.green),
                       const SizedBox(width: 8),
-                      const Text('Update Available', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+                      const Text(
+                        'Update Available',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.green,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Version ${_pendingUpdate!['version']} is ready.', style: const TextStyle(fontSize: 16)),
+                  Text(
+                    'Version ${_pendingUpdate!['version']} is ready.',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                   if ((_pendingUpdate!['notes'] ?? '').isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    const Text("What's new:", style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text(
+                      "What's new:",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
-                    Text(_pendingUpdate!['notes']!, style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4)),
+                    Text(
+                      _pendingUpdate!['notes']!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[700],
+                        height: 1.4,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => UpdateService.checkForUpdates(context, showNoUpdateMsg: false),
+                      onPressed: () => UpdateService.checkForUpdates(
+                        context,
+                        showNoUpdateMsg: false,
+                      ),
                       icon: const Icon(Icons.download),
                       label: const Text('Install Update'),
                       style: ElevatedButton.styleFrom(
@@ -297,7 +360,13 @@ class _NotificationScreenState extends State<NotificationScreen>
                   children: [
                     const Icon(Icons.search, color: Colors.blue),
                     const SizedBox(width: 8),
-                    const Text('Check for Updates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text(
+                      'Check for Updates',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -305,7 +374,10 @@ class _NotificationScreenState extends State<NotificationScreen>
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      UpdateService.checkForUpdates(context, showNoUpdateMsg: true).then((_) async {
+                      UpdateService.checkForUpdates(
+                        context,
+                        showNoUpdateMsg: true,
+                      ).then((_) async {
                         final info = await UpdateService.getPendingUpdateInfo();
                         if (mounted) setState(() => _pendingUpdate = info);
                       });
@@ -322,7 +394,10 @@ class _NotificationScreenState extends State<NotificationScreen>
     );
   }
 
-  Widget _buildNotificationCard(BuildContext context, ClassNotification notify) {
+  Widget _buildNotificationCard(
+    BuildContext context,
+    ClassNotification notify,
+  ) {
     Color color;
     IconData icon;
 
@@ -365,19 +440,33 @@ class _NotificationScreenState extends State<NotificationScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(notify.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          notify.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      Text(notify.timeAgo,
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                      Text(
+                        notify.timeAgo,
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(notify.message,
-                      maxLines: 3, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.3, fontSize: 13)),
+                  Text(
+                    notify.message,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.3,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -427,16 +516,28 @@ class _NotificationScreenState extends State<NotificationScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(alert.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          alert.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(alert.message,
-                      maxLines: 4, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.3, fontSize: 13)),
+                  Text(
+                    alert.message,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.3,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             ),

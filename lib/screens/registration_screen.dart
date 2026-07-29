@@ -31,20 +31,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   // Role specific fields
   String? _selectedDesignation; // For Leaders, Teachers, Officials
   bool _isCustomDesignation = false;
   final _customDesignationController = TextEditingController();
   bool _isHostelResident = false; // For Students and Leaders
-  
+
   // Cohort Selection from Timetable
   String? _selectedCohort;
   bool _cohortMissing = false;
 
   bool _isLoading = false;
   File? _profileImage;
-  
+
   final ImagePicker _picker = ImagePicker();
   final StorageService _storageService = StorageService();
 
@@ -75,9 +75,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.grey[300],
-                  backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                  backgroundImage: _profileImage != null
+                      ? FileImage(_profileImage!)
+                      : null,
                   child: _profileImage == null
-                      ? const Icon(Icons.add_a_photo, size: 40, color: Colors.white)
+                      ? const Icon(
+                          Icons.add_a_photo,
+                          size: 40,
+                          color: Colors.white,
+                        )
                       : null,
                 ),
               ),
@@ -89,27 +95,36 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: _regNumController,
-                decoration: const InputDecoration(labelText: 'Registration Number (e.g., EE-2024-001)'),
+                decoration: const InputDecoration(
+                  labelText: 'Registration Number (e.g., EE-2024-001)',
+                ),
                 textCapitalization: TextCapitalization.characters,
                 inputFormatters: [
                   TextInputFormatter.withFunction(
-                    (oldValue, newValue) => newValue.copyWith(text: newValue.text.toUpperCase()),
+                    (oldValue, newValue) =>
+                        newValue.copyWith(text: newValue.text.toUpperCase()),
                   ),
                 ],
-                validator: (val) => val == null || val.trim().isEmpty ? 'Registration Number is required' : null,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? 'Registration Number is required'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _fullNameController,
                 decoration: const InputDecoration(labelText: 'Full Name'),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Full Name is required' : null,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? 'Full Name is required'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _mobileController,
                 decoration: const InputDecoration(labelText: 'Mobile Number'),
                 keyboardType: TextInputType.phone,
-                validator: (val) => val == null || val.trim().isEmpty ? 'Mobile Number is required' : null,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? 'Mobile Number is required'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -117,7 +132,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 decoration: const InputDecoration(labelText: 'Email Address'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Email is required';
+                  if (val == null || val.trim().isEmpty)
+                    return 'Email is required';
                   if (!val.contains('@')) return 'Enter a valid email address';
                   return null;
                 },
@@ -129,7 +145,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 decoration: const InputDecoration(labelText: 'Password'),
                 validator: (val) {
                   if (val == null || val.isEmpty) return 'Password is required';
-                  if (val.length < 6) return 'Password must be at least 6 characters';
+                  if (val.length < 6)
+                    return 'Password must be at least 6 characters';
                   return null;
                 },
               ),
@@ -137,14 +154,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               TextFormField(
                 controller: _confirmPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                ),
                 validator: (val) {
-                  if (val != _passwordController.text) return 'Passwords do not match';
+                  if (val != _passwordController.text)
+                    return 'Passwords do not match';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              
+
               if (widget.selectedRole != 'Student') ...[
                 DropdownButtonFormField<String>(
                   value: _selectedDesignation,
@@ -152,55 +172,65 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     labelText: widget.selectedRole == 'Teacher'
                         ? 'Department'
                         : widget.selectedRole == 'Official'
-                            ? 'Office / Role'
-                            : 'Leadership Position',
+                        ? 'Office / Role'
+                        : 'Leadership Position',
                     border: const OutlineInputBorder(),
                     prefixIcon: Icon(
                       widget.selectedRole == 'Teacher'
                           ? Icons.school
                           : widget.selectedRole == 'Official'
-                              ? Icons.admin_panel_settings
-                              : Icons.star,
+                          ? Icons.admin_panel_settings
+                          : Icons.star,
                     ),
                   ),
                   isExpanded: true,
-                  hint: Text(widget.selectedRole == 'Teacher'
-                      ? 'Select your department'
-                      : widget.selectedRole == 'Official'
-                          ? 'Select your office'
-                          : 'Select your position'),
+                  hint: Text(
+                    widget.selectedRole == 'Teacher'
+                        ? 'Select your department'
+                        : widget.selectedRole == 'Official'
+                        ? 'Select your office'
+                        : 'Select your position',
+                  ),
                   items: [
-                    for (final section in RoleData.sectionsForRole(widget.selectedRole))
-                      ...[
-                        DropdownMenuItem<String>(
-                          enabled: false,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              section.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
+                    for (final section in RoleData.sectionsForRole(
+                      widget.selectedRole,
+                    )) ...[
+                      DropdownMenuItem<String>(
+                        enabled: false,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            section.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                              fontSize: 12,
                             ),
                           ),
                         ),
-                        for (final item in section.items)
-                          DropdownMenuItem(
-                            value: item,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: Text(item, style: const TextStyle(fontSize: 14)),
+                      ),
+                      for (final item in section.items)
+                        DropdownMenuItem(
+                          value: item,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              item,
+                              style: const TextStyle(fontSize: 14),
                             ),
                           ),
-                      ],
+                        ),
+                    ],
                     DropdownMenuItem(
                       enabled: true,
                       value: '__custom__',
                       child: Row(
                         children: [
-                          const Icon(Icons.edit, size: 16, color: Colors.orange),
+                          const Icon(
+                            Icons.edit,
+                            size: 16,
+                            color: Colors.orange,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Other (specify)',
@@ -234,12 +264,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   TextFormField(
                     controller: _customDesignationController,
                     decoration: InputDecoration(
-                      labelText: 'Specify your ${widget.selectedRole == 'Teacher' ? 'department' : widget.selectedRole == 'Official' ? 'office' : 'position'}',
+                      labelText:
+                          'Specify your ${widget.selectedRole == 'Teacher'
+                              ? 'department'
+                              : widget.selectedRole == 'Official'
+                              ? 'office'
+                              : 'position'}',
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.edit),
                     ),
                     validator: (val) {
-                      if (_isCustomDesignation && (val == null || val.trim().isEmpty)) {
+                      if (_isCustomDesignation &&
+                          (val == null || val.trim().isEmpty)) {
                         return 'Please specify your designation';
                       }
                       return null;
@@ -248,8 +284,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ],
                 const SizedBox(height: 16),
               ],
-              
-               if (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ...[
+
+              if (widget.selectedRole == 'Student' ||
+                  widget.selectedRole == 'Leader') ...[
                 DropdownButtonFormField<String>(
                   value: _selectedCohort,
                   decoration: const InputDecoration(
@@ -260,15 +297,28 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   isExpanded: true,
                   hint: const Text('Choose your class from the timetable'),
                   items: [
-                    ...context.read<ClassProvider>().availableClasses
+                    ...context
+                        .read<ClassProvider>()
+                        .availableClasses
                         .where((c) => c != 'Global / General Assembly')
                         .map((code) {
-                      return DropdownMenuItem(value: code, child: Text(code, style: const TextStyle(fontSize: 14)));
-                    }),
+                          return DropdownMenuItem(
+                            value: code,
+                            child: Text(
+                              code,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          );
+                        }),
                     const DropdownMenuItem(
                       value: '__missing__',
-                      child: Text('My class is not listed',
-                          style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange)),
+                      child: Text(
+                        'My class is not listed',
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Colors.orange,
+                        ),
+                      ),
                     ),
                   ],
                   onChanged: (val) {
@@ -294,26 +344,39 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline, color: Colors.orange[700], size: 18),
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.orange[700],
+                          size: 18,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: GestureDetector(
                             onTap: () async {
-                              final uri = Uri.parse('mailto:sheldonramu8@gmail.com?subject=Missing%20Cohort%20Request&body=Cohort%20Code:%0ADepartment:%0ACourse:');
+                              final uri = Uri.parse(
+                                'mailto:sheldonramu8@gmail.com?subject=Missing%20Cohort%20Request&body=Cohort%20Code:%0ADepartment:%0ACourse:',
+                              );
                               if (await canLaunchUrl(uri)) {
                                 await launchUrl(uri);
                               }
                             },
                             child: Text.rich(
                               TextSpan(
-                                style: TextStyle(fontSize: 13, color: Colors.orange[900]),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.orange[900],
+                                ),
                                 children: [
-                                  const TextSpan(text: 'Missing a class? Email '),
+                                  const TextSpan(
+                                    text: 'Missing a class? Email ',
+                                  ),
                                   TextSpan(
                                     text: 'sheldonramu8@gmail.com',
                                     style: TextStyle(
@@ -323,7 +386,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     ),
                                   ),
                                   const TextSpan(
-                                      text: ' with your cohort code and department details to have it added.'),
+                                    text:
+                                        ' with your cohort code and department details to have it added.',
+                                  ),
                                 ],
                               ),
                             ),
@@ -334,26 +399,34 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ],
               ],
-              
-              if (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ...[
-               SwitchListTile(
-                 title: const Text('Stay in Hostel?'),
-                 value: _isHostelResident,
-                 onChanged: (val) => setState(() => _isHostelResident = val),
-                 activeThumbColor: Theme.of(context).primaryColor,
-                 contentPadding: EdgeInsets.zero,
-               ),
-               const SizedBox(height: 32),
+
+              if (widget.selectedRole == 'Student' ||
+                  widget.selectedRole == 'Leader') ...[
+                SwitchListTile(
+                  title: const Text('Stay in Hostel?'),
+                  value: _isHostelResident,
+                  onChanged: (val) => setState(() => _isHostelResident = val),
+                  activeThumbColor: Theme.of(context).primaryColor,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 32),
               ],
-              
+
               ElevatedButton(
                 onPressed: _isLoading ? null : _handleRegister,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: _isLoading 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Create Account'),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('Create Account'),
               ),
               const SizedBox(height: 24),
             ],
@@ -370,15 +443,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     setState(() => _isLoading = true);
     final authProvider = context.read<AuthProvider>();
-    
+
     try {
       String photoUrl = '';
-      
+
       // Upload image if provided
       if (_profileImage != null) {
         final regNo = _regNumController.text.trim().toUpperCase();
         final path = 'profiles/img_$regNo.jpg';
-        final uploadedUrl = await _storageService.uploadImage(_profileImage!, path);
+        final uploadedUrl = await _storageService.uploadImage(
+          _profileImage!,
+          path,
+        );
         if (uploadedUrl != null) {
           photoUrl = uploadedUrl;
         }
@@ -398,26 +474,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         profilePhotoUrl: photoUrl,
         mobileNumber: _mobileController.text.trim(),
         email: _emailController.text.trim(),
-        isHostelResident: (widget.selectedRole == 'Student' || widget.selectedRole == 'Leader') ? _isHostelResident : false,
+        isHostelResident:
+            (widget.selectedRole == 'Student' ||
+                widget.selectedRole == 'Leader')
+            ? _isHostelResident
+            : false,
         role: widget.selectedRole,
         designation: widget.selectedRole != 'Student'
             ? (_isCustomDesignation
-                ? _customDesignationController.text.trim()
-                : _selectedDesignation)
+                  ? _customDesignationController.text.trim()
+                  : _selectedDesignation)
             : null,
         enrolledClasses: enrolled,
       );
-      
+
       await authProvider.register(profile, _passwordController.text);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully!'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Account created successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
         final user = authProvider.currentUser;
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (_) => (user?.isAdmin == true) ? const AdminHomeScreen() : const HomeScreen(),
+            builder: (_) => (user?.isAdmin == true)
+                ? const AdminHomeScreen()
+                : const HomeScreen(),
           ),
           (route) => false,
         );
@@ -425,12 +510,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red, duration: const Duration(seconds: 4)),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
 }

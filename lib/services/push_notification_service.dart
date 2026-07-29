@@ -13,12 +13,14 @@ Future<void> fcmBackgroundHandler(RemoteMessage message) async {
 }
 
 class PushNotificationService {
-  static final PushNotificationService _instance = PushNotificationService._internal();
+  static final PushNotificationService _instance =
+      PushNotificationService._internal();
   factory PushNotificationService() => _instance;
   PushNotificationService._internal();
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotif =
+      FlutterLocalNotificationsPlugin();
   String? _fcmToken;
   bool _initialized = false;
   StreamSubscription<String>? _tokenSubscription;
@@ -33,7 +35,9 @@ class PushNotificationService {
 
     await _requestPermission();
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     await _localNotif.initialize(
       settings: const InitializationSettings(android: androidSettings),
     );
@@ -44,8 +48,12 @@ class PushNotificationService {
       _fcmToken = token;
     });
 
-    _messageSubscription = FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    _openSubscription = FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    _messageSubscription = FirebaseMessaging.onMessage.listen(
+      _handleForegroundMessage,
+    );
+    _openSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
+      _handleNotificationTap,
+    );
     FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
   }
 

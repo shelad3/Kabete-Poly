@@ -16,6 +16,7 @@ import 'services/push_notification_service.dart';
 import 'services/analytics_service.dart';
 import 'services/unread_badge_provider.dart';
 import 'services/connectivity_provider.dart';
+import 'providers/feature_flag_provider.dart';
 import 'widgets/offline_banner.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
@@ -64,6 +65,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ThemeNotifier()),
           ChangeNotifierProvider(create: (_) => UnreadBadgeProvider()),
           ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+          ChangeNotifierProvider(create: (_) => FeatureFlagProvider()..init()),
         ],
         child: const KabeteApp(),
       ),
@@ -81,10 +83,22 @@ class KabeteApp extends StatelessWidget {
     final themeNotifier = context.watch<ThemeNotifier>();
     final auth = context.watch<AuthProvider>();
 
-    final (ThemeData theme, ThemeData? darkTheme, ThemeMode themeMode) = switch (themeNotifier.mode) {
-      AppThemeMode.knp  => (AppTheme.knpTheme, AppTheme.darkTheme, ThemeMode.light),
-      AppThemeMode.light => (AppTheme.lightTheme, AppTheme.darkTheme, ThemeMode.light),
-      AppThemeMode.dark  => (AppTheme.darkTheme, null, ThemeMode.dark),
+    final (
+      ThemeData theme,
+      ThemeData? darkTheme,
+      ThemeMode themeMode,
+    ) = switch (themeNotifier.mode) {
+      AppThemeMode.knp => (
+        AppTheme.knpTheme,
+        AppTheme.darkTheme,
+        ThemeMode.light,
+      ),
+      AppThemeMode.light => (
+        AppTheme.lightTheme,
+        AppTheme.darkTheme,
+        ThemeMode.light,
+      ),
+      AppThemeMode.dark => (AppTheme.darkTheme, null, ThemeMode.dark),
     };
 
     Widget home;
@@ -99,7 +113,9 @@ class KabeteApp extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const SplashScreen();
           }
-          return snapshot.data == true ? const LoginScreen() : const OnboardingScreen();
+          return snapshot.data == true
+              ? const LoginScreen()
+              : const OnboardingScreen();
         },
       );
     } else {
@@ -112,7 +128,9 @@ class KabeteApp extends StatelessWidget {
     }
 
     return MaterialApp(
-      key: ValueKey('${auth.isAuthenticated}_${auth.isGuest}_${auth.currentUserId}'),
+      key: ValueKey(
+        '${auth.isAuthenticated}_${auth.isGuest}_${auth.currentUserId}',
+      ),
       title: 'Kabete Poly',
       debugShowCheckedModeBanner: false,
       theme: theme,

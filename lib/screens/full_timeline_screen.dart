@@ -45,7 +45,10 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
         bottom: TabBar(
           controller: _tabCtrl,
           isScrollable: true,
-          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'Theory'),
@@ -85,7 +88,9 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
 
   Widget _buildCombinedFeed(String targetClass, String? filter) {
     final lessonsStream = _firestoreService.getLessonsStream(targetClass);
-    final scheduleStream = _firestoreService.getScheduleTimelineStream(targetClass);
+    final scheduleStream = _firestoreService.getScheduleTimelineStream(
+      targetClass,
+    );
 
     return StreamBuilder<List<Lesson>>(
       stream: lessonsStream,
@@ -115,7 +120,8 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
             if (filter == null || filter == 'theory') {
               final schedules = scheduleSnap.data ?? [];
               for (final s in schedules) {
-                if (s.date.isBefore(now) && !s.description.contains('Practical')) {
+                if (s.date.isBefore(now) &&
+                    !s.description.contains('Practical')) {
                   feed.add(FeedItem.schedule(s));
                 }
               }
@@ -123,7 +129,8 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
             if (filter == null || filter == 'practical') {
               final schedules = scheduleSnap.data ?? [];
               for (final s in schedules) {
-                if (s.date.isBefore(now) && s.description.contains('Practical')) {
+                if (s.date.isBefore(now) &&
+                    s.description.contains('Practical')) {
                   feed.add(FeedItem.schedule(s));
                 }
               }
@@ -178,11 +185,18 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
                   backgroundColor: Colors.teal.withValues(alpha: 0.1),
                   child: const Icon(Icons.quiz, color: Colors.teal, size: 20),
                 ),
-                title: Text(q.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text(DateFormat('MMM dd, yyyy').format(q.createdAt),
-                    style: const TextStyle(fontSize: 12)),
-                trailing: Text('${q.durationMinutes} min',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                title: Text(
+                  q.title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  DateFormat('MMM dd, yyyy').format(q.createdAt),
+                  style: const TextStyle(fontSize: 12),
+                ),
+                trailing: Text(
+                  '${q.durationMinutes} min',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ),
             );
           },
@@ -199,10 +213,16 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.1),
-          child: Icon(isPractical ? Icons.science : Icons.auto_stories,
-              color: color, size: 20),
+          child: Icon(
+            isPractical ? Icons.science : Icons.auto_stories,
+            color: color,
+            size: 20,
+          ),
         ),
-        title: Text(lesson.topic, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          lesson.topic,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         subtitle: Text(
           '${lesson.subtopic} • ${DateFormat('MMM dd, yyyy').format(lesson.date)}',
           style: const TextStyle(fontSize: 12),
@@ -224,7 +244,10 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
             size: 20,
           ),
         ),
-        title: Text(item.subject, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          item.subject,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         subtitle: Text(
           '${item.startTime}-${item.endTime} • ${item.room} • ${DateFormat('MMM dd, yyyy').format(item.date)}',
           style: const TextStyle(fontSize: 12),

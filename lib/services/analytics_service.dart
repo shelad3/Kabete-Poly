@@ -11,7 +11,8 @@ class AnalyticsService {
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   FirebaseAnalytics get analytics => _analytics;
-  FirebaseAnalyticsObserver get observer => FirebaseAnalyticsObserver(analytics: _analytics);
+  FirebaseAnalyticsObserver get observer =>
+      FirebaseAnalyticsObserver(analytics: _analytics);
 
   Future<void> logScreenView(String screenName) =>
       _analytics.logScreenView(screenName: screenName);
@@ -25,6 +26,5 @@ class AnalyticsService {
   Future<void> logEvent({
     required String name,
     Map<String, Object>? parameters,
-  }) =>
-      _analytics.logEvent(name: name, parameters: parameters);
+  }) => _analytics.logEvent(name: name, parameters: parameters);
 }

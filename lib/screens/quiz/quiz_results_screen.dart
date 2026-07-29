@@ -32,7 +32,10 @@ class QuizResultsScreen extends StatelessWidget {
             },
             itemBuilder: (context) => [
               if (!quiz.isPublished)
-                const PopupMenuItem(value: 'publish', child: Text('Publish Quiz')),
+                const PopupMenuItem(
+                  value: 'publish',
+                  child: Text('Publish Quiz'),
+                ),
             ],
           ),
         ],
@@ -60,26 +63,43 @@ class QuizResultsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(quiz.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                          Text(
+                            quiz.title,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text('${quiz.durationMinutes} min · ${quiz.questionIds.length} questions',
-                              style: TextStyle(color: Colors.grey[600])),
+                          Text(
+                            '${quiz.durationMinutes} min · ${quiz.questionIds.length} questions',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
                         ],
                       ),
                     ),
                     Column(
                       children: [
-                        Text('${submissions.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                        Text('Submissions', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        Text(
+                          '${submissions.length}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Submissions',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
               if (submissions.isEmpty)
-                const Expanded(
-                  child: Center(child: Text('No submissions yet')),
-                )
+                const Expanded(child: Center(child: Text('No submissions yet')))
               else
                 Expanded(
                   child: ListView.builder(
@@ -92,17 +112,29 @@ class QuizResultsScreen extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: pct >= 50 ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                            child: Text('${pct.round()}%',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: pct >= 50 ? Colors.green : Colors.red,
-                                )),
+                            backgroundColor: pct >= 50
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Colors.red.withValues(alpha: 0.1),
+                            child: Text(
+                              '${pct.round()}%',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: pct >= 50 ? Colors.green : Colors.red,
+                              ),
+                            ),
                           ),
-                          title: Text(s.studentName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('${s.score}/${s.total} · ${_formatDate(s.submittedAt)}',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                          title: Text(
+                            s.studentName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            '${s.score}/${s.total} · ${_formatDate(s.submittedAt)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
                         ),
                       );
                     },

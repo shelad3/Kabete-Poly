@@ -398,7 +398,9 @@ final List<CampusLocation> campusLocations = [
     lat: -1.265876,
     lng: 36.727454,
     aliases: [
-      'Electrical Engineering Block', 'EE Block', 'Electrical Eng',
+      'Electrical Engineering Block',
+      'EE Block',
+      'Electrical Eng',
       'Electrical Engineering',
     ],
   ),
@@ -436,7 +438,11 @@ final List<CampusLocation> campusLocations = [
     type: LocationType.workshop,
     lat: -1.264833,
     lng: 36.727978,
-    aliases: ['Electrical Workshop', 'EE Workshop', 'Electrical Engineering Workshop'],
+    aliases: [
+      'Electrical Workshop',
+      'EE Workshop',
+      'Electrical Engineering Workshop',
+    ],
   ),
   const CampusLocation(
     id: 'automotive_block',
@@ -450,7 +456,8 @@ final List<CampusLocation> campusLocations = [
   const CampusLocation(
     id: 'med_bay',
     name: 'Med Bay',
-    description: 'Campus health center providing first aid and basic medical care.',
+    description:
+        'Campus health center providing first aid and basic medical care.',
     type: LocationType.medBay,
     lat: -1.265014,
     lng: 36.726604,
@@ -508,12 +515,17 @@ final List<CampusLocation> campusLocations = [
     type: LocationType.academicBlock,
     lat: -1.264402,
     lng: 36.726761,
-    aliases: ['International Studies', 'Intl Studies', 'International Studies Block'],
+    aliases: [
+      'International Studies',
+      'Intl Studies',
+      'International Studies Block',
+    ],
   ),
   const CampusLocation(
     id: 'admin_block',
     name: 'Administration Block',
-    description: 'Principal\'s office, Deputy Principal, and main administrative staff.',
+    description:
+        'Principal\'s office, Deputy Principal, and main administrative staff.',
     type: LocationType.adminOffice,
     lat: -1.264787,
     lng: 36.727164,
@@ -553,7 +565,12 @@ final List<CampusLocation> campusLocations = [
     type: LocationType.hall,
     lat: -1.265529,
     lng: 36.726789,
-    aliases: ['Lecture Theater', 'Lecture Room', 'Theater Room', 'Lecture Hall'],
+    aliases: [
+      'Lecture Theater',
+      'Lecture Room',
+      'Theater Room',
+      'Lecture Hall',
+    ],
   ),
   const CampusLocation(
     id: 'main_hall',
@@ -623,7 +640,9 @@ CampusLocation? findLocationByVenue(String room) {
     return campusLocations.where((l) => l.id == id).firstOrNull;
   }
   for (final loc in campusLocations) {
-    if (loc.aliases.any((a) => cleaned.toLowerCase().contains(a.toLowerCase()))) {
+    if (loc.aliases.any(
+      (a) => cleaned.toLowerCase().contains(a.toLowerCase()),
+    )) {
       return loc;
     }
   }

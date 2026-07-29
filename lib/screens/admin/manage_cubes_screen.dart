@@ -8,7 +8,11 @@ import '../../services/cube_service.dart';
 class ManageCubesScreen extends StatefulWidget {
   final String houseId;
   final String houseName;
-  const ManageCubesScreen({super.key, required this.houseId, required this.houseName});
+  const ManageCubesScreen({
+    super.key,
+    required this.houseId,
+    required this.houseName,
+  });
 
   @override
   State<ManageCubesScreen> createState() => _ManageCubesScreenState();
@@ -30,13 +34,19 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
             children: [
               TextField(
                 controller: capCtrl,
-                decoration: const InputDecoration(labelText: 'Max Occupancy', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Max Occupancy',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String?>(
                 value: side,
-                decoration: const InputDecoration(labelText: 'Side (optional)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Side (optional)',
+                  border: OutlineInputBorder(),
+                ),
                 items: const [
                   DropdownMenuItem(value: null, child: Text('None')),
                   DropdownMenuItem(value: 'left', child: Text('Left')),
@@ -47,19 +57,26 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
-                final cap = int.tryParse(capCtrl.text.trim()) ?? cube.maxOccupancy;
-                await _service.updateCube(cube.id, Cube(
-                  id: cube.id,
-                  houseId: cube.houseId,
-                  houseName: cube.houseName,
-                  cubeNumber: cube.cubeNumber,
-                  maxOccupancy: cap,
-                  side: side,
-                  isActive: cube.isActive,
-                ));
+                final cap =
+                    int.tryParse(capCtrl.text.trim()) ?? cube.maxOccupancy;
+                await _service.updateCube(
+                  cube.id,
+                  Cube(
+                    id: cube.id,
+                    houseId: cube.houseId,
+                    houseName: cube.houseName,
+                    cubeNumber: cube.cubeNumber,
+                    maxOccupancy: cap,
+                    side: side,
+                    isActive: cube.isActive,
+                  ),
+                );
                 if (ctx.mounted) Navigator.pop(ctx, true);
               },
               child: const Text('Save'),
@@ -86,9 +103,16 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.workspaces_outlined, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.workspaces_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
-                  Text('No cubes in this house', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  Text(
+                    'No cubes in this house',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
                 ],
               ),
             );
@@ -98,14 +122,25 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
             itemCount: cubes.length,
             itemBuilder: (_, i) {
               final c = cubes[i];
-              final sideLabel = c.side != null ? ' • ${c.side!.toUpperCase()} side' : '';
+              final sideLabel = c.side != null
+                  ? ' • ${c.side!.toUpperCase()} side'
+                  : '';
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                    child: Text('${c.cubeNumber}', style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.bold)),
+                    child: Text(
+                      '${c.cubeNumber}',
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  title: Text(c.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(
+                    c.label,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text('Max ${c.maxOccupancy} students$sideLabel'),
                   trailing: IconButton(
                     icon: const Icon(Icons.edit, color: Colors.blue),

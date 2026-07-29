@@ -65,13 +65,19 @@ class LessonDetailSheet extends StatelessWidget {
                   children: [
                     Text(
                       lesson.subject,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: lesson.color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
@@ -88,7 +94,10 @@ class LessonDetailSheet extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           DateFormat('MMM dd, yyyy').format(lesson.date),
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -138,7 +147,9 @@ class LessonDetailSheet extends StatelessWidget {
                   }
                 : null,
           ),
-          if (lesson.description.isNotEmpty && lesson.description != 'Theory Class' && lesson.description != 'Practical Lab Session') ...[
+          if (lesson.description.isNotEmpty &&
+              lesson.description != 'Theory Class' &&
+              lesson.description != 'Practical Lab Session') ...[
             const SizedBox(height: 12),
             _buildOption(
               context,
@@ -226,8 +237,14 @@ class LessonDetailSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
                   ],
                 ),
               ),
@@ -252,14 +269,18 @@ class LessonDetailSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Attachments for ${lesson.subject}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              'Attachments for ${lesson.subject}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             const SizedBox(height: 12),
             ...List.generate(lesson.attachmentUrls.length, (i) {
               return ListTile(
                 leading: const Icon(Icons.picture_as_pdf, color: Colors.blue),
                 title: Text(
-                  i < lesson.attachmentNames.length ? lesson.attachmentNames[i] : 'Document ${i + 1}',
+                  i < lesson.attachmentNames.length
+                      ? lesson.attachmentNames[i]
+                      : 'Document ${i + 1}',
                 ),
                 trailing: const Icon(Icons.open_in_new, size: 16),
                 onTap: () async {
@@ -269,7 +290,9 @@ class LessonDetailSheet extends StatelessWidget {
                   } else if (ctx.mounted) {
                     ScaffoldMessenger.of(ctx).showSnackBar(
                       SnackBar(
-                        content: Text('Could not open "${lesson.attachmentNames[i]}". The file may be unavailable.'),
+                        content: Text(
+                          'Could not open "${lesson.attachmentNames[i]}". The file may be unavailable.',
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );

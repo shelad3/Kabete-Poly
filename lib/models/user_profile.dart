@@ -16,6 +16,8 @@ class UserProfile {
   final int classChangeCount;
   final int enrolledTerm;
   final int enrolledYear;
+  final String gender;
+  final String nationality;
 
   UserProfile({
     required this.registrationNumber,
@@ -30,8 +32,10 @@ class UserProfile {
     this.classChangeCount = 0,
     int? enrolledTerm,
     int? enrolledYear,
-  })  : enrolledTerm = enrolledTerm ?? TermUtils.getCurrentTerm(),
-        enrolledYear = enrolledYear ?? TermUtils.getCurrentYear();
+    this.gender = '',
+    this.nationality = 'Kenyan',
+  }) : enrolledTerm = enrolledTerm ?? TermUtils.getCurrentTerm(),
+       enrolledYear = enrolledYear ?? TermUtils.getCurrentYear();
 
   bool get isNewStudent {
     final currentTerm = TermUtils.getCurrentTerm();
@@ -53,6 +57,8 @@ class UserProfile {
       classChangeCount: json['classChangeCount'] ?? 0,
       enrolledTerm: json['enrolledTerm'],
       enrolledYear: json['enrolledYear'],
+      gender: json['gender'] ?? '',
+      nationality: json['nationality'] ?? 'Kenyan',
     );
   }
 
@@ -70,6 +76,8 @@ class UserProfile {
       'classChangeCount': classChangeCount,
       'enrolledTerm': enrolledTerm,
       'enrolledYear': enrolledYear,
+      'gender': gender,
+      'nationality': nationality,
     };
   }
 

@@ -48,10 +48,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildAnnouncementsTab(),
-          _buildAlertsTab(),
-        ],
+        children: [_buildAnnouncementsTab(), _buildAlertsTab()],
       ),
     );
   }
@@ -78,7 +75,10 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
               children: [
                 Icon(Icons.campaign_outlined, size: 64, color: Colors.grey),
                 SizedBox(height: 16),
-                Text('No announcements yet', style: TextStyle(color: Colors.grey)),
+                Text(
+                  'No announcements yet',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -119,9 +119,16 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.notifications_off_outlined, size: 64, color: Colors.grey),
+                Icon(
+                  Icons.notifications_off_outlined,
+                  size: 64,
+                  color: Colors.grey,
+                ),
                 SizedBox(height: 16),
-                Text('No alerts sent yet', style: TextStyle(color: Colors.grey)),
+                Text(
+                  'No alerts sent yet',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -142,7 +149,11 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
     );
   }
 
-  Widget _buildNotificationItem(BuildContext context, ClassNotification notification, String docId) {
+  Widget _buildNotificationItem(
+    BuildContext context,
+    ClassNotification notification,
+    String docId,
+  ) {
     Color typeColor;
     IconData typeIcon;
     switch (notification.type) {
@@ -170,23 +181,39 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
           backgroundColor: typeColor.withValues(alpha: 0.1),
           child: Icon(typeIcon, color: typeColor),
         ),
-        title: Text(notification.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          notification.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(notification.message, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(
+              notification.message,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
             const SizedBox(height: 4),
             Row(
               children: [
-                Text(notification.timeAgo, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                Text(
+                  notification.timeAgo,
+                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: typeColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(notification.type, style: TextStyle(fontSize: 10, color: typeColor)),
+                  child: Text(
+                    notification.type,
+                    style: TextStyle(fontSize: 10, color: typeColor),
+                  ),
                 ),
               ],
             ),
@@ -201,16 +228,22 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: ListTile(
-              leading: Icon(Icons.edit, size: 20),
-              title: Text('Edit'),
-              dense: true,
-            )),
-            const PopupMenuItem(value: 'delete', child: ListTile(
-              leading: Icon(Icons.delete, color: Colors.red, size: 20),
-              title: Text('Delete', style: TextStyle(color: Colors.red)),
-              dense: true,
-            )),
+            const PopupMenuItem(
+              value: 'edit',
+              child: ListTile(
+                leading: Icon(Icons.edit, size: 20),
+                title: Text('Edit'),
+                dense: true,
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: ListTile(
+                leading: Icon(Icons.delete, color: Colors.red, size: 20),
+                title: Text('Delete', style: TextStyle(color: Colors.red)),
+                dense: true,
+              ),
+            ),
           ],
         ),
       ),
@@ -241,7 +274,10 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
           backgroundColor: typeColor.withValues(alpha: 0.1),
           child: Icon(typeIcon, color: typeColor),
         ),
-        title: Text(alert.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          alert.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -271,23 +307,33 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: ListTile(
-              leading: Icon(Icons.edit, size: 20),
-              title: Text('Edit'),
-              dense: true,
-            )),
-            const PopupMenuItem(value: 'delete', child: ListTile(
-              leading: Icon(Icons.delete, color: Colors.red, size: 20),
-              title: Text('Delete', style: TextStyle(color: Colors.red)),
-              dense: true,
-            )),
+            const PopupMenuItem(
+              value: 'edit',
+              child: ListTile(
+                leading: Icon(Icons.edit, size: 20),
+                title: Text('Edit'),
+                dense: true,
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: ListTile(
+                leading: Icon(Icons.delete, color: Colors.red, size: 20),
+                title: Text('Delete', style: TextStyle(color: Colors.red)),
+                dense: true,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _showEditNotificationDialog(BuildContext context, ClassNotification notification, String docId) {
+  void _showEditNotificationDialog(
+    BuildContext context,
+    ClassNotification notification,
+    String docId,
+  ) {
     final titleController = TextEditingController(text: notification.title);
     final messageController = TextEditingController(text: notification.message);
     String selectedType = notification.type;
@@ -303,23 +349,41 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
               children: [
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: messageController,
                   maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Message', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Message',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: selectedType,
-                  decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Type',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
-                    DropdownMenuItem(value: 'general', child: Text('General Info')),
+                    DropdownMenuItem(
+                      value: 'general',
+                      child: Text('General Info'),
+                    ),
                     DropdownMenuItem(value: 'event', child: Text('Event')),
-                    DropdownMenuItem(value: 'deadline', child: Text('Deadline')),
-                    DropdownMenuItem(value: 'canceled', child: Text('Cancellation')),
+                    DropdownMenuItem(
+                      value: 'deadline',
+                      child: Text('Deadline'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'canceled',
+                      child: Text('Cancellation'),
+                    ),
                   ],
                   onChanged: (v) => setState(() => selectedType = v!),
                 ),
@@ -327,15 +391,23 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
-                if (titleController.text.trim().isEmpty || messageController.text.trim().isEmpty) return;
-                await FirebaseFirestore.instance.collection('notifications').doc(docId).update({
-                  'title': titleController.text.trim(),
-                  'message': messageController.text.trim(),
-                  'type': selectedType,
-                });
+                if (titleController.text.trim().isEmpty ||
+                    messageController.text.trim().isEmpty)
+                  return;
+                await FirebaseFirestore.instance
+                    .collection('notifications')
+                    .doc(docId)
+                    .update({
+                      'title': titleController.text.trim(),
+                      'message': messageController.text.trim(),
+                      'type': selectedType,
+                    });
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -368,29 +440,44 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
               children: [
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: messageController,
                   maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Message', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Message',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: alertType,
-                  decoration: const InputDecoration(labelText: 'Alert Type', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Alert Type',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
                     DropdownMenuItem(value: 'info', child: Text('Information')),
                     DropdownMenuItem(value: 'warning', child: Text('Warning')),
-                    DropdownMenuItem(value: 'class_update', child: Text('Class Update')),
+                    DropdownMenuItem(
+                      value: 'class_update',
+                      child: Text('Class Update'),
+                    ),
                   ],
                   onChanged: (v) => setState(() => alertType = v!),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: targetType,
-                  decoration: const InputDecoration(labelText: 'Target', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Target',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
                     DropdownMenuItem(value: 'all', child: Text('All Users')),
                     DropdownMenuItem(value: 'class', child: Text('Class')),
@@ -403,16 +490,24 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
-                if (titleController.text.trim().isEmpty || messageController.text.trim().isEmpty) return;
-                await FirebaseFirestore.instance.collection('alerts').doc(docId).update({
-                  'title': titleController.text.trim(),
-                  'message': messageController.text.trim(),
-                  'type': alertType,
-                  'targetType': targetType,
-                });
+                if (titleController.text.trim().isEmpty ||
+                    messageController.text.trim().isEmpty)
+                  return;
+                await FirebaseFirestore.instance
+                    .collection('alerts')
+                    .doc(docId)
+                    .update({
+                      'title': titleController.text.trim(),
+                      'message': messageController.text.trim(),
+                      'type': alertType,
+                      'targetType': targetType,
+                    });
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -435,17 +530,25 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
         title: const Text('Confirm Delete'),
         content: Text('Delete this $type permanently?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              final collection = type == 'notification' ? 'notifications' : 'alerts';
-              await FirebaseFirestore.instance.collection(collection).doc(docId).delete();
+              final collection = type == 'notification'
+                  ? 'notifications'
+                  : 'alerts';
+              await FirebaseFirestore.instance
+                  .collection(collection)
+                  .doc(docId)
+                  .delete();
               if (ctx.mounted) Navigator.pop(ctx);
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('$type deleted')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('$type deleted')));
               }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.white)),

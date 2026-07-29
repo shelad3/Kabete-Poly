@@ -27,10 +27,18 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
     super.dispose();
   }
 
-  void _showGradeEditor(GradeRecord? existing, String studentId, String studentName) {
-    final subjectCtrl = TextEditingController(text: existing?.subjectName ?? '');
+  void _showGradeEditor(
+    GradeRecord? existing,
+    String studentId,
+    String studentName,
+  ) {
+    final subjectCtrl = TextEditingController(
+      text: existing?.subjectName ?? '',
+    );
     final termCtrl = TextEditingController(text: existing?.term ?? 'Term 1');
-    final yearCtrl = TextEditingController(text: existing?.academicYear ?? '2026');
+    final yearCtrl = TextEditingController(
+      text: existing?.academicYear ?? '2026',
+    );
     final commentCtrl = TextEditingController(text: existing?.comments ?? '');
     final formKey = GlobalKey<FormState>();
 
@@ -42,8 +50,12 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
     if (existing != null) {
       existing.assessments.forEach((key, entry) {
         assessmentKeys.add(key);
-        scoreCtrls[key] = TextEditingController(text: entry.score.toStringAsFixed(0));
-        maxCtrls[key] = TextEditingController(text: entry.max.toStringAsFixed(0));
+        scoreCtrls[key] = TextEditingController(
+          text: entry.score.toStringAsFixed(0),
+        );
+        maxCtrls[key] = TextEditingController(
+          text: entry.max.toStringAsFixed(0),
+        );
       });
     } else {
       assessmentKeys.addAll(['cat1', 'cat2', 'exam']);
@@ -70,12 +82,19 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Student: $studentName', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Student: $studentName',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: subjectCtrl,
-                      decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder()),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Subject',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Required' : null,
                     ),
                     const SizedBox(height: 12),
                     ...assessmentKeys.map((key) {
@@ -99,7 +118,11 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: scoreCtrls[key],
-                                decoration: const InputDecoration(labelText: 'Score', border: OutlineInputBorder(), isDense: true),
+                                decoration: const InputDecoration(
+                                  labelText: 'Score',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
@@ -107,13 +130,21 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: maxCtrls[key],
-                                decoration: const InputDecoration(labelText: 'Max', border: OutlineInputBorder(), isDense: true),
+                                decoration: const InputDecoration(
+                                  labelText: 'Max',
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                ),
                                 keyboardType: TextInputType.number,
                               ),
                             ),
                             if (assessmentKeys.length > 1)
                               IconButton(
-                                icon: const Icon(Icons.remove_circle, color: Colors.red, size: 20),
+                                icon: const Icon(
+                                  Icons.remove_circle,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
                                 onPressed: () {
                                   setDState(() {
                                     assessmentKeys.remove(key);
@@ -144,14 +175,22 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: termCtrl,
-                            decoration: const InputDecoration(labelText: 'Term', border: OutlineInputBorder(), isDense: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Term',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextFormField(
                             controller: yearCtrl,
-                            decoration: const InputDecoration(labelText: 'Year', border: OutlineInputBorder(), isDense: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Year',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
                           ),
                         ),
                       ],
@@ -159,7 +198,10 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: commentCtrl,
-                      decoration: const InputDecoration(labelText: 'Comments (optional)', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        labelText: 'Comments (optional)',
+                        border: OutlineInputBorder(),
+                      ),
                       maxLines: 2,
                     ),
                   ],
@@ -167,14 +209,18 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
               ElevatedButton(
                 onPressed: () async {
                   if (!formKey.currentState!.validate()) return;
 
                   final assessments = <String, AssessmentEntry>{};
                   for (final key in assessmentKeys) {
-                    final score = double.tryParse(scoreCtrls[key]?.text ?? '') ?? 0;
+                    final score =
+                        double.tryParse(scoreCtrls[key]?.text ?? '') ?? 0;
                     final max = double.tryParse(maxCtrls[key]?.text ?? '') ?? 0;
                     assessments[key] = AssessmentEntry(score: score, max: max);
                   }
@@ -189,7 +235,9 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                     academicYear: yearCtrl.text,
                     assessments: assessments,
                     teacherId: context.read<AuthProvider>().currentUserId,
-                    teacherName: context.read<AuthProvider>().currentUser?.fullName ?? '',
+                    teacherName:
+                        context.read<AuthProvider>().currentUser?.fullName ??
+                        '',
                     comments: commentCtrl.text,
                   );
                   if (existing != null) {
@@ -228,8 +276,14 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
           }
           var rawDocs = userSnap.data?.docs ?? [];
           rawDocs.sort((a, b) {
-            final nameA = ((a.data() as Map<String, dynamic>)['fullName'] as String? ?? '').toLowerCase();
-            final nameB = ((b.data() as Map<String, dynamic>)['fullName'] as String? ?? '').toLowerCase();
+            final nameA =
+                ((a.data() as Map<String, dynamic>)['fullName'] as String? ??
+                        '')
+                    .toLowerCase();
+            final nameB =
+                ((b.data() as Map<String, dynamic>)['fullName'] as String? ??
+                        '')
+                    .toLowerCase();
             return nameA.compareTo(nameB);
           });
           final students = rawDocs;
@@ -243,10 +297,16 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search students...',
                     prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
-                  onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+                  onChanged: (v) =>
+                      setState(() => _searchQuery = v.toLowerCase()),
                 ),
               ),
               Expanded(
@@ -256,7 +316,10 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                     final allGrades = gradeSnap.data ?? [];
 
                     final filtered = students.where((doc) {
-                      final name = (doc.data() as Map<String, dynamic>)['fullName'] as String? ?? '';
+                      final name =
+                          (doc.data() as Map<String, dynamic>)['fullName']
+                              as String? ??
+                          '';
                       return name.toLowerCase().contains(_searchQuery);
                     }).toList();
 
@@ -265,9 +328,19 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                            Icon(
+                              Icons.people_outline,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
                             const SizedBox(height: 16),
-                            Text('No students enrolled', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                            Text(
+                              'No students enrolled',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -277,50 +350,92 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
-                        final data = filtered[index].data() as Map<String, dynamic>;
+                        final data =
+                            filtered[index].data() as Map<String, dynamic>;
                         final sid = filtered[index].id;
                         final name = data['fullName'] ?? 'Unknown';
                         final regNo = data['registrationNumber'] ?? '';
 
-                        final studentGrades = allGrades.where((g) => g.studentId == sid).toList();
+                        final studentGrades = allGrades
+                            .where((g) => g.studentId == sid)
+                            .toList();
                         final avg = studentGrades.isEmpty
                             ? null
-                            : studentGrades.map((g) => g.percentage).reduce((a, b) => a + b) / studentGrades.length;
+                            : studentGrades
+                                      .map((g) => g.percentage)
+                                      .reduce((a, b) => a + b) /
+                                  studentGrades.length;
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: ExpansionTile(
                             leading: CircleAvatar(
-                              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                              child: Text(name.toString()[0].toUpperCase(),
-                                  style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
+                              child: Text(
+                                name.toString()[0].toUpperCase(),
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                            title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text('$regNo · ${studentGrades.length} subjects${avg != null ? ' · Avg: ${avg.toStringAsFixed(1)}%' : ''}',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                            title: Text(
+                              name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '$regNo · ${studentGrades.length} subjects${avg != null ? ' · Avg: ${avg.toStringAsFixed(1)}%' : ''}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
                             children: [
                               ...studentGrades.map((g) {
-                                final assessmentsStr = g.assessments.entries.map((e) =>
-                                  '${e.key}: ${e.value.score.toStringAsFixed(0)}/${e.value.max.toStringAsFixed(0)}'
-                                ).join(' | ');
+                                final assessmentsStr = g.assessments.entries
+                                    .map(
+                                      (e) =>
+                                          '${e.key}: ${e.value.score.toStringAsFixed(0)}/${e.value.max.toStringAsFixed(0)}',
+                                    )
+                                    .join(' | ');
                                 return ListTile(
                                   dense: true,
                                   title: Text(g.subjectName),
-                                  subtitle: Text('$assessmentsStr\n${g.grade} · ${g.percentage.toStringAsFixed(1)}% · ${g.term} ${g.academicYear}'),
+                                  subtitle: Text(
+                                    '$assessmentsStr\n${g.grade} · ${g.percentage.toStringAsFixed(1)}% · ${g.term} ${g.academicYear}',
+                                  ),
                                   isThreeLine: true,
                                   trailing: IconButton(
                                     icon: const Icon(Icons.edit, size: 18),
-                                    onPressed: () => _showGradeEditor(g, sid, name.toString()),
+                                    onPressed: () => _showGradeEditor(
+                                      g,
+                                      sid,
+                                      name.toString(),
+                                    ),
                                   ),
                                 );
                               }),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  4,
+                                  16,
+                                  12,
+                                ),
                                 child: TextButton.icon(
                                   icon: const Icon(Icons.add, size: 18),
                                   label: const Text('Add Subject Grade'),
-                                  onPressed: () => _showGradeEditor(null, sid, name.toString()),
+                                  onPressed: () => _showGradeEditor(
+                                    null,
+                                    sid,
+                                    name.toString(),
+                                  ),
                                 ),
                               ),
                             ],

@@ -68,7 +68,10 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
         if (file.size > maxSize) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('File too large. Maximum size is 20MB.'), backgroundColor: Colors.red),
+              const SnackBar(
+                content: Text('File too large. Maximum size is 20MB.'),
+                backgroundColor: Colors.red,
+              ),
             );
           }
           return;
@@ -77,10 +80,9 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
       setState(() {
         for (final file in result.files) {
           if (file.path != null) {
-            _attachments.add(_AttachmentItem(
-              file: File(file.path!),
-              name: file.name,
-            ));
+            _attachments.add(
+              _AttachmentItem(file: File(file.path!), name: file.name),
+            );
           }
         }
       });
@@ -118,22 +120,37 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
   }
 
   Future<void> _saveAndSync() async {
-    if (!_formKey.currentState!.validate() || _selectedDate == null || _startTime == null || _endTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all required fields, including date and times.')));
+    if (!_formKey.currentState!.validate() ||
+        _selectedDate == null ||
+        _startTime == null ||
+        _endTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please fill all required fields, including date and times.',
+          ),
+        ),
+      );
       return;
     }
 
     setState(() => _isSaving = true);
 
     try {
-      final classId = Provider.of<ClassProvider>(context, listen: false).currentClass;
-      final startTimeStr = '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}';
-      final endTimeStr = '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}';
+      final classId = Provider.of<ClassProvider>(
+        context,
+        listen: false,
+      ).currentClass;
+      final startTimeStr =
+          '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}';
+      final endTimeStr =
+          '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}';
 
       final List<String> urls = [];
       final List<String> names = [];
       for (final att in _attachments) {
-        final path = 'attachments/$classId/${DateTime.now().millisecondsSinceEpoch}_${att.name}';
+        final path =
+            'attachments/$classId/${DateTime.now().millisecondsSinceEpoch}_${att.name}';
         final url = await _storageService.uploadFile(att.file, path);
         urls.add(url ?? '');
         names.add(att.name);
@@ -149,7 +166,9 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
         endTime: endTimeStr,
         color: widget.isPractical ? Colors.purple : Colors.orange,
         date: _selectedDate!,
-        description: widget.isPractical ? 'Practical Lab Session' : 'Theory Class',
+        description: widget.isPractical
+            ? 'Practical Lab Session'
+            : 'Theory Class',
         attachmentUrls: urls,
         attachmentNames: names,
       );
@@ -160,7 +179,8 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
         id: '',
         classId: classId,
         title: 'New ${widget.isPractical ? 'Practical' : 'Class'} Scheduled',
-        message: '${_topicController.text.trim()} is scheduled for ${_selectedDate!.month}/${_selectedDate!.day} at $startTimeStr in ${_roomController.text.trim()}.',
+        message:
+            '${_topicController.text.trim()} is scheduled for ${_selectedDate!.month}/${_selectedDate!.day} at $startTimeStr in ${_roomController.text.trim()}.',
         type: widget.isPractical ? 'event' : 'general',
         timestamp: DateTime.now(),
       );
@@ -169,11 +189,19 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Omni-Sync successful. Class scheduled & notification sent.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Omni-Sync successful. Class scheduled & notification sent.',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
         setState(() => _isSaving = false);
       }
     }
@@ -195,8 +223,14 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()), child: const Text('Save')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()),
+            child: const Text('Save'),
+          ),
         ],
       ),
     );
@@ -215,7 +249,10 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
       await _firestoreService.saveScheduleTemplate(template);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Template saved!'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Template saved!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -236,21 +273,34 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
       ),
       builder: (_) {
         return StreamBuilder<List<ScheduleTemplate>>(
-          stream: _firestoreService.getScheduleTemplatesStream(user?.email ?? ''),
+          stream: _firestoreService.getScheduleTemplatesStream(
+            user?.email ?? '',
+          ),
           builder: (context, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()));
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: CircularProgressIndicator(),
+                ),
+              );
             }
             final templates = snap.data ?? [];
             if (templates.isEmpty) {
-              return const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('No saved templates')));
+              return const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: Text('No saved templates')),
+              );
             }
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Padding(
                   padding: EdgeInsets.all(16),
-                  child: Text('Load Template', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: Text(
+                    'Load Template',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
                 const Divider(height: 1),
                 Flexible(
@@ -260,12 +310,24 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                     itemBuilder: (_, i) {
                       final t = templates[i];
                       return ListTile(
-                        leading: Icon(t.isPractical ? Icons.science : Icons.book, color: t.isPractical ? Colors.purple : Colors.orange),
+                        leading: Icon(
+                          t.isPractical ? Icons.science : Icons.book,
+                          color: t.isPractical ? Colors.purple : Colors.orange,
+                        ),
                         title: Text(t.name),
-                        subtitle: Text('${t.subject} — ${t.room}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(
+                          '${t.subject} — ${t.room}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                          onPressed: () => _firestoreService.deleteScheduleTemplate(t.id),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          onPressed: () =>
+                              _firestoreService.deleteScheduleTemplate(t.id),
                         ),
                         onTap: () {
                           Navigator.pop(context);
@@ -289,25 +351,34 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isPractical ? 'Schedule Practical' : 'Schedule Theory'),
+        title: Text(
+          widget.isPractical ? 'Schedule Practical' : 'Schedule Theory',
+        ),
         actions: [
           PopupMenuButton<String>(
             onSelected: (v) {
               if (v == 'save_template') {
                 _saveTemplate();
-              } else if (v == 'load_template') _showTemplatePicker();
+              } else if (v == 'load_template')
+                _showTemplatePicker();
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'save_template', child: ListTile(
-                leading: Icon(Icons.save_as, color: Colors.teal),
-                title: Text('Save as Template'),
-                dense: true,
-              )),
-              const PopupMenuItem(value: 'load_template', child: ListTile(
-                leading: Icon(Icons.file_copy, color: Colors.blue),
-                title: Text('Load Template'),
-                dense: true,
-              )),
+              const PopupMenuItem(
+                value: 'save_template',
+                child: ListTile(
+                  leading: Icon(Icons.save_as, color: Colors.teal),
+                  title: Text('Save as Template'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'load_template',
+                child: ListTile(
+                  leading: Icon(Icons.file_copy, color: Colors.blue),
+                  title: Text('Load Template'),
+                  dense: true,
+                ),
+              ),
             ],
           ),
         ],
@@ -323,57 +394,108 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                 builder: (context, provider, _) => Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.people, color: Theme.of(context).primaryColor),
                       const SizedBox(width: 12),
-                      const Text('Posting to:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Posting to:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(width: 8),
-                      Text(provider.currentClass, style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
+                      Text(
+                        provider.currentClass,
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('1. Topic & Details', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const Text(
+                '1. Topic & Details',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _topicController,
-                decoration: const InputDecoration(labelText: 'Topic/Subject Name', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Topic/Subject Name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _roomController,
-                decoration: InputDecoration(labelText: widget.isPractical ? 'Lab Room' : 'Classroom', border: const OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                decoration: InputDecoration(
+                  labelText: widget.isPractical ? 'Lab Room' : 'Classroom',
+                  border: const OutlineInputBorder(),
+                ),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _teacherController,
-                decoration: const InputDecoration(labelText: 'Teacher Name', border: OutlineInputBorder()),
-                validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Teacher Name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 24),
 
-              const Text('2. Class Type', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const Text(
+                '2. Class Type',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
               const SizedBox(height: 8),
               Card(
-                color: widget.isPractical ? Colors.purple.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                color: widget.isPractical
+                    ? Colors.purple.withValues(alpha: 0.1)
+                    : Colors.orange.withValues(alpha: 0.1),
                 child: ListTile(
-                  leading: Icon(widget.isPractical ? Icons.science : Icons.book,
-                    color: widget.isPractical ? Colors.purple : Colors.orange),
-                  title: Text(widget.isPractical ? 'Practical Lab Session' : 'Normal Theory Class',
-                    style: TextStyle(fontWeight: FontWeight.bold,
-                    color: widget.isPractical ? Colors.purple : Colors.orange)),
+                  leading: Icon(
+                    widget.isPractical ? Icons.science : Icons.book,
+                    color: widget.isPractical ? Colors.purple : Colors.orange,
+                  ),
+                  title: Text(
+                    widget.isPractical
+                        ? 'Practical Lab Session'
+                        : 'Normal Theory Class',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: widget.isPractical ? Colors.purple : Colors.orange,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
 
-              const Text('3. Attachments (Optional)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const Text(
+                '3. Attachments (Optional)',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -385,22 +507,43 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                 child: Column(
                   children: [
                     if (_attachments.isNotEmpty)
-                      ..._attachments.asMap().entries.map((entry) => Card(
-                        margin: const EdgeInsets.only(bottom: 4),
-                        child: ListTile(
-                          dense: true,
-                          leading: const Icon(Icons.insert_drive_file, color: Colors.blue, size: 20),
-                          title: Text(entry.value.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.red, size: 18),
-                            onPressed: () => setState(() => _attachments.removeAt(entry.key)),
+                      ..._attachments.asMap().entries.map(
+                        (entry) => Card(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          child: ListTile(
+                            dense: true,
+                            leading: const Icon(
+                              Icons.insert_drive_file,
+                              color: Colors.blue,
+                              size: 20,
+                            ),
+                            title: Text(
+                              entry.value.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              onPressed: () => setState(
+                                () => _attachments.removeAt(entry.key),
+                              ),
+                            ),
                           ),
                         ),
-                      )),
+                      ),
                     OutlinedButton.icon(
                       onPressed: _pickFiles,
                       icon: const Icon(Icons.add, size: 18),
-                      label: Text(_attachments.isEmpty ? 'Attach Notes / Practical PDF' : 'Add More Files'),
+                      label: Text(
+                        _attachments.isEmpty
+                            ? 'Attach Notes / Practical PDF'
+                            : 'Add More Files',
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         side: BorderSide(color: Theme.of(context).primaryColor),
@@ -411,7 +554,13 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
               ),
               const SizedBox(height: 24),
 
-              const Text('4. Schedule Timeline', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+              const Text(
+                '4. Schedule Timeline',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -419,7 +568,11 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _selectDate(context),
                       icon: const Icon(Icons.calendar_today),
-                      label: Text(_selectedDate == null ? 'Select Date' : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'),
+                      label: Text(
+                        _selectedDate == null
+                            ? 'Select Date'
+                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                      ),
                     ),
                   ),
                 ],
@@ -431,7 +584,11 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _selectTime(context, true),
                       icon: const Icon(Icons.access_time),
-                      label: Text(_startTime == null ? 'Start Time' : _startTime!.format(context)),
+                      label: Text(
+                        _startTime == null
+                            ? 'Start Time'
+                            : _startTime!.format(context),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -439,7 +596,11 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _selectTime(context, false),
                       icon: const Icon(Icons.access_time),
-                      label: Text(_endTime == null ? 'End Time' : _endTime!.format(context)),
+                      label: Text(
+                        _endTime == null
+                            ? 'End Time'
+                            : _endTime!.format(context),
+                      ),
                     ),
                   ),
                 ],
@@ -449,14 +610,26 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                 onPressed: _isSaving ? null : _saveAndSync,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
                 child: _isSaving
-                  ? const SizedBox(
-                      width: 20, height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('Omni-Sync & Publish', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Omni-Sync & Publish',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ],
           ),

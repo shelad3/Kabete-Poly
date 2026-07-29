@@ -13,7 +13,10 @@ class GuestHousesWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('houses').orderBy('name').snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('houses')
+          .orderBy('name')
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -26,7 +29,10 @@ class GuestHousesWidget extends StatelessWidget {
               children: [
                 Icon(Icons.home_work, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 12),
-                Text('No houses listed yet', style: TextStyle(color: Colors.grey[600])),
+                Text(
+                  'No houses listed yet',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
               ],
             ),
           );
@@ -36,10 +42,20 @@ class GuestHousesWidget extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text('Cubicle Houses', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+              child: Text(
+                'Cubicle Houses',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
             ),
             ...houses.map((doc) {
-              final house = House.fromJson(doc.data() as Map<String, dynamic>, doc.id);
+              final house = House.fromJson(
+                doc.data() as Map<String, dynamic>,
+                doc.id,
+              );
               return _HouseCard(house: house);
             }),
           ],
@@ -64,12 +80,20 @@ class _HouseCard extends StatelessWidget {
           backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(isBoys ? Icons.male : Icons.female, color: color),
         ),
-        title: Text(house.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${house.totalCubes} cubes${house.reservedForNewStudents ? ' • New Students' : ''}',
-            style: TextStyle(color: house.reservedForNewStudents ? Colors.orange[700] : Colors.grey[600], fontSize: 12)),
-        children: [
-          _CubeOccupancyList(houseId: house.id),
-        ],
+        title: Text(
+          house.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          '${house.totalCubes} cubes${house.reservedForNewStudents ? ' • New Students' : ''}',
+          style: TextStyle(
+            color: house.reservedForNewStudents
+                ? Colors.orange[700]
+                : Colors.grey[600],
+            fontSize: 12,
+          ),
+        ),
+        children: [_CubeOccupancyList(houseId: house.id)],
       ),
     );
   }
@@ -84,13 +108,18 @@ class _CubeOccupancyList extends StatelessWidget {
     final term = TermUtils.getCurrentTerm();
     final year = TermUtils.getCurrentYear();
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('cubes')
+      stream: FirebaseFirestore.instance
+          .collection('cubes')
           .where('houseId', isEqualTo: houseId)
           .where('isActive', isEqualTo: true)
           .orderBy('cubeNumber')
           .snapshots(),
       builder: (context, snap) {
-        if (!snap.hasData) return const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator());
+        if (!snap.hasData)
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: CircularProgressIndicator(),
+          );
         final cubes = snap.data!.docs;
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -108,16 +137,28 @@ class _CubeOccupancyList extends StatelessWidget {
                   final free = maxOcc - booked;
                   final isFull = free <= 0;
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: isFull ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                      color: isFull
+                          ? Colors.red.withValues(alpha: 0.1)
+                          : Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: isFull ? Colors.red.withValues(alpha: 0.3) : Colors.green.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: isFull
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.green.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       'C$cubeNum${isFull ? ' (Full)' : ' ($free free)'}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-                        color: isFull ? Colors.red[700] : Colors.green[700]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isFull ? Colors.red[700] : Colors.green[700],
+                      ),
                     ),
                   );
                 },

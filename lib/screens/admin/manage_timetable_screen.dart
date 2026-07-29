@@ -15,8 +15,10 @@ class ManageTimetableScreen extends StatefulWidget {
 class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
   static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-  CollectionReference get _timetableRef =>
-      FirebaseFirestore.instance.collection('classes').doc(widget.className).collection('timetable');
+  CollectionReference get _timetableRef => FirebaseFirestore.instance
+      .collection('classes')
+      .doc(widget.className)
+      .collection('timetable');
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +51,10 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
                 children: [
                   Icon(Icons.calendar_month, size: 64, color: Colors.grey[300]),
                   const SizedBox(height: 16),
-                  Text('No timetable entries yet', style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                  Text(
+                    'No timetable entries yet',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.add),
@@ -74,26 +79,41 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
                 if (grouped.containsKey(day)) ...[
                   Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 4, left: 4),
-                    child: Text(day, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blueGrey)),
+                    child: Text(
+                      day,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
                   ),
                   for (final entry in grouped[day]!)
                     Card(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
                         leading: Container(
-                          width: 4, height: 48,
+                          width: 4,
+                          height: 48,
                           decoration: BoxDecoration(
                             color: Color(entry['color'] as int? ?? 0xFF1565C0),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        title: Text(entry['unit'] as String? ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        title: Text(
+                          entry['unit'] as String? ?? '',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         subtitle: Text(
                           '${entry['time'] ?? ''}  •  ${entry['room'] ?? ''}  •  ${entry['lecturer'] ?? ''}',
                           style: const TextStyle(fontSize: 12),
                         ),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
                           onPressed: () => _deleteEntry(entry.id),
                         ),
                       ),
@@ -117,50 +137,105 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 24, right: 24, top: 24,
+                left: 24,
+                right: 24,
+                top: 24,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                   const SizedBox(height: 20),
-                  const Text('Add Timetable Entry', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Add Timetable Entry',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedDay,
-                    decoration: const InputDecoration(labelText: 'Day', prefixIcon: Icon(Icons.calendar_today)),
-                    items: _days.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+                    decoration: const InputDecoration(
+                      labelText: 'Day',
+                      prefixIcon: Icon(Icons.calendar_today),
+                    ),
+                    items: _days
+                        .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                        .toList(),
                     onChanged: (v) => setSheetState(() => selectedDay = v!),
                   ),
                   const SizedBox(height: 12),
-                  TextField(controller: timeCtrl, decoration: const InputDecoration(labelText: 'Time (e.g. 0800-1000 hrs)', prefixIcon: Icon(Icons.access_time))),
+                  TextField(
+                    controller: timeCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Time (e.g. 0800-1000 hrs)',
+                      prefixIcon: Icon(Icons.access_time),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  TextField(controller: unitCtrl, decoration: const InputDecoration(labelText: 'Unit Name', prefixIcon: Icon(Icons.book))),
+                  TextField(
+                    controller: unitCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Unit Name',
+                      prefixIcon: Icon(Icons.book),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  TextField(controller: roomCtrl, decoration: const InputDecoration(labelText: 'Room', prefixIcon: Icon(Icons.location_on))),
+                  TextField(
+                    controller: roomCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Room',
+                      prefixIcon: Icon(Icons.location_on),
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  TextField(controller: lecturerCtrl, decoration: const InputDecoration(labelText: 'Lecturer', prefixIcon: Icon(Icons.person))),
+                  TextField(
+                    controller: lecturerCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Lecturer',
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     children: [
-                      for (final c in [Colors.blue, Colors.green, Colors.orange, Colors.purple, Colors.red, Colors.teal, Colors.indigo, Colors.pink])
+                      for (final c in [
+                        Colors.blue,
+                        Colors.green,
+                        Colors.orange,
+                        Colors.purple,
+                        Colors.red,
+                        Colors.teal,
+                        Colors.indigo,
+                        Colors.pink,
+                      ])
                         GestureDetector(
                           onTap: () => setSheetState(() => selectedColor = c),
                           child: Container(
-                            width: 32, height: 32,
+                            width: 32,
+                            height: 32,
                             decoration: BoxDecoration(
                               color: c,
                               shape: BoxShape.circle,
-                              border: selectedColor == c ? Border.all(color: Colors.black, width: 2) : null,
+                              border: selectedColor == c
+                                  ? Border.all(color: Colors.black, width: 2)
+                                  : null,
                             ),
                           ),
                         ),
@@ -169,7 +244,9 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
-                      if (unitCtrl.text.trim().isEmpty || timeCtrl.text.trim().isEmpty) return;
+                      if (unitCtrl.text.trim().isEmpty ||
+                          timeCtrl.text.trim().isEmpty)
+                        return;
                       await _timetableRef.add({
                         'day': selectedDay,
                         'time': timeCtrl.text.trim(),
@@ -197,10 +274,22 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Entry'),
-        content: const Text('Are you sure you want to delete this timetable entry?'),
+        content: const Text(
+          'Are you sure you want to delete this timetable entry?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white), child: const Text('Delete')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );

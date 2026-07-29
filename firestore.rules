@@ -79,6 +79,12 @@ service cloud.firestore {
         allow create, update: if isTeacherOrAbove();
         allow delete: if isTeacherOrAbove();
       }
+
+      match /exam_timetable/{entryId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isTeacherOrAbove();
+        allow delete: if isTeacherOrAbove();
+      }
     }
 
     // ---------------------------------------------------- //
@@ -273,12 +279,17 @@ service cloud.firestore {
       // Students read all bookings for availability checks; teachers manage
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
-        request.resource.data.studentId == request.auth.uid;
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['studentId', 'cubeId', 'term', 'year', 'status']);
       allow update: if isTeacherOrAbove() || (
         request.resource.data.studentId == request.auth.uid &&
         request.resource.data.status == 'cancelled'
       );
       allow delete: if false;
+      // NOTE: One-active-booking-per-student and cube capacity limits are
+      // enforced atomically in CubeService.createBooking() via Firestore
+      // runTransaction(). Server-side rules cannot efficiently query across
+      // documents to enforce these constraints.
     }
 
     // ---------------------------------------------------- //
@@ -332,6 +343,83 @@ service cloud.firestore {
       allow create: if isTeacherOrAbove();
       allow update: if isTeacherOrAbove();
       allow delete: if isTeacherOrAbove();
+    }
+
+    // ---------------------------------------------------- //
+    // Feature Flags (Admin toggle for app features)
+    // ---------------------------------------------------- //
+    match /feature_flags/{flagId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
+    // Payments (M-Pesa, Airtel, Card transactions)
+    // ---------------------------------------------------- //
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isTeacherOrAbove()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.studentId == request.auth.uid;
+      allow update: if isTeacherOrAbove();  // admin confirms/refunds
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------- //
+    // Waiting List (hostel cube queue)
+    // ---------------------------------------------------- //
+    match /waitlist/{entryId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.studentId == request.auth.uid;
+      allow update: if isTeacherOrAbove() || (
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == 'expired'
+      );
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------- //
+    // Elections & Voting
+    // ---------------------------------------------------- //
+    match /elections/{electionId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin();
+
+      match /positions/{positionId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin();
+
+        match /candidates/{candidateId} {
+          allow read: if isAuthenticated();
+          allow create, update, delete: if isAdmin();
+        }
+      }
+
+      match /ballots/{ballotId} {
+        allow read: if false;  // ballots are write-only for audit
+        allow create: if isAuthenticated();
+      }
+    }
+
+    // ---------------------------------------------------- //
+    // Exams & Exam Bookings
+    // ---------------------------------------------------- //
+    match /exams/{examId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin();
+    }
+
+    match /exam_bookings/{bookingId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isTeacherOrAbove()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.studentId == request.auth.uid;
+      allow delete: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isTeacherOrAbove()
+      );
     }
 
     // ---------------------------------------------------- //

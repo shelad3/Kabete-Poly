@@ -17,16 +17,17 @@ class ForumService {
         .where('classId', isEqualTo: classId)
         .snapshots()
         .map((snapshot) {
-      final channels = snapshot.docs.map(
-          (doc) => ForumChannel.fromJson(doc.data(), doc.id)).toList();
-      channels.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          final channels = snapshot.docs
+              .map((doc) => ForumChannel.fromJson(doc.data(), doc.id))
+              .toList();
+          channels.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-      // If no channels exist yet, trigger creation of defaults (once per class)
-      if (channels.isEmpty && _defaultsAttempted.add(classId)) {
-        _ensureDefaultChannels(classId);
-      }
-      return channels;
-    });
+          // If no channels exist yet, trigger creation of defaults (once per class)
+          if (channels.isEmpty && _defaultsAttempted.add(classId)) {
+            _ensureDefaultChannels(classId);
+          }
+          return channels;
+        });
   }
 
   Future<void> _ensureDefaultChannels(String classId) async {
@@ -63,7 +64,10 @@ class ForumService {
     await _firestore.collection('forum_channels').add(channel.toJson());
   }
 
-  Future<void> updateChannel(String channelId, Map<String, dynamic> data) async {
+  Future<void> updateChannel(
+    String channelId,
+    Map<String, dynamic> data,
+  ) async {
     await _firestore.collection('forum_channels').doc(channelId).update(data);
   }
 
@@ -79,12 +83,12 @@ class ForumService {
         .where('channelId', isEqualTo: channelId)
         .snapshots()
         .map((snapshot) {
-      final messages = snapshot.docs
-          .map((doc) => ChatMessage.fromJson(doc.data(), doc.id))
-          .toList();
-      messages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      return messages;
-    });
+          final messages = snapshot.docs
+              .map((doc) => ChatMessage.fromJson(doc.data(), doc.id))
+              .toList();
+          messages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return messages;
+        });
   }
 
   Future<void> sendMessage(ChatMessage message) async {

@@ -40,7 +40,13 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
                 hintText: 'Search by name, reg no, or class...',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear), onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); })
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
                     : null,
               ),
               onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
@@ -53,19 +59,23 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
-                _FilterChip(label: 'All', selected: _roleFilter == null, onTap: () => setState(() => _roleFilter = null)),
-                ..._roles.map((r) => _FilterChip(
-                  label: r,
-                  selected: _roleFilter == r,
-                  onTap: () => setState(() => _roleFilter = r),
-                )),
+                _FilterChip(
+                  label: 'All',
+                  selected: _roleFilter == null,
+                  onTap: () => setState(() => _roleFilter = null),
+                ),
+                ..._roles.map(
+                  (r) => _FilterChip(
+                    label: r,
+                    selected: _roleFilter == r,
+                    onTap: () => setState(() => _roleFilter = r),
+                  ),
+                ),
               ],
             ),
           ),
           const Divider(height: 1),
-          Expanded(
-            child: _buildUserList(),
-          ),
+          Expanded(child: _buildUserList()),
         ],
       ),
     );
@@ -88,7 +98,10 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
               children: [
                 Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
                 const SizedBox(height: 12),
-                Text('Failed to load users', style: TextStyle(color: Colors.grey[600])),
+                Text(
+                  'Failed to load users',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
               ],
             ),
           );
@@ -98,11 +111,14 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final users = snapshot.data!.docs
-            .map((d) => UserProfile.fromJson(d.data() as Map<String, dynamic>))
-            .where(_matchesSearch)
-            .toList()
-          ..sort((a, b) => a.fullName.compareTo(b.fullName));
+        final users =
+            snapshot.data!.docs
+                .map(
+                  (d) => UserProfile.fromJson(d.data() as Map<String, dynamic>),
+                )
+                .where(_matchesSearch)
+                .toList()
+              ..sort((a, b) => a.fullName.compareTo(b.fullName));
 
         if (users.isEmpty) {
           return Center(
@@ -111,7 +127,10 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
               children: [
                 Icon(Icons.people_outline, size: 48, color: Colors.grey[300]),
                 const SizedBox(height: 12),
-                Text('No users found', style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                Text(
+                  'No users found',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                ),
               ],
             ),
           );
@@ -154,7 +173,11 @@ class _FilterChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -202,10 +225,12 @@ class _UserCard extends StatelessWidget {
         onLongPress: user.mobileNumber.isNotEmpty
             ? () {
                 Clipboard.setData(ClipboardData(text: user.mobileNumber));
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('${user.fullName}\'s number copied'),
-                  duration: const Duration(seconds: 2),
-                ));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${user.fullName}\'s number copied'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
               }
             : null,
         child: Padding(
@@ -215,9 +240,17 @@ class _UserCard extends StatelessWidget {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: color.withValues(alpha: 0.15),
-                backgroundImage: user.profilePhotoUrl.isNotEmpty ? NetworkImage(user.profilePhotoUrl) : null,
+                backgroundImage: user.profilePhotoUrl.isNotEmpty
+                    ? NetworkImage(user.profilePhotoUrl)
+                    : null,
                 child: user.profilePhotoUrl.isEmpty
-                    ? Text(user.fullName[0].toUpperCase(), style: TextStyle(color: color, fontWeight: FontWeight.bold))
+                    ? Text(
+                        user.fullName[0].toUpperCase(),
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
                     : null,
               ),
               const SizedBox(width: 12),
@@ -225,24 +258,48 @@ class _UserCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    Text(
+                      user.fullName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: color.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(user.role, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+                          child: Text(
+                            user.role,
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         if (user.mobileNumber.isNotEmpty)
                           Icon(Icons.phone, size: 14, color: Colors.grey[400]),
                         if (user.mobileNumber.isNotEmpty)
                           const SizedBox(width: 4),
-                        Text(user.mobileNumber.isNotEmpty ? user.mobileNumber : 'No phone', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                        Text(
+                          user.mobileNumber.isNotEmpty
+                              ? user.mobileNumber
+                              : 'No phone',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -258,11 +315,16 @@ class _UserCard extends StatelessWidget {
 
   Color _roleColor(BuildContext context) {
     switch (user.role) {
-      case 'Official': return Colors.purple;
-      case 'Teacher': return Colors.blue;
-      case 'Leader': return Colors.orange;
-      case 'Student': return Colors.teal;
-      default: return Colors.grey;
+      case 'Official':
+        return Colors.purple;
+      case 'Teacher':
+        return Colors.blue;
+      case 'Leader':
+        return Colors.orange;
+      case 'Student':
+        return Colors.teal;
+      default:
+        return Colors.grey;
     }
   }
 }

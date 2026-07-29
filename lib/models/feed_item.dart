@@ -12,16 +12,16 @@ class FeedItem {
   final ScheduleItem? schedule;
 
   FeedItem.lesson(Lesson l)
-      : id = l.id,
-        date = l.date,
-        type = 'lesson',
-        lesson = l,
-        schedule = null;
+    : id = l.id,
+      date = l.date,
+      type = 'lesson',
+      lesson = l,
+      schedule = null;
 
   FeedItem.schedule(ScheduleItem s)
-      : id = s.id,
-        date = s.date,
-        type = 'schedule',
-        lesson = null,
-        schedule = s;
+    : id = s.id,
+      date = s.date,
+      type = 'schedule',
+      lesson = null,
+      schedule = s;
 }

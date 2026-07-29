@@ -82,7 +82,8 @@ class _ForumScreenState extends State<ForumScreen> {
             .limit(1)
             .get();
         if (snap.docs.isNotEmpty) {
-          final ts = (snap.docs.first.data()['timestamp'] as Timestamp?)?.toDate();
+          final ts = (snap.docs.first.data()['timestamp'] as Timestamp?)
+              ?.toDate();
           if (ts != null) {
             _latestMsg[ch.id] = ts;
           }
@@ -100,7 +101,9 @@ class _ForumScreenState extends State<ForumScreen> {
     if (text.toLowerCase().contains('badword')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Message blocked by AI Monitor: Inappropriate content.'),
+          content: Text(
+            'Message blocked by AI Monitor: Inappropriate content.',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -156,8 +159,14 @@ class _ForumScreenState extends State<ForumScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'chat', child: Text('Chat (everyone can post)')),
-                  DropdownMenuItem(value: 'announcement', child: Text('Announcement (admin only)')),
+                  DropdownMenuItem(
+                    value: 'chat',
+                    child: Text('Chat (everyone can post)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'announcement',
+                    child: Text('Announcement (admin only)'),
+                  ),
                 ],
                 onChanged: (v) => setDState(() => type = v!),
               ),
@@ -171,7 +180,10 @@ class _ForumScreenState extends State<ForumScreen> {
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
-                  Navigator.pop(ctx, {'name': nameCtrl.text.trim(), 'type': type});
+                  Navigator.pop(ctx, {
+                    'name': nameCtrl.text.trim(),
+                    'type': type,
+                  });
                 }
               },
               child: const Text('Create'),
@@ -194,9 +206,9 @@ class _ForumScreenState extends State<ForumScreen> {
       );
       await _forumService.createChannel(channel);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Channel created')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Channel created')));
       }
     }
   }
@@ -228,8 +240,14 @@ class _ForumScreenState extends State<ForumScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'chat', child: Text('Chat (everyone can post)')),
-                  DropdownMenuItem(value: 'announcement', child: Text('Announcement (admin only)')),
+                  DropdownMenuItem(
+                    value: 'chat',
+                    child: Text('Chat (everyone can post)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'announcement',
+                    child: Text('Announcement (admin only)'),
+                  ),
                 ],
                 onChanged: (v) => setDState(() => type = v!),
               ),
@@ -243,7 +261,10 @@ class _ForumScreenState extends State<ForumScreen> {
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
-                  Navigator.pop(ctx, {'name': nameCtrl.text.trim(), 'type': type});
+                  Navigator.pop(ctx, {
+                    'name': nameCtrl.text.trim(),
+                    'type': type,
+                  });
                 }
               },
               child: const Text('Save'),
@@ -278,16 +299,20 @@ class _ForumScreenState extends State<ForumScreen> {
                 onPressed: () => setState(() => _showChannelList = true),
               ),
         actions: [
-          Builder(builder: (ctx) {
-            final user = ctx.read<AuthProvider>().currentUser;
-            final canCreate = user != null && (user.isTeacher || user.isLeader || user.isAdmin);
-            if (!canCreate) return const SizedBox.shrink();
-            return IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              tooltip: 'New Channel',
-              onPressed: _createChannel,
-            );
-          }),
+          Builder(
+            builder: (ctx) {
+              final user = ctx.read<AuthProvider>().currentUser;
+              final canCreate =
+                  user != null &&
+                  (user.isTeacher || user.isLeader || user.isAdmin);
+              if (!canCreate) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                tooltip: 'New Channel',
+                onPressed: _createChannel,
+              );
+            },
+          ),
         ],
       ),
       body: Selector<ClassProvider, String>(
@@ -310,7 +335,9 @@ class _ForumScreenState extends State<ForumScreen> {
           return const ShimmerForumMessages();
         }
         if (channelSnapshot.hasError) {
-          return Center(child: Text('Error loading channels: ${channelSnapshot.error}'));
+          return Center(
+            child: Text('Error loading channels: ${channelSnapshot.error}'),
+          );
         }
         final channels = channelSnapshot.data ?? [];
         if (_latestMsg.isEmpty && channels.isNotEmpty) {
@@ -328,7 +355,9 @@ class _ForumScreenState extends State<ForumScreen> {
 
   Widget _buildChannelList(List<ForumChannel> channels, dynamic user) {
     if (channels.isEmpty) {
-      return const Center(child: Text('No channels yet. Create one to get started!'));
+      return const Center(
+        child: Text('No channels yet. Create one to get started!'),
+      );
     }
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -341,7 +370,8 @@ class _ForumScreenState extends State<ForumScreen> {
         final canEdit = isTeacher || isAdmin;
         final lastSeen = _lastSeen[ch.id];
         final latest = _latestMsg[ch.id];
-        final hasUnread = latest != null && (lastSeen == null || latest.isAfter(lastSeen));
+        final hasUnread =
+            latest != null && (lastSeen == null || latest.isAfter(lastSeen));
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: ListTile(
@@ -374,7 +404,10 @@ class _ForumScreenState extends State<ForumScreen> {
             title: Row(
               children: [
                 Expanded(
-                  child: Text(ch.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(
+                    ch.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
                 if (hasUnread)
                   Container(
@@ -390,7 +423,10 @@ class _ForumScreenState extends State<ForumScreen> {
             ),
             subtitle: Text(
               ch.isAnnouncement ? 'Announcements' : 'Open discussion',
-              style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.white54 : Colors.grey[600],
+              ),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -406,12 +442,20 @@ class _ForumScreenState extends State<ForumScreen> {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             title: const Text('Delete Channel'),
-                            content: Text('Delete "${ch.name}"? This cannot be undone.'),
+                            content: Text(
+                              'Delete "${ch.name}"? This cannot be undone.',
+                            ),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel'),
+                              ),
                               ElevatedButton(
                                 onPressed: () => Navigator.pop(ctx, true),
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                ),
                                 child: const Text('Delete'),
                               ),
                             ],
@@ -428,9 +472,28 @@ class _ForumScreenState extends State<ForumScreen> {
                       }
                     },
                     itemBuilder: (_) => [
-                      const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit, size: 18), title: Text('Edit'))),
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit, size: 18),
+                          title: Text('Edit'),
+                        ),
+                      ),
                       if (isAdmin)
-                        const PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete, size: 18, color: Colors.red), title: Text('Delete', style: TextStyle(color: Colors.red)))),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: ListTile(
+                            leading: Icon(
+                              Icons.delete,
+                              size: 18,
+                              color: Colors.red,
+                            ),
+                            title: Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 const Icon(Icons.chevron_right, size: 18),
@@ -450,7 +513,11 @@ class _ForumScreenState extends State<ForumScreen> {
     );
   }
 
-  Widget _buildChannelView(List<ForumChannel> channels, String currentClass, dynamic user) {
+  Widget _buildChannelView(
+    List<ForumChannel> channels,
+    String currentClass,
+    dynamic user,
+  ) {
     if (_selectedChannelId == null && channels.isNotEmpty) {
       _selectedChannelId = channels.first.id;
     }
@@ -468,7 +535,10 @@ class _ForumScreenState extends State<ForumScreen> {
               children: channels.map((ch) {
                 final isSelected = _selectedChannelId == ch.id;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 6,
+                  ),
                   child: ChoiceChip(
                     label: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -516,7 +586,9 @@ class _ForumScreenState extends State<ForumScreen> {
         final messages = snapshot.data ?? [];
 
         if (messages.isEmpty) {
-          return const Center(child: Text('No messages yet. Start the conversation!'));
+          return const Center(
+            child: Text('No messages yet. Start the conversation!'),
+          );
         }
 
         return ListView.builder(
@@ -540,31 +612,55 @@ class _ForumScreenState extends State<ForumScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isMe)
             CircleAvatar(
               radius: 18,
               backgroundColor: Colors.grey[200],
-              backgroundImage: msg.senderAvatarUrl.isNotEmpty ? NetworkImage(msg.senderAvatarUrl) : null,
+              backgroundImage: msg.senderAvatarUrl.isNotEmpty
+                  ? NetworkImage(msg.senderAvatarUrl)
+                  : null,
               child: msg.senderAvatarUrl.isEmpty
-                  ? Text(msg.senderName[0].toUpperCase(), style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 12))
+                  ? Text(
+                      msg.senderName[0].toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    )
                   : null,
             ),
           if (!isMe) const SizedBox(width: 8),
           Column(
-            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               if (!isMe)
-                Text(msg.senderName,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  msg.senderName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               Container(
                 constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.7),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  maxWidth: MediaQuery.of(context).size.width * 0.7,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: isMe ? Theme.of(context).primaryColor : (isDark ? const Color(0xFF2A2A3E) : Colors.grey[200]),
+                  color: isMe
+                      ? Theme.of(context).primaryColor
+                      : (isDark ? const Color(0xFF2A2A3E) : Colors.grey[200]),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -574,7 +670,11 @@ class _ForumScreenState extends State<ForumScreen> {
                 ),
                 child: Text(
                   msg.text,
-                  style: TextStyle(color: isMe ? Colors.white : (isDark ? Colors.white70 : Colors.black87)),
+                  style: TextStyle(
+                    color: isMe
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : Colors.black87),
+                  ),
                 ),
               ),
               const SizedBox(height: 4),
@@ -590,9 +690,13 @@ class _ForumScreenState extends State<ForumScreen> {
   }
 
   Widget _buildInputArea(List<ForumChannel> channels, dynamic user) {
-    final selectedChannel = channels.where((c) => c.id == _selectedChannelId).firstOrNull;
+    final selectedChannel = channels
+        .where((c) => c.id == _selectedChannelId)
+        .firstOrNull;
     final bool isAnnouncement = selectedChannel?.isAnnouncement ?? false;
-    final bool canPost = user != null && (!isAnnouncement || user.isTeacher || user.isAdmin || user.isLeader);
+    final bool canPost =
+        user != null &&
+        (!isAnnouncement || user.isTeacher || user.isAdmin || user.isLeader);
 
     if (!canPost) {
       return Container(
@@ -603,8 +707,10 @@ class _ForumScreenState extends State<ForumScreen> {
           children: [
             Icon(Icons.lock, size: 16, color: Colors.grey),
             SizedBox(width: 8),
-            Text('Only admins and teachers can post in this channel.',
-                style: TextStyle(color: Colors.grey)),
+            Text(
+              'Only admins and teachers can post in this channel.',
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       );
@@ -616,7 +722,11 @@ class _ForumScreenState extends State<ForumScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         boxShadow: [
-          BoxShadow(color: isDark ? Colors.white10 : Colors.black12, blurRadius: 4, offset: const Offset(0, -2))
+          BoxShadow(
+            color: isDark ? Colors.white10 : Colors.black12,
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
         ],
       ),
       child: SafeArea(
@@ -634,9 +744,13 @@ class _ForumScreenState extends State<ForumScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF2A2A3E) : Colors.grey[100],
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  fillColor: isDark
+                      ? const Color(0xFF2A2A3E)
+                      : Colors.grey[100],
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                 ),
               ),
             ),
@@ -652,5 +766,3 @@ class _ForumScreenState extends State<ForumScreen> {
     );
   }
 }
-
-

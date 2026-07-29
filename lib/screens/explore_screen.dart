@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/unread_badge_provider.dart';
 import '../services/cube_service.dart';
+import '../providers/feature_flag_provider.dart';
+import '../widgets/feature_gate.dart';
 import '../widgets/app_drawer.dart';
 import 'incoming_lessons_screen.dart';
 import 'full_timeline_screen.dart';
@@ -16,7 +18,8 @@ import 'cubes/my_bookings_screen.dart';
 import 'cubes/booking_receipt_screen.dart';
 import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
-
+import 'exam_booking/exam_booking_screen.dart';
+import 'school_id_card_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -30,9 +33,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: const AppDrawer(),
-      appBar: AppBar(
-        title: const Text('Explore Archive'),
-      ),
+      appBar: AppBar(title: const Text('Explore Archive')),
       body: Consumer<UnreadBadgeProvider>(
         builder: (context, badge, _) {
           return SingleChildScrollView(
@@ -45,12 +46,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       backgroundColor: Colors.blue.withValues(alpha: 0.1),
                       child: const Icon(Icons.schedule, color: Colors.blue),
                     ),
-                    title: const Text('Incoming Lessons', style: TextStyle(fontWeight: FontWeight.bold)),
+                    title: const Text(
+                      'Incoming Lessons',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: const Text('Upcoming practical & theory'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const IncomingLessonsScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const IncomingLessonsScreen(),
+                      ),
                     ),
                   ),
                 ),
@@ -78,12 +88,23 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         ],
                       ),
                     ),
-                    title: const Text('Full Timeline', style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: const Text('Past theory, practical, quizzes & completed lessons'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    title: const Text(
+                      'Full Timeline',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'Past theory, practical, quizzes & completed lessons',
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const FullTimelineScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const FullTimelineScreen(),
+                      ),
                     ),
                   ),
                 ),
@@ -94,13 +115,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       backgroundColor: Colors.teal.withValues(alpha: 0.1),
                       child: const Icon(Icons.quiz, color: Colors.teal),
                     ),
-                    title: const Text('Quizzes', style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: const Text('Practice assessments'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const QuizListScreen()),
+                    title: const Text(
+                      'Quizzes',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    subtitle: const Text('Practice assessments'),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'quizzes')) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const QuizListScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -110,13 +143,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       backgroundColor: Colors.amber.withValues(alpha: 0.1),
                       child: const Icon(Icons.grade, color: Colors.amber),
                     ),
-                    title: const Text('My Grades', style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: const Text('View report card & performance'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const GradeReportScreen()),
+                    title: const Text(
+                      'My Grades',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    subtitle: const Text('View report card & performance'),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'grades')) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const GradeReportScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -126,24 +171,38 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       backgroundColor: Colors.indigo.withValues(alpha: 0.1),
                       child: const Icon(Icons.workspaces, color: Colors.indigo),
                     ),
-                    title: const Text('Book a Cubicle', style: TextStyle(fontWeight: FontWeight.bold)),
+                    title: const Text(
+                      'Book a Cubicle',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: const Text('Reserve a lab workstation'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () async {
+                      if (!checkFeatureEnabled(context, 'hostel_booking'))
+                        return;
                       final userId = context.read<AuthProvider>().currentUserId;
-                      final existing = await CubeService().getMyActiveBooking(userId);
+                      final existing = await CubeService().getMyActiveBooking(
+                        userId,
+                      );
                       if (!context.mounted) return;
                       if (existing != null) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => BookingReceiptScreen(booking: existing),
+                            builder: (_) =>
+                                BookingReceiptScreen(booking: existing),
                           ),
                         );
                       } else {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const HouseListScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const HouseListScreen(),
+                          ),
                         );
                       }
                     },
@@ -154,15 +213,84 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.deepPurple.withValues(alpha: 0.1),
-                      child: const Icon(Icons.book_online, color: Colors.deepPurple),
+                      child: const Icon(
+                        Icons.book_online,
+                        color: Colors.deepPurple,
+                      ),
                     ),
-                    title: const Text('My Bookings', style: TextStyle(fontWeight: FontWeight.bold)),
+                    title: const Text(
+                      'My Bookings',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: const Text('View & cancel cubicle bookings'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'hostel_booking'))
+                        return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MyBookingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Card(
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.green.withValues(alpha: 0.1),
+                      child: const Icon(Icons.badge, color: Colors.green),
+                    ),
+                    title: const Text(
+                      'School ID Card',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text('View your official student ID'),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const SchoolIDCardScreen(),
+                      ),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Card(
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.deepOrange.withValues(alpha: 0.1),
+                      child: const Icon(Icons.school, color: Colors.deepOrange),
+                    ),
+                    title: const Text(
+                      'Exam Booking',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text('Register for examinations'),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'exam_booking')) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ExamBookingScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -205,43 +333,65 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ),
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.blue, child: Icon(Icons.post_add, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    child: Icon(Icons.post_add, color: Colors.white),
+                  ),
                   title: const Text('Post Completed Lesson'),
                   subtitle: const Text('Upload notes, summary & lab reports'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AddLessonScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const AddLessonScreen(),
+                      ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.orange, child: Icon(Icons.calendar_today, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.orange,
+                    child: Icon(Icons.calendar_today, color: Colors.white),
+                  ),
                   title: const Text('Schedule Upcoming Theory'),
                   subtitle: const Text('Add to timetable & notify class'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ScheduleUpcomingScreen(isPractical: false)),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const ScheduleUpcomingScreen(isPractical: false),
+                      ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.purple, child: Icon(Icons.science, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.purple,
+                    child: Icon(Icons.science, color: Colors.white),
+                  ),
                   title: const Text('Schedule Upcoming Practical'),
-                  subtitle: const Text('Add laboratory schedule & notify class'),
+                  subtitle: const Text(
+                    'Add laboratory schedule & notify class',
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ScheduleUpcomingScreen(isPractical: true)),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const ScheduleUpcomingScreen(isPractical: true),
+                      ),
                     );
                   },
                 ),
                 ListTile(
-                  leading: const CircleAvatar(backgroundColor: Colors.teal, child: Icon(Icons.quiz, color: Colors.white)),
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.teal,
+                    child: Icon(Icons.quiz, color: Colors.white),
+                  ),
                   title: const Text('Create Quiz'),
                   subtitle: const Text('Build multiple-choice assessments'),
                   onTap: () {

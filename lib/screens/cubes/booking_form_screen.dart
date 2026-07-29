@@ -7,8 +7,11 @@ import '../../models/cube.dart';
 import '../../models/house.dart';
 import '../../models/cube_booking.dart';
 import '../../services/cube_service.dart';
+import '../../services/payment_service.dart';
 import '../../services/auth_provider.dart';
 import '../../utils/term_utils.dart';
+import '../payment/payment_method_screen.dart';
+import 'booking_receipt_screen.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Cube cube;
@@ -29,7 +32,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   Future<void> _submit() async {
     if (!_acceptedFee) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the fee terms to continue'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Please accept the fee terms to continue'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -40,18 +46,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     setState(() => _isBooking = true);
 
     try {
-      final available = await _service.isCubeAvailable(
-        widget.cube.id, widget.cube.maxOccupancy, _term, _year,
-      );
-      if (!available) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('This cubicle is fully booked'), backgroundColor: Colors.red),
-          );
-        }
-        return;
-      }
-
       final booking = CubeBooking(
         id: '',
         studentId: context.read<AuthProvider>().currentUserId,
@@ -65,18 +59,29 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         year: _year,
       );
 
-      await _service.createBooking(booking);
+      // Atomic transaction: checks existing bookings + cube capacity + creates booking
+      final result = await _service.createBooking(booking);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cubicle booked successfully!'), backgroundColor: Colors.green),
+        // Navigate to payment screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PaymentMethodScreen(
+              bookingId: result.id,
+              houseName: widget.house.name,
+              cubeNumber: widget.cube.cubeNumber,
+            ),
+          ),
         );
-        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Booking failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Booking failed: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -86,7 +91,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final fee = 8000;
+    final fee = PaymentService.cubeBookingAmount;
     return Scaffold(
       appBar: AppBar(title: Text('Book ${widget.cube.label}')),
       body: Padding(
@@ -104,9 +109,24 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.cube.label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(widget.house.name, style: TextStyle(color: Colors.grey[600])),
-                        Text('Max ${widget.cube.maxOccupancy} students', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                        Text(
+                          widget.cube.label,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          widget.house.name,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        Text(
+                          'Max ${widget.cube.maxOccupancy} students',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -122,19 +142,31 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.calendar_month, size: 18, color: Colors.blue),
+                        const Icon(
+                          Icons.calendar_month,
+                          size: 18,
+                          color: Colors.blue,
+                        ),
                         const SizedBox(width: 8),
-                        Text('${TermUtils.getCurrentTermLabel()} $_year',
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(
+                          '${TermUtils.getCurrentTermLabel()} $_year',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.payments, size: 18, color: Colors.green),
+                        const Icon(
+                          Icons.payments,
+                          size: 18,
+                          color: Colors.green,
+                        ),
                         const SizedBox(width: 8),
-                        Text('KSH $fee per term (pay to accounts office)',
-                            style: TextStyle(color: Colors.grey[700])),
+                        Text(
+                          'KES ${fee.toStringAsFixed(0)} per term',
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
                       ],
                     ),
                   ],
@@ -144,8 +176,12 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             const SizedBox(height: 12),
             Card(
               child: CheckboxListTile(
-                title: const Text('I acknowledge the KSH 8,000 term fee'),
-                subtitle: const Text('Pay at the accounts office and update payment status'),
+                title: Text(
+                  'I acknowledge the KES ${fee.toStringAsFixed(0)} term fee',
+                ),
+                subtitle: const Text(
+                  'Payment will be processed via M-Pesa, Airtel Money, or Card',
+                ),
                 value: _acceptedFee,
                 onChanged: (v) => setState(() => _acceptedFee = v ?? false),
                 controlAffinity: ListTileControlAffinity.leading,
@@ -158,7 +194,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               child: ElevatedButton.icon(
                 onPressed: _isBooking ? null : _submit,
                 icon: _isBooking
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.book_online),
                 label: Text(_isBooking ? 'Booking...' : 'Confirm Booking'),
                 style: ElevatedButton.styleFrom(

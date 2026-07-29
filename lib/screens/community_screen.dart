@@ -46,23 +46,26 @@ class _CommunityScreenState extends State<CommunityScreen>
                   badge.unreadForum > 99 ? '99+' : badge.unreadForum.toString(),
                   style: const TextStyle(fontSize: 10, color: Colors.white),
                 ),
-                child: const Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(Icons.forum_outlined),
-                  SizedBox(height: 4),
-                  Text('Forums'),
-                ]),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.forum_outlined),
+                    SizedBox(height: 4),
+                    Text('Forums'),
+                  ],
+                ),
               ),
             ),
-            const Tab(icon: Icon(Icons.photo_library_outlined), text: 'Gallery'),
+            const Tab(
+              icon: Icon(Icons.photo_library_outlined),
+              text: 'Gallery',
+            ),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          ForumScreen(),
-          GalleryScreen(),
-        ],
+        children: const [ForumScreen(), GalleryScreen()],
       ),
     );
   }

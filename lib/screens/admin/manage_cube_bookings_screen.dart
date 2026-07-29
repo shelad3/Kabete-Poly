@@ -12,7 +12,8 @@ class ManageCubeBookingsScreen extends StatefulWidget {
   const ManageCubeBookingsScreen({super.key});
 
   @override
-  State<ManageCubeBookingsScreen> createState() => _ManageCubeBookingsScreenState();
+  State<ManageCubeBookingsScreen> createState() =>
+      _ManageCubeBookingsScreenState();
 }
 
 class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
@@ -22,12 +23,18 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'pending': return Colors.orange;
-      case 'confirmed': return Colors.blue;
-      case 'checked_in': return Colors.green;
-      case 'completed': return Colors.grey;
-      case 'cancelled': return Colors.red;
-      default: return Colors.grey;
+      case 'pending':
+        return Colors.orange;
+      case 'confirmed':
+        return Colors.blue;
+      case 'checked_in':
+        return Colors.green;
+      case 'completed':
+        return Colors.grey;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -39,14 +46,18 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
     try {
       await _service.updateBookingStatus(booking.id, newStatus);
       if (newStatus == 'confirmed') {
-        _firestore.sendNotification(ClassNotification(
-          id: '',
-          classId: 'General',
-          title: 'Booking Confirmed',
-          message: 'Your booking for ${booking.cubeLabel} at ${booking.houseName} (Term ${booking.term} ${booking.year}) has been confirmed.',
-          type: 'general',
-          timestamp: DateTime.now(),
-        ));
+        _firestore.sendNotification(
+          ClassNotification(
+            id: '',
+            classId: 'General',
+            studentId: booking.studentId,
+            title: 'Booking Confirmed',
+            message:
+                'Your booking for ${booking.cubeLabel} at ${booking.houseName} (Term ${booking.term} ${booking.year}) has been confirmed.',
+            type: 'general',
+            timestamp: DateTime.now(),
+          ),
+        );
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -83,13 +94,20 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
               const PopupMenuItem(value: 'all', child: Text('All')),
               const PopupMenuItem(value: 'pending', child: Text('Pending')),
               const PopupMenuItem(value: 'confirmed', child: Text('Confirmed')),
-              const PopupMenuItem(value: 'checked_in', child: Text('Checked In')),
+              const PopupMenuItem(
+                value: 'checked_in',
+                child: Text('Checked In'),
+              ),
               const PopupMenuItem(value: 'cancelled', child: Text('Cancelled')),
             ],
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
               child: Row(
-                children: [Icon(Icons.filter_list), SizedBox(width: 4), Text('Filter')],
+                children: [
+                  Icon(Icons.filter_list),
+                  SizedBox(width: 4),
+                  Text('Filter'),
+                ],
               ),
             ),
           ),
@@ -103,7 +121,9 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
           }
           var bookings = snapshot.data ?? [];
           if (_statusFilter != 'all') {
-            bookings = bookings.where((b) => b.status == _statusFilter).toList();
+            bookings = bookings
+                .where((b) => b.status == _statusFilter)
+                .toList();
           }
           if (bookings.isEmpty) {
             return Center(
@@ -112,7 +132,10 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                 children: [
                   Icon(Icons.book_online, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  Text('No bookings found', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  Text(
+                    'No bookings found',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
                 ],
               ),
             );
@@ -124,7 +147,9 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
               final b = bookings[i];
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
@@ -133,49 +158,91 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text('${b.cubeLabel} — ${b.houseName}',
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text(
+                              '${b.cubeLabel} — ${b.houseName}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: _statusColor(b.status).withValues(alpha: 0.15),
+                              color: _statusColor(
+                                b.status,
+                              ).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text(b.status.replaceAll('_', ' ').toUpperCase(),
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _statusColor(b.status))),
+                            child: Text(
+                              b.status.replaceAll('_', ' ').toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: _statusColor(b.status),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text('${b.studentName} (${b.regNo})', style: TextStyle(color: Colors.grey[800])),
+                      Text(
+                        '${b.studentName} (${b.regNo})',
+                        style: TextStyle(color: Colors.grey[800]),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           GestureDetector(
                             onTap: () => _togglePayment(b),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: _paymentColor(b.paymentStatus).withValues(alpha: 0.15),
+                                color: _paymentColor(
+                                  b.paymentStatus,
+                                ).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.payments, size: 12, color: _paymentColor(b.paymentStatus)),
+                                  Icon(
+                                    Icons.payments,
+                                    size: 12,
+                                    color: _paymentColor(b.paymentStatus),
+                                  ),
                                   const SizedBox(width: 4),
-                                  Text(b.paymentStatus.toUpperCase(),
-                                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _paymentColor(b.paymentStatus))),
+                                  Text(
+                                    b.paymentStatus.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: _paymentColor(b.paymentStatus),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Icon(Icons.calendar_month, size: 14, color: Colors.grey[600]),
+                          Icon(
+                            Icons.calendar_month,
+                            size: 14,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 4),
-                          Text('Term ${b.term} ${b.year}',
-                              style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                          Text(
+                            'Term ${b.term} ${b.year}',
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                       if (b.status == 'pending') ...[
@@ -187,14 +254,18 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                               onPressed: () => _updateStatus(b, 'confirmed'),
                               icon: const Icon(Icons.check, size: 16),
                               label: const Text('Confirm'),
-                              style: TextButton.styleFrom(foregroundColor: Colors.blue),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.blue,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             TextButton.icon(
                               onPressed: () => _updateStatus(b, 'cancelled'),
                               icon: const Icon(Icons.close, size: 16),
                               label: const Text('Reject'),
-                              style: TextButton.styleFrom(foregroundColor: Colors.red),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
                             ),
                           ],
                         ),
@@ -208,14 +279,18 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                               onPressed: () => _updateStatus(b, 'checked_in'),
                               icon: const Icon(Icons.verified, size: 16),
                               label: const Text('Check In'),
-                              style: TextButton.styleFrom(foregroundColor: Colors.green),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.green,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             TextButton.icon(
                               onPressed: () => _updateStatus(b, 'completed'),
                               icon: const Icon(Icons.done_all, size: 16),
                               label: const Text('Complete'),
-                              style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -228,7 +303,9 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                             onPressed: () => _updateStatus(b, 'completed'),
                             icon: const Icon(Icons.done_all, size: 16),
                             label: const Text('Mark Completed'),
-                            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.grey,
+                            ),
                           ),
                         ),
                       ],

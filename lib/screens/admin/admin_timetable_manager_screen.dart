@@ -11,10 +11,12 @@ class AdminTimetableManagerScreen extends StatefulWidget {
   const AdminTimetableManagerScreen({super.key});
 
   @override
-  State<AdminTimetableManagerScreen> createState() => _AdminTimetableManagerScreenState();
+  State<AdminTimetableManagerScreen> createState() =>
+      _AdminTimetableManagerScreenState();
 }
 
-class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScreen> {
+class _AdminTimetableManagerScreenState
+    extends State<AdminTimetableManagerScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   String _currentClassId = '';
 
@@ -32,15 +34,15 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
   void initState() {
     super.initState();
     final cp = context.read<ClassProvider>();
-    _currentClassId = cp.availableClasses.isNotEmpty ? cp.availableClasses.first : '';
+    _currentClassId = cp.availableClasses.isNotEmpty
+        ? cp.availableClasses.first
+        : '';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Timetable Manager'),
-      ),
+      appBar: AppBar(title: const Text('Timetable Manager')),
       body: _currentClassId.isEmpty
           ? const Center(child: Text('No classes available'))
           : Column(
@@ -49,7 +51,9 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                 const Divider(),
                 Expanded(
                   child: StreamBuilder<List<ScheduleItem>>(
-                    stream: _firestoreService.getDefaultScheduleStream(_currentClassId),
+                    stream: _firestoreService.getDefaultScheduleStream(
+                      _currentClassId,
+                    ),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Center(child: Text('Error: ${snapshot.error}'));
@@ -64,13 +68,27 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.calendar_month_outlined, size: 64, color: Colors.grey[400]),
+                              Icon(
+                                Icons.calendar_month_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
                               const SizedBox(height: 16),
-                              Text('No official timetable entries for $_currentClassId.',
-                                  style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                              Text(
+                                'No official timetable entries for $_currentClassId.',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
                               const SizedBox(height: 8),
-                              Text('Tap + to add the first entry.',
-                                  style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                              Text(
+                                'Tap + to add the first entry.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -95,10 +113,16 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                                 child: Text(
                                   _weekdays[dayInt] ?? 'Unknown Day',
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueGrey,
+                                  ),
                                 ),
                               ),
                               ...dayItems.map(_buildScheduleCard),
@@ -133,7 +157,9 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.group),
             ),
-            items: classes.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+            items: classes
+                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                .toList(),
             onChanged: (val) {
               if (val != null) setState(() => _currentClassId = val);
             },
@@ -153,7 +179,10 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
           height: double.infinity,
           color: item.color,
         ),
-        title: Text('${item.startTime} - ${item.endTime} | ${item.subject}', style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          '${item.startTime} - ${item.endTime} | ${item.subject}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text('Room: ${item.room} • Tr: ${item.teacher}'),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -168,9 +197,14 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Entry?'),
-        content: Text('Remove ${item.subject} from $_currentClassId timetable?'),
+        content: Text(
+          'Remove ${item.subject} from $_currentClassId timetable?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
@@ -183,7 +217,9 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
     if (confirm == true) {
       await _firestoreService.deleteScheduleItem(item.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entry removed.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Entry removed.')));
       }
     }
   }
@@ -199,40 +235,80 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16, right: 16, top: 24,
+                left: 16,
+                right: 16,
+                top: 24,
               ),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('New Timetable Entry', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'New Timetable Entry',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: subjectController,
-                      decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        labelText: 'Subject',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: TextField(controller: teacherController, decoration: const InputDecoration(labelText: 'Teacher', border: OutlineInputBorder()))),
+                        Expanded(
+                          child: TextField(
+                            controller: teacherController,
+                            decoration: const InputDecoration(
+                              labelText: 'Teacher',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: TextField(controller: roomController, decoration: const InputDecoration(labelText: 'Room', border: OutlineInputBorder()))),
+                        Expanded(
+                          child: TextField(
+                            controller: roomController,
+                            decoration: const InputDecoration(
+                              labelText: 'Room',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<int>(
                       value: selectedDay,
-                      decoration: const InputDecoration(labelText: 'Day of Week', border: OutlineInputBorder()),
-                      items: _weekdays.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
-                      onChanged: (val) => setModalState(() => selectedDay = val!),
+                      decoration: const InputDecoration(
+                        labelText: 'Day of Week',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _weekdays.entries
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) =>
+                          setModalState(() => selectedDay = val!),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -240,10 +316,21 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                         Expanded(
                           child: OutlinedButton.icon(
                             icon: const Icon(Icons.access_time),
-                            label: Text(selectedStart != null ? selectedStart!.format(context) : 'Start Time'),
+                            label: Text(
+                              selectedStart != null
+                                  ? selectedStart!.format(context)
+                                  : 'Start Time',
+                            ),
                             onPressed: () async {
-                              final time = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 8, minute: 0));
-                              if (time != null) setModalState(() => selectedStart = time);
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: const TimeOfDay(
+                                  hour: 8,
+                                  minute: 0,
+                                ),
+                              );
+                              if (time != null)
+                                setModalState(() => selectedStart = time);
                             },
                           ),
                         ),
@@ -251,10 +338,21 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                         Expanded(
                           child: OutlinedButton.icon(
                             icon: const Icon(Icons.access_time_filled),
-                            label: Text(selectedEnd != null ? selectedEnd!.format(context) : 'End Time'),
+                            label: Text(
+                              selectedEnd != null
+                                  ? selectedEnd!.format(context)
+                                  : 'End Time',
+                            ),
                             onPressed: () async {
-                              final time = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 10, minute: 0));
-                              if (time != null) setModalState(() => selectedEnd = time);
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: const TimeOfDay(
+                                  hour: 10,
+                                  minute: 0,
+                                ),
+                              );
+                              if (time != null)
+                                setModalState(() => selectedEnd = time);
                             },
                           ),
                         ),
@@ -264,10 +362,20 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
                         onPressed: () async {
-                          if (subjectController.text.isEmpty || selectedStart == null || selectedEnd == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all critical fields')));
+                          if (subjectController.text.isEmpty ||
+                              selectedStart == null ||
+                              selectedEnd == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Please fill all critical fields',
+                                ),
+                              ),
+                            );
                             return;
                           }
 
@@ -281,8 +389,12 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
                             id: '',
                             classId: _currentClassId,
                             subject: subjectController.text.trim(),
-                            teacher: teacherController.text.trim().isEmpty ? 'TBA' : teacherController.text.trim(),
-                            room: roomController.text.trim().isEmpty ? 'TBA' : roomController.text.trim(),
+                            teacher: teacherController.text.trim().isEmpty
+                                ? 'TBA'
+                                : teacherController.text.trim(),
+                            room: roomController.text.trim().isEmpty
+                                ? 'TBA'
+                                : roomController.text.trim(),
                             startTime: formatTime(selectedStart!),
                             endTime: formatTime(selectedEnd!),
                             color: Colors.blueGrey,
@@ -296,7 +408,11 @@ class _AdminTimetableManagerScreenState extends State<AdminTimetableManagerScree
 
                           if (context.mounted) {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved successfully!')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Saved successfully!'),
+                              ),
+                            );
                           }
                         },
                         child: const Text('Save Entry to Cloud'),

@@ -23,7 +23,11 @@ class OfflineBanner extends StatelessWidget {
                 child: const Text(
                   'No internet connection',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             Expanded(child: child),

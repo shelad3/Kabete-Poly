@@ -3,7 +3,7 @@ KNP Management System — Windows Admin Tool
 Author: Sheldon Ramu — Kabete National Polytechnique
 Language: Python 3.12+  |  GUI Framework: PyQt6  |  Database: Firebase
 Source code: https://github.com/shelad3/KNP-Management-System
-License: MIT
+License: GNU AGPL v3
 
 ---
 

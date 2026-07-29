@@ -49,9 +49,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: cardColor,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -62,10 +60,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -83,7 +78,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
       ),
     );
   }
@@ -101,18 +99,19 @@ class AppTheme {
         surface: const Color(0xFF1A1A2E),
         error: const Color(0xFFEF5350),
       ),
-      textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
-        titleLarge: GoogleFonts.outfit(
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-        headlineMedium: GoogleFonts.outfit(
-          fontWeight: FontWeight.bold,
-          color: Colors.white70,
-        ),
-        bodyLarge: GoogleFonts.outfit(color: Colors.white70),
-        bodyMedium: GoogleFonts.outfit(color: Colors.white60),
-      ),
+      textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme)
+          .copyWith(
+            titleLarge: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            headlineMedium: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.white70,
+            ),
+            bodyLarge: GoogleFonts.outfit(color: Colors.white70),
+            bodyMedium: GoogleFonts.outfit(color: Colors.white60),
+          ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -134,14 +133,10 @@ class AppTheme {
       dividerColor: Colors.white12,
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: const Color(0xFF2A2A3E),
       ),
-      dialogTheme: const DialogThemeData(
-        backgroundColor: Color(0xFF2A2A3E),
-      ),
+      dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF2A2A3E)),
       chipTheme: ChipThemeData(
         backgroundColor: const Color(0xFF2A2A3E),
         labelStyle: const TextStyle(color: Colors.white70),
@@ -166,10 +161,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -195,7 +187,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFF7986CB), width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
       ),
     );
   }

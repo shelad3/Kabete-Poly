@@ -23,7 +23,10 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
         title: const Text('Delete Event'),
         content: Text('Delete "${doc['title']}"? This cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -41,13 +44,19 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
         await doc.reference.delete();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Event deleted'), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text('Event deleted'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Delete failed: $e'), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text('Delete failed: $e'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -59,7 +68,10 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Events')),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('events').orderBy('date', descending: true).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('events')
+            .orderBy('date', descending: true)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -72,7 +84,10 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                 children: [
                   Icon(Icons.event, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  Text('No events yet', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  Text(
+                    'No events yet',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: () => _showEventForm(),
@@ -105,13 +120,25 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
-                  leading: data['coverUrl'] != null && (data['coverUrl'] as String).isNotEmpty
+                  leading:
+                      data['coverUrl'] != null &&
+                          (data['coverUrl'] as String).isNotEmpty
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(data['coverUrl'], width: 48, height: 48, fit: BoxFit.cover),
+                          child: Image.network(
+                            data['coverUrl'],
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                          ),
                         )
-                      : CircleAvatar(child: Icon(Icons.image, color: Colors.grey[400])),
-                  title: Text(data['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      : CircleAvatar(
+                          child: Icon(Icons.image, color: Colors.grey[400]),
+                        ),
+                  title: Text(
+                    data['title'] ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text(
                     '${DateFormat('d MMM yyyy').format((data['date'] as Timestamp).toDate())} • ${data['visibility'] ?? 'public'}',
                   ),
@@ -123,7 +150,11 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                         onPressed: () => _showEventForm(existingDoc: doc),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete,
+                          size: 20,
+                          color: Colors.red,
+                        ),
                         onPressed: () => _deleteEvent(doc),
                       ),
                     ],
@@ -183,7 +214,9 @@ class _EventFormScreenState extends State<_EventFormScreen> {
       _visibility = data['visibility'] ?? 'public';
       final guests = data['specialGuests'] as List<dynamic>?;
       if (guests != null) {
-        _specialGuests = guests.map((g) => Map<String, String>.from(g as Map)).toList();
+        _specialGuests = guests
+            .map((g) => Map<String, String>.from(g as Map))
+            .toList();
       }
     } else {
       _eventDate = DateTime.now();
@@ -228,29 +261,45 @@ class _EventFormScreenState extends State<_EventFormScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
+              controller: nameCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
-                controller: roleCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Role (e.g. HOD, Principal)', border: OutlineInputBorder())),
+              controller: roleCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Role (e.g. HOD, Principal)',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
-                controller: photoCtrl,
-                decoration: const InputDecoration(labelText: 'Photo URL (optional)', border: OutlineInputBorder())),
+              controller: photoCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Photo URL (optional)',
+                border: OutlineInputBorder(),
+              ),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
               if (nameCtrl.text.trim().isNotEmpty) {
-                setState(() => _specialGuests.add({
-                      'name': nameCtrl.text.trim(),
-                      'role': roleCtrl.text.trim(),
-                      'photoUrl': photoCtrl.text.trim(),
-                    }));
+                setState(
+                  () => _specialGuests.add({
+                    'name': nameCtrl.text.trim(),
+                    'role': roleCtrl.text.trim(),
+                    'photoUrl': photoCtrl.text.trim(),
+                  }),
+                );
                 Navigator.pop(ctx);
               }
             },
@@ -265,7 +314,10 @@ class _EventFormScreenState extends State<_EventFormScreen> {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event title is required'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Event title is required'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -283,13 +335,19 @@ class _EventFormScreenState extends State<_EventFormScreen> {
       if (_selectedPhotos.isNotEmpty) {
         final eventId = eventRef.id;
         final coverFile = File(_selectedPhotos.first.path);
-        final coverUploaded = await _storage.uploadImage(coverFile, 'events/$eventId/cover');
+        final coverUploaded = await _storage.uploadImage(
+          coverFile,
+          'events/$eventId/cover',
+        );
         if (coverUploaded != null) coverUrl = coverUploaded;
 
         final batch = db.batch();
         for (int i = 1; i < _selectedPhotos.length; i++) {
           final photo = File(_selectedPhotos[i].path);
-          final url = await _storage.uploadImage(photo, 'events/$eventId/photo_$i');
+          final url = await _storage.uploadImage(
+            photo,
+            'events/$eventId/photo_$i',
+          );
           if (url != null) {
             final photoDocRef = eventRef.collection('photos').doc();
             batch.set(photoDocRef, {
@@ -327,7 +385,10 @@ class _EventFormScreenState extends State<_EventFormScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save event: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to save event: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -346,13 +407,19 @@ class _EventFormScreenState extends State<_EventFormScreen> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Event Title', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Event Title',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _descController,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Description (optional)', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Description (optional)',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -376,7 +443,10 @@ class _EventFormScreenState extends State<_EventFormScreen> {
             const SizedBox(height: 20),
             Row(
               children: [
-                const Text('Photos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Photos',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _pickPhotos,
@@ -403,7 +473,8 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                             height: 100,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              width: 100, height: 100,
+                              width: 100,
+                              height: 100,
                               color: Colors.grey[300],
                               child: const Icon(Icons.broken_image),
                             ),
@@ -412,14 +483,24 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                       ),
                       if (i == 0)
                         Positioned(
-                          top: 4, left: 4,
+                          top: 4,
+                          left: 4,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue,
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text('Cover', style: TextStyle(color: Colors.white, fontSize: 10)),
+                            child: const Text(
+                              'Cover',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
                           ),
                         ),
                     ],
@@ -434,13 +515,19 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
-                  child: Text('No photos selected (optional)', style: TextStyle(color: Colors.grey[500])),
+                  child: Text(
+                    'No photos selected (optional)',
+                    style: TextStyle(color: Colors.grey[500]),
+                  ),
                 ),
               ),
             const SizedBox(height: 20),
             Row(
               children: [
-                const Text('Special Guests', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Special Guests',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _addGuest,
@@ -449,19 +536,28 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                 ),
               ],
             ),
-            ..._specialGuests.map((g) => ListTile(
-                  leading: CircleAvatar(child: Text((g['name']?[0] ?? '?').toUpperCase())),
-                  title: Text(g['name'] ?? ''),
-                  subtitle: g['role']?.isNotEmpty == true ? Text(g['role']!) : null,
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    onPressed: () => setState(() => _specialGuests.remove(g)),
-                  ),
-                )),
+            ..._specialGuests.map(
+              (g) => ListTile(
+                leading: CircleAvatar(
+                  child: Text((g['name']?[0] ?? '?').toUpperCase()),
+                ),
+                title: Text(g['name'] ?? ''),
+                subtitle: g['role']?.isNotEmpty == true
+                    ? Text(g['role']!)
+                    : null,
+                trailing: IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => setState(() => _specialGuests.remove(g)),
+                ),
+              ),
+            ),
             if (_specialGuests.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Text('No special guests added', style: TextStyle(color: Colors.grey[500])),
+                child: Text(
+                  'No special guests added',
+                  style: TextStyle(color: Colors.grey[500]),
+                ),
               ),
             const SizedBox(height: 24),
             SizedBox(
@@ -470,11 +566,17 @@ class _EventFormScreenState extends State<_EventFormScreen> {
               child: ElevatedButton.icon(
                 onPressed: _isUploading ? null : _saveEvent,
                 icon: _isUploading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.upload),
-                label: Text(_isUploading
-                    ? 'Uploading...'
-                    : (_isEdit ? 'Update Event' : 'Create Event Gallery')),
+                label: Text(
+                  _isUploading
+                      ? 'Uploading...'
+                      : (_isEdit ? 'Update Event' : 'Create Event Gallery'),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,

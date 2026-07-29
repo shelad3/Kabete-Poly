@@ -81,13 +81,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 40),
                         Text(
                           page.title,
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           page.description,
-                          style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant, height: 1.5),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.5,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -106,7 +111,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: _currentPage == i ? 24 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _currentPage == i ? theme.primaryColor : Colors.grey[300],
+                    color: _currentPage == i
+                        ? theme.primaryColor
+                        : Colors.grey[300],
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -137,7 +144,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       );
                     }
                   },
-                  child: Text(_currentPage == _pages.length - 1 ? 'Get Started' : 'Next'),
+                  child: Text(
+                    _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                  ),
                 ),
               ),
             ),
@@ -149,8 +158,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
                 child: const Text('Skip'),
               ),
-            if (_currentPage == _pages.length - 1)
-              const SizedBox(height: 48),
+            if (_currentPage == _pages.length - 1) const SizedBox(height: 48),
           ],
         ),
       ),

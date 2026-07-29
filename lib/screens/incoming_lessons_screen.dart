@@ -40,7 +40,10 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
         title: const Text('Incoming Lessons'),
         bottom: TabBar(
           controller: _tabCtrl,
-          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
           tabs: const [
             Tab(text: 'Practical'),
             Tab(text: 'Theory'),
@@ -50,7 +53,9 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
       body: Consumer<ClassProvider>(
         builder: (context, classProvider, _) {
           return StreamBuilder<List<ScheduleItem>>(
-            stream: _firestoreService.getScheduleTimelineStream(classProvider.currentClass),
+            stream: _firestoreService.getScheduleTimelineStream(
+              classProvider.currentClass,
+            ),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
@@ -64,9 +69,12 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
 
               final upcoming = allItems.where((item) {
                 if (item.isDefault) {
-                  return item.dayOfWeek != null && item.dayOfWeek! >= today.weekday;
+                  return item.dayOfWeek != null &&
+                      item.dayOfWeek! >= today.weekday;
                 }
-                return item.date.isAfter(startOfToday.subtract(const Duration(seconds: 1)));
+                return item.date.isAfter(
+                  startOfToday.subtract(const Duration(seconds: 1)),
+                );
               }).toList();
 
               upcoming.sort((a, b) => a.date.compareTo(b.date));
@@ -74,8 +82,18 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
               return TabBarView(
                 controller: _tabCtrl,
                 children: [
-                  _buildLessonList(upcoming.where((i) => i.description.contains('Practical')).toList(), Colors.purple),
-                  _buildLessonList(upcoming.where((i) => !i.description.contains('Practical')).toList(), Colors.orange),
+                  _buildLessonList(
+                    upcoming
+                        .where((i) => i.description.contains('Practical'))
+                        .toList(),
+                    Colors.purple,
+                  ),
+                  _buildLessonList(
+                    upcoming
+                        .where((i) => !i.description.contains('Practical'))
+                        .toList(),
+                    Colors.orange,
+                  ),
                 ],
               );
             },
@@ -112,13 +130,20 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
             leading: CircleAvatar(
               backgroundColor: color.withValues(alpha: 0.1),
               child: Icon(
-                item.description.contains('Practical') ? Icons.science : Icons.auto_stories,
+                item.description.contains('Practical')
+                    ? Icons.science
+                    : Icons.auto_stories,
                 color: color,
               ),
             ),
-            title: Text(item.subject, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text('$dateStr • ${item.startTime} - ${item.endTime} • ${item.teacher}',
-                style: const TextStyle(fontSize: 12)),
+            title: Text(
+              item.subject,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              '$dateStr • ${item.startTime} - ${item.endTime} • ${item.teacher}',
+              style: const TextStyle(fontSize: 12),
+            ),
             trailing: const Icon(Icons.chevron_right, size: 18),
             onTap: () => showModalBottomSheet(
               context: context,

@@ -8,7 +8,7 @@ from typing import Optional
 import firebase_admin
 from firebase_admin import credentials, firestore, storage as fb_storage
 
-from models import GradeRecord, TimetableEntry, UserProfile
+from models import GradeRecord, TimetableEntry, UserProfile, ExamTimetableEntry, Payment, FeatureFlag
 
 
 class FirestoreClient:
@@ -232,3 +232,197 @@ class FirestoreClient:
         except Exception as e:
             print(f'[WARN] Report upload skipped (Storage not configured): {e}')
             return ''
+
+    # ---- Exam Timetable ----
+
+    def get_exam_timetable(self, class_id: str) -> list[ExamTimetableEntry]:
+        docs = (
+            self.db.collection('classes')
+            .document(class_id)
+            .collection('exam_timetable')
+            .order_by('date')
+            .order_by('startTime')
+            .stream()
+        )
+        return [ExamTimetableEntry.from_doc(doc) for doc in docs]
+
+    def add_exam_timetable_entry(self, class_id: str, entry: ExamTimetableEntry) -> str:
+        ref = (
+            self.db.collection('classes')
+            .document(class_id)
+            .collection('exam_timetable')
+            .document()
+        )
+        ref.set(entry.to_dict())
+        return ref.id
+
+    def update_exam_timetable_entry(self, class_id: str, entry: ExamTimetableEntry):
+        ref = self.db.collection('classes').document(class_id).collection('exam_timetable').document(entry.doc_id)
+        ref.set(entry.to_dict())
+
+    def delete_exam_timetable_entry(self, class_id: str, entry_id: str):
+        ref = self.db.collection('classes').document(class_id).collection('exam_timetable').document(entry_id)
+        ref.delete()
+
+    # ---- Payments ----
+
+    def get_all_payments(self, status: str = '', limit: int = 200) -> list[Payment]:
+        q = self.db.collection('payments').order_by('initiatedAt', direction=firestore.Query.DESCENDING)
+        if status:
+            q = q.where('status', '==', status)
+        docs = q.limit(limit).stream()
+        return [Payment.from_doc(doc) for doc in docs]
+
+    def get_payments_by_student(self, student_id: str) -> list[Payment]:
+        docs = (
+            self.db.collection('payments')
+            .where('studentId', '==', student_id)
+            .order_by('initiatedAt', direction=firestore.Query.DESCENDING)
+            .stream()
+        )
+        return [Payment.from_doc(doc) for doc in docs]
+
+    def update_payment_status(self, payment_id: str, status: str, transaction_ref: str = '') -> None:
+        data = {'status': status}
+        if transaction_ref:
+            data['transactionRef'] = transaction_ref
+        if status == 'completed':
+            data['completedAt'] = firestore.SERVER_TIMESTAMP
+        self.db.collection('payments').document(payment_id).update(data)
+
+    def get_payments_summary(self) -> dict:
+        """Return aggregated payment stats."""
+        all_payments = self.get_all_payments()
+        total = len(all_payments)
+        total_amount = sum(p.amount for p in all_payments)
+        completed = sum(1 for p in all_payments if p.status == 'completed')
+        pending = sum(1 for p in all_payments if p.status == 'pending')
+        failed = sum(1 for p in all_payments if p.status == 'failed')
+        methods = {}
+        for p in all_payments:
+            methods[p.method] = methods.get(p.method, 0) + 1
+        return {
+            'total': total,
+            'total_amount': total_amount,
+            'completed': completed,
+            'pending': pending,
+            'failed': failed,
+            'methods': methods,
+        }
+
+    # ---- Feature Flags ----
+
+    def get_all_feature_flags(self) -> list[FeatureFlag]:
+        docs = self.db.collection('feature_flags').stream()
+        return [FeatureFlag.from_doc(doc) for doc in docs]
+
+    def update_feature_flag(self, flag: FeatureFlag):
+        data = flag.to_dict()
+        data['lastModifiedAt'] = firestore.SERVER_TIMESTAMP
+        self.db.collection('feature_flags').document(flag.doc_id).set(data, merge=True)
+
+    def seed_feature_flags(self):
+        """Create default feature flags if they don't exist."""
+        from models import DEFAULT_FEATURE_FLAGS
+        existing = {f.name for f in self.get_all_feature_flags()}
+        batch = self.db.batch()
+        count = 0
+        for name, display_name in DEFAULT_FEATURE_FLAGS.items():
+            if name not in existing:
+                ref = self.db.collection('feature_flags').document()
+                batch.set(ref, {
+                    'name': name,
+                    'displayName': display_name,
+                    'enabled': True,
+                    'description': f'{display_name} feature toggle',
+                    'disabledMessage': f'{display_name} is currently unavailable.',
+                    'allowedRoles': [],
+                    'createdAt': firestore.SERVER_TIMESTAMP,
+                })
+                count += 1
+        if count:
+            batch.commit()
+        return count
+
+    # ---- Timetable Batch Upload (for upload pipeline) ----
+
+    def get_existing_timetable(self, class_id: str) -> list[dict]:
+        """Return raw existing timetable entries for conflict detection."""
+        docs = (
+            self.db.collection('classes')
+            .document(class_id)
+            .collection('timetable')
+            .stream()
+        )
+        return [{'id': doc.id, **doc.to_dict()} for doc in docs]
+
+    def upload_timetable_batch(self, class_id: str, entries: list[dict], replace: bool = False) -> int:
+        """Upload/merge timetable entries. If replace=True, delete existing first."""
+        if replace:
+            existing = self.db.collection('classes').document(class_id).collection('timetable').list_documents()
+            for doc in existing:
+                doc.delete()
+
+        batch = self.db.batch()
+        for entry in entries:
+            ref = self.db.collection('classes').document(class_id).collection('timetable').document()
+            batch.set(ref, entry)
+        batch.commit()
+        return len(entries)
+
+    def duplicate_exists(self, class_id: str, entry: dict, mode: str = 'class') -> tuple[bool, str]:
+        """Check if an entry already exists in Firestore. Returns (is_duplicate, existing_id)."""
+        try:
+            if mode == 'class':
+                day = entry.get('day', '')
+                time_val = entry.get('time', '')
+                unit = entry.get('unit', '')
+                docs = (
+                    self.db.collection('classes').document(class_id).collection('timetable')
+                    .where('day', '==', day)
+                    .where('time', '==', time_val)
+                    .where('unit', '==', unit)
+                    .limit(1)
+                    .stream()
+                )
+            else:
+                subject = entry.get('subject', '')
+                date_val = entry.get('date', '')
+                start_time = entry.get('startTime', '')
+                docs = (
+                    self.db.collection('classes').document(class_id).collection('exam_timetable')
+                    .where('subject', '==', subject)
+                    .where('date', '==', date_val)
+                    .where('startTime', '==', start_time)
+                    .limit(1)
+                    .stream()
+                )
+            for doc in docs:
+                return True, doc.id
+            return False, ''
+        except Exception:
+            return False, ''
+
+    # ---- Exam Timetable Batch Upload ----
+
+    def get_existing_exam_timetable(self, class_id: str) -> list[dict]:
+        docs = (
+            self.db.collection('classes')
+            .document(class_id)
+            .collection('exam_timetable')
+            .stream()
+        )
+        return [{'id': doc.id, **doc.to_dict()} for doc in docs]
+
+    def upload_exam_timetable_batch(self, class_id: str, entries: list[dict], replace: bool = False) -> int:
+        if replace:
+            existing = self.db.collection('classes').document(class_id).collection('exam_timetable').list_documents()
+            for doc in existing:
+                doc.delete()
+
+        batch = self.db.batch()
+        for entry in entries:
+            ref = self.db.collection('classes').document(class_id).collection('exam_timetable').document()
+            batch.set(ref, entry)
+        batch.commit()
+        return len(entries)

@@ -19,7 +19,8 @@ class QuizListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
-    final canCreate = user != null && (user.isTeacher || user.isAdmin || user.isLeader);
+    final canCreate =
+        user != null && (user.isTeacher || user.isAdmin || user.isLeader);
 
     return Scaffold(
       appBar: AppBar(
@@ -47,7 +48,9 @@ class QuizListScreen extends StatelessWidget {
                 return const ShimmerExploreList();
               }
               if (snap.hasError) {
-                return Center(child: Text('Error loading quizzes: ${snap.error}'));
+                return Center(
+                  child: Text('Error loading quizzes: ${snap.error}'),
+                );
               }
               final quizzes = snap.data ?? [];
               if (quizzes.isEmpty) {
@@ -55,15 +58,24 @@ class QuizListScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.quiz_outlined, size: 64, color: Colors.grey[400]),
+                      Icon(
+                        Icons.quiz_outlined,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(height: 16),
-                      Text('No quizzes yet', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                      Text(
+                        'No quizzes yet',
+                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                      ),
                       if (canCreate) ...[
                         const SizedBox(height: 8),
                         TextButton(
                           onPressed: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const CreateQuizScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const CreateQuizScreen(),
+                            ),
                           ),
                           child: const Text('Create the first quiz'),
                         ),
@@ -88,7 +100,8 @@ class QuizListScreen extends StatelessWidget {
   }
 
   Widget _buildQuizCard(BuildContext context, Quiz quiz, dynamic user) {
-    final isCreator = user != null && (user.isTeacher || user.isAdmin || user.isLeader);
+    final isCreator =
+        user != null && (user.isTeacher || user.isAdmin || user.isLeader);
     final theme = Theme.of(context);
 
     return Card(
@@ -113,7 +126,9 @@ class QuizListScreen extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: quiz.isPublished ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                backgroundColor: quiz.isPublished
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.orange.withValues(alpha: 0.1),
                 child: Icon(
                   quiz.isPublished ? Icons.check_circle : Icons.hourglass_empty,
                   color: quiz.isPublished ? Colors.green : Colors.orange,
@@ -124,25 +139,64 @@ class QuizListScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(quiz.title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      quiz.title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     if (quiz.description.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(quiz.description, style: TextStyle(color: Colors.grey[600], fontSize: 13), maxLines: 2),
+                      Text(
+                        quiz.description,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        maxLines: 2,
+                      ),
                     ],
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.timer_outlined, size: 14, color: Colors.grey[500]),
+                        Icon(
+                          Icons.timer_outlined,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
-                        Text('${quiz.durationMinutes} min', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                        Text(
+                          '${quiz.durationMinutes} min',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Icon(Icons.quiz_outlined, size: 14, color: Colors.grey[500]),
+                        Icon(
+                          Icons.quiz_outlined,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
-                        Text('${quiz.questionIds.length} questions', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                        Text(
+                          '${quiz.questionIds.length} questions',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
+                        Icon(
+                          Icons.person_outline,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
-                        Text(quiz.createdBy, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                        Text(
+                          quiz.createdBy,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
                       ],
                     ),
                   ],

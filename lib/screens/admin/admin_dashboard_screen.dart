@@ -21,6 +21,9 @@ import '../grades/manage_grades_screen.dart';
 import 'manage_alerts_screen.dart';
 import 'manage_classes_screen.dart';
 import 'manage_events_screen.dart';
+import 'feature_flag_management_screen.dart';
+import 'manage_exam_timetable_screen.dart';
+import 'voting_admin_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -227,6 +230,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageAlertsScreen()),
+              ),
+            ),
+            _buildActionCard(
+              context,
+              Icons.flag,
+              'Feature Flags',
+              'Enable/disable features on the go',
+              Colors.teal,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const FeatureFlagManagementScreen(),
+                ),
+              ),
+            ),
+            _buildActionCard(
+              context,
+              Icons.school,
+              'Exam Timetable',
+              'Add & manage exam schedules',
+              Colors.deepOrange,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ManageExamTimetableScreen(),
+                ),
+              ),
+            ),
+            _buildActionCard(
+              context,
+              Icons.how_to_vote,
+              'Student Elections',
+              'Create & manage elections',
+              Colors.purple,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VotingAdminScreen()),
               ),
             ),
           ],

@@ -10,9 +10,7 @@ class ManageStudentsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manage Students'),
-      ),
+      appBar: AppBar(title: const Text('Manage Students')),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -46,12 +44,22 @@ class ManageStudentsScreen extends StatelessWidget {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: _roleColor(role).withValues(alpha: 0.1),
-                    child: Text(name.toString()[0].toUpperCase(),
-                        style: TextStyle(color: _roleColor(role), fontWeight: FontWeight.bold)),
+                    child: Text(
+                      name.toString()[0].toUpperCase(),
+                      style: TextStyle(
+                        color: _roleColor(role),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  title: Text('$name ($role)', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('$regNo · $email\n${classes.length} class(es)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  title: Text(
+                    '$name ($role)',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '$regNo · $email\n${classes.length} class(es)',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
                   isThreeLine: true,
                 ),
               );

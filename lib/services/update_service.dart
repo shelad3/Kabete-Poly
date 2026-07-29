@@ -20,8 +20,10 @@ class UpdateService {
 
   static String get _filePath => '${Directory.systemTemp.path}/$_fileName';
 
-  static Future<void> checkForUpdates(BuildContext context,
-      {bool showNoUpdateMsg = false}) async {
+  static Future<void> checkForUpdates(
+    BuildContext context, {
+    bool showNoUpdateMsg = false,
+  }) async {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
@@ -35,8 +37,9 @@ class UpdateService {
         if (showNoUpdateMsg && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Update server not configured.'),
-                backgroundColor: Colors.orange),
+              content: Text('Update server not configured.'),
+              backgroundColor: Colors.orange,
+            ),
           );
         }
         return;
@@ -61,8 +64,9 @@ class UpdateService {
       } else if (showNoUpdateMsg && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('You are already on the latest version!'),
-              backgroundColor: Colors.green),
+            content: Text('You are already on the latest version!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -70,8 +74,9 @@ class UpdateService {
       if (showNoUpdateMsg && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Check your internet connection.'),
-              backgroundColor: Colors.red),
+            content: Text('Check your internet connection.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -79,14 +84,13 @@ class UpdateService {
 
   static bool _isUpdateAvailable(String currentVersion, String latestVersion) {
     try {
-      List<int> currentParts =
-          currentVersion.split('.').map(int.parse).toList();
-      List<int> latestParts =
-          latestVersion.split('.').map(int.parse).toList();
+      List<int> currentParts = currentVersion
+          .split('.')
+          .map(int.parse)
+          .toList();
+      List<int> latestParts = latestVersion.split('.').map(int.parse).toList();
 
-      for (int i = 0;
-          i < currentParts.length && i < latestParts.length;
-          i++) {
+      for (int i = 0; i < currentParts.length && i < latestParts.length; i++) {
         if (latestParts[i] > currentParts[i]) return true;
         if (latestParts[i] < currentParts[i]) return false;
       }
@@ -130,7 +134,9 @@ class UpdateService {
   /// or null if it cannot be determined.
   static Future<int?> _fetchExpectedSize(String url) async {
     try {
-      final head = await http.head(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      final head = await http
+          .head(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
       final len = head.headers['content-length'];
       if (len != null) return int.tryParse(len);
     } catch (_) {}
@@ -154,7 +160,11 @@ class UpdateService {
   }
 
   static void _showUpdateDialog(
-      BuildContext context, String newVersion, String url, String releaseNotes) {
+    BuildContext context,
+    String newVersion,
+    String url,
+    String releaseNotes,
+  ) {
     bool downloading = false;
     bool downloadComplete = false;
     bool installing = false;
@@ -178,8 +188,8 @@ class UpdateService {
                       installing
                           ? Icons.download_done
                           : downloadComplete
-                              ? Icons.check_circle
-                              : Icons.system_update_alt,
+                          ? Icons.check_circle
+                          : Icons.system_update_alt,
                       color: installing || downloadComplete
                           ? Colors.green
                           : Colors.blue,
@@ -189,61 +199,68 @@ class UpdateService {
                       installing
                           ? 'Installing...'
                           : downloadComplete
-                              ? 'Download Complete'
-                              : 'Update Available!',
+                          ? 'Download Complete'
+                          : 'Update Available!',
                     ),
                   ],
                 ),
                 content: installing
                     ? Text(installStatus)
                     : downloadComplete
-                        ? const Text(
-                            'The update file has been downloaded. '
-                            'Tap "Install Now" to open the package installer.')
-                        : downloading
-                            ? Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('Downloading update...'),
-                                  const SizedBox(height: 16),
-                                  LinearProgressIndicator(
-                                      value: progress > 0 ? progress : null),
-                                  const SizedBox(height: 8),
-                                  Text('${(progress * 100).toStringAsFixed(0)}%'),
-                                  if (totalBytes > 0) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${_formatBytes(downloadedBytes)} / ${_formatBytes(totalBytes)}',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              )
-                            : SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Version $newVersion is now available.',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    if (releaseNotes.isNotEmpty) ...[
-                                      const SizedBox(height: 12),
-                                      const Text('What\'s new:',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.w600)),
-                                      const SizedBox(height: 4),
-                                      Text(releaseNotes),
-                                    ],
-                                    const SizedBox(height: 12),
-                                    const Text(
-                                        'Please update to get the latest features and fixes.'),
-                                  ],
-                                ),
+                    ? const Text(
+                        'The update file has been downloaded. '
+                        'Tap "Install Now" to open the package installer.',
+                      )
+                    : downloading
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Downloading update...'),
+                          const SizedBox(height: 16),
+                          LinearProgressIndicator(
+                            value: progress > 0 ? progress : null,
+                          ),
+                          const SizedBox(height: 8),
+                          Text('${(progress * 100).toStringAsFixed(0)}%'),
+                          if (totalBytes > 0) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '${_formatBytes(downloadedBytes)} / ${_formatBytes(totalBytes)}',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 13,
                               ),
+                            ),
+                          ],
+                        ],
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Version $newVersion is now available.',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (releaseNotes.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              const Text(
+                                'What\'s new:',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(releaseNotes),
+                            ],
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Please update to get the latest features and fixes.',
+                            ),
+                          ],
+                        ),
+                      ),
                 actions: [
                   if (installing)
                     const SizedBox.shrink()
@@ -266,13 +283,16 @@ class UpdateService {
                           },
                         );
                       },
-                      child: const Text('Later',
-                          style: TextStyle(color: Colors.grey)),
+                      child: const Text(
+                        'Later',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white),
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () {
                         setDialogState(() => installing = true);
                         _installAndFinish(
@@ -292,26 +312,31 @@ class UpdateService {
                       },
                       child: const Text('Install Now'),
                     ),
-                  ]
-                  else ...[
+                  ] else ...[
                     TextButton(
                       onPressed: downloading
                           ? null
                           : () => Navigator.of(dialogContext).pop(),
-                      child: const Text('Later',
-                          style: TextStyle(color: Colors.grey)),
+                      child: const Text(
+                        'Later',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white),
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: downloading
                           ? null
                           : () async {
                               // Check if APK already exists and is fully downloaded
                               final existing = File(_filePath);
                               if (existing.existsSync()) {
-                                final complete = await _isFileComplete(url, _filePath);
+                                final complete = await _isFileComplete(
+                                  url,
+                                  _filePath,
+                                );
                                 if (complete) {
                                   setDialogState(() => downloadComplete = true);
                                   _showPersistentNotification();
@@ -329,7 +354,11 @@ class UpdateService {
                               });
 
                               try {
-                                final result = await _downloadApk(url, (pct, downloaded, total) {
+                                final result = await _downloadApk(url, (
+                                  pct,
+                                  downloaded,
+                                  total,
+                                ) {
                                   setDialogState(() {
                                     progress = pct;
                                     downloadedBytes = downloaded;
@@ -357,7 +386,8 @@ class UpdateService {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                          'Download failed: ${e.toString().replaceAll("Exception: ", "")}'),
+                                        'Download failed: ${e.toString().replaceAll("Exception: ", "")}',
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -409,7 +439,9 @@ class UpdateService {
     final client = http.Client();
     try {
       final request = http.Request('GET', Uri.parse(url));
-      final response = await client.send(request).timeout(const Duration(minutes: 5));
+      final response = await client
+          .send(request)
+          .timeout(const Duration(minutes: 5));
 
       final contentLength = response.contentLength ?? 0;
 
@@ -444,7 +476,10 @@ class UpdateService {
     }
   }
 
-  static Future<void> _installApk(String filePath, void Function(String) onStatus) async {
+  static Future<void> _installApk(
+    String filePath,
+    void Function(String) onStatus,
+  ) async {
     onStatus('Opening package installer...');
     await NotificationService().cancelDownloadNotification(ids: [9999]);
     await NotificationService().showDownloadCompleteNotification(filePath);

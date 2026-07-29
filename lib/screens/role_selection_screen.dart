@@ -51,9 +51,14 @@ class RoleSelectionScreen extends StatelessWidget {
                       : () async {
                           setDState(() => isLoading = true);
                           try {
-                            final verifiedRole = await service.verifyCode(passwordController.text);
+                            final verifiedRole = await service.verifyCode(
+                              passwordController.text,
+                            );
                             if (verifiedRole != null && verifiedRole == role) {
-                              await service.markCodeUsed(passwordController.text, role);
+                              await service.markCodeUsed(
+                                passwordController.text,
+                                role,
+                              );
                               if (context.mounted) {
                                 Navigator.pop(context);
                                 _showVerifiedDialog(screenContext, role);
@@ -62,7 +67,12 @@ class RoleSelectionScreen extends StatelessWidget {
                               setDState(() => isLoading = false);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Invalid or expired Security Key!'), backgroundColor: Colors.red),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Invalid or expired Security Key!',
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
                                 );
                               }
                             }
@@ -70,29 +80,39 @@ class RoleSelectionScreen extends StatelessWidget {
                             setDState(() => isLoading = false);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: ${e.toString().replaceAll("Exception: ", "")}'), backgroundColor: Colors.red),
+                                SnackBar(
+                                  content: Text(
+                                    'Error: ${e.toString().replaceAll("Exception: ", "")}',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
                               );
                             }
                           }
                         },
                   child: isLoading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text('Verify'),
                 ),
               ],
             );
           },
         );
-      }
+      },
     );
   }
 
   void _navigateToRegistration(BuildContext context, String role) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => RegistrationScreen(selectedRole: role),
-      ),
+      MaterialPageRoute(builder: (_) => RegistrationScreen(selectedRole: role)),
     );
   }
 
@@ -119,7 +139,11 @@ class RoleSelectionScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
-            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -156,13 +180,33 @@ class RoleSelectionScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 48),
-            _buildRoleButton(context, 'Student', Icons.school, 'Standard class archive access'),
+            _buildRoleButton(
+              context,
+              'Student',
+              Icons.school,
+              'Standard class archive access',
+            ),
             const SizedBox(height: 16),
-            _buildRoleButton(context, 'Leader', Icons.star, 'For Prefects and Class Reps'),
+            _buildRoleButton(
+              context,
+              'Leader',
+              Icons.star,
+              'For Prefects and Class Reps',
+            ),
             const SizedBox(height: 16),
-            _buildRoleButton(context, 'Teacher', Icons.menu_book, 'Post lessons and manage schedule'),
+            _buildRoleButton(
+              context,
+              'Teacher',
+              Icons.menu_book,
+              'Post lessons and manage schedule',
+            ),
             const SizedBox(height: 16),
-            _buildRoleButton(context, 'Official', Icons.admin_panel_settings, 'Global administrative access'),
+            _buildRoleButton(
+              context,
+              'Official',
+              Icons.admin_panel_settings,
+              'Global administrative access',
+            ),
             const Spacer(),
             Container(
               padding: const EdgeInsets.all(16),
@@ -175,42 +219,55 @@ class RoleSelectionScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[700], size: 18),
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue[700],
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Authentication code needed for elevated roles',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.blue[700]),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: Colors.blue[700],
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                InkWell(
-                  onTap: () async {
-                    final uri = Uri.parse('mailto:sheldonramu8@gmail.com?subject=Access%20Key%20Request&body=Role:%0ARegistration%20Number:');
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri);
-                    }
-                  },
-                  child: Text.rich(
-                    TextSpan(
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      children: [
-                        const TextSpan(text: 'Contact '),
-                        TextSpan(
-                          text: 'sheldonramu8@gmail.com',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            decoration: TextDecoration.underline,
-                            fontWeight: FontWeight.w600,
+                  InkWell(
+                    onTap: () async {
+                      final uri = Uri.parse(
+                        'mailto:sheldonramu8@gmail.com?subject=Access%20Key%20Request&body=Role:%0ARegistration%20Number:',
+                      );
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      }
+                    },
+                    child: Text.rich(
+                      TextSpan(
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        children: [
+                          const TextSpan(text: 'Contact '),
+                          TextSpan(
+                            text: 'sheldonramu8@gmail.com',
+                            style: TextStyle(
+                              color: Colors.blue[700],
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const TextSpan(text: ' with your role and registration number to receive your access key.'),
-                      ],
+                          const TextSpan(
+                            text:
+                                ' with your role and registration number to receive your access key.',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 ],
               ),
             ),
@@ -221,7 +278,12 @@ class RoleSelectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRoleButton(BuildContext context, String role, IconData icon, String subtitle) {
+  Widget _buildRoleButton(
+    BuildContext context,
+    String role,
+    IconData icon,
+    String subtitle,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -234,7 +296,9 @@ class RoleSelectionScreen extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(
+                  context,
+                ).primaryColor.withValues(alpha: 0.1),
                 child: Icon(icon, color: Theme.of(context).primaryColor),
               ),
               const SizedBox(width: 16),
@@ -242,9 +306,18 @@ class RoleSelectionScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(role, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      role,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
                   ],
                 ),
               ),

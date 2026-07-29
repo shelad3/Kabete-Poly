@@ -28,6 +28,10 @@ from grade_editor import GradeEditor
 from timetable_editor import TimetableEditor
 from report_card_generator import ReportCardGenerator
 from analytics_dashboard import AnalyticsDashboard
+from timetable_upload_tab import TimetableUploadTab
+from payment_dashboard import PaymentDashboard
+from exam_timetable_tab import ExamTimetableTab
+from feature_flag_manager import FeatureFlagManager
 from models import UserProfile
 import config_manager
 
@@ -267,9 +271,17 @@ class MainWindow(QMainWindow):
         self.timetable_editor = TimetableEditor()
         self.report_card = ReportCardGenerator()
         self.analytics = AnalyticsDashboard()
+        self.timetable_upload = TimetableUploadTab()
+        self.payment_dashboard = PaymentDashboard()
+        self.exam_timetable = ExamTimetableTab()
+        self.feature_flags = FeatureFlagManager()
         self.tabs.addTab(self.grade_editor, 'Grade Entry')
         self.tabs.addTab(self.timetable_editor, 'Timetable Editor')
+        self.tabs.addTab(self.timetable_upload, 'Timetable Upload')
         self.tabs.addTab(self.report_card, 'Report Cards')
+        self.tabs.addTab(self.exam_timetable, 'Exam Timetable')
+        self.tabs.addTab(self.payment_dashboard, 'Payments')
+        self.tabs.addTab(self.feature_flags, 'Feature Flags')
         self.tabs.addTab(self.analytics, 'Analytics')
         layout.addWidget(self.tabs)
 
@@ -295,6 +307,8 @@ class MainWindow(QMainWindow):
             self.grade_editor.refresh_classes(classes)
             self.report_card.refresh_classes(classes)
             self.analytics.refresh_classes(classes)
+            self.timetable_upload.refresh_classes(classes)
+            self.exam_timetable.refresh_classes(classes)
             self.status.showMessage(f'{len(classes)} classes loaded')
         except Exception as e:
             QMessageBox.critical(self, 'Error', f'Failed to load classes:\n{e}')
@@ -304,6 +318,7 @@ class MainWindow(QMainWindow):
         self.timetable_editor.set_class(class_id)
         self.report_card.set_class(class_id)
         self.analytics.set_class(class_id)
+        self.exam_timetable.set_class(class_id)
         self.status.showMessage(f'Selected: {class_id}')
 
     def _migrate_timetable(self):

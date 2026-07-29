@@ -15,7 +15,8 @@ class HouseListScreen extends StatefulWidget {
   State<HouseListScreen> createState() => _HouseListScreenState();
 }
 
-class _HouseListScreenState extends State<HouseListScreen> with TickerProviderStateMixin {
+class _HouseListScreenState extends State<HouseListScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -74,7 +75,10 @@ class _HouseCategoryTab extends StatelessWidget {
               children: [
                 Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
                 const SizedBox(height: 8),
-                Text('Error loading houses', style: TextStyle(color: Colors.red[600])),
+                Text(
+                  'Error loading houses',
+                  style: TextStyle(color: Colors.red[600]),
+                ),
               ],
             ),
           );
@@ -91,15 +95,25 @@ class _HouseCategoryTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(category == 'boys' ? Icons.male : Icons.female, size: 64, color: Colors.grey[400]),
+                Icon(
+                  category == 'boys' ? Icons.male : Icons.female,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
                 const SizedBox(height: 16),
-                Text(isNewStudent ? 'No $category houses configured' : 'No $category houses available',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                Text(
+                  isNewStudent
+                      ? 'No $category houses configured'
+                      : 'No $category houses available',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                ),
                 if (!isNewStudent)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: Text('Houses reserved for new students are hidden',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                    child: Text(
+                      'Houses reserved for new students are hidden',
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
                   ),
               ],
             ),
@@ -114,7 +128,8 @@ class _HouseCategoryTab extends StatelessWidget {
             childAspectRatio: 1.2,
           ),
           itemCount: houses.length,
-          itemBuilder: (_, i) => _HouseCard(house: houses[i], isNewStudent: isNewStudent),
+          itemBuilder: (_, i) =>
+              _HouseCard(house: houses[i], isNewStudent: isNewStudent),
         );
       },
     );
@@ -143,24 +158,54 @@ class _HouseCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(isBoys ? Icons.workspaces : Icons.workspaces_outlined, size: 40, color: color),
+              Icon(
+                isBoys ? Icons.workspaces : Icons.workspaces_outlined,
+                size: 40,
+                color: color,
+              ),
               const SizedBox(height: 8),
-              Text(house.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), textAlign: TextAlign.center),
+              Text(
+                house.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 4),
-              Text('${house.totalCubes} cubes', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              Text(
+                '${house.totalCubes} cubes',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
               if (house.reservedForNewStudents)
                 Container(
                   margin: const EdgeInsets.only(top: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('New Students', style: TextStyle(color: Colors.orange[700], fontSize: 9, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    'New Students',
+                    style: TextStyle(
+                      color: Colors.orange[700],
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              if (house.description != null && house.description!.isNotEmpty) ...[
+              if (house.description != null &&
+                  house.description!.isNotEmpty) ...[
                 const SizedBox(height: 2),
-                Text(house.description!, style: TextStyle(color: Colors.grey[500], fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  house.description!,
+                  style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ],
           ),

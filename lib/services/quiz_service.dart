@@ -14,9 +14,11 @@ class QuizService {
         .where('classId', isEqualTo: classId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => Quiz.fromJson(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => Quiz.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<Quiz?> getQuiz(String quizId) async {
@@ -51,9 +53,11 @@ class QuizService {
         .collection('questions')
         .where('quizId', isEqualTo: quizId)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => Question.fromJson(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => Question.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<List<Question>> getQuestions(String quizId) async {
@@ -71,7 +75,10 @@ class QuizService {
     return doc.id;
   }
 
-  Future<void> updateQuestion(String questionId, Map<String, dynamic> data) async {
+  Future<void> updateQuestion(
+    String questionId,
+    Map<String, dynamic> data,
+  ) async {
     await _firestore.collection('questions').doc(questionId).update(data);
   }
 
@@ -86,9 +93,11 @@ class QuizService {
         .where('quizId', isEqualTo: quizId)
         .orderBy('submittedAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => QuizSubmission.fromJson(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => QuizSubmission.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<bool> hasSubmitted(String quizId, String userId) async {

@@ -11,6 +11,7 @@ import '../widgets/app_drawer.dart';
 import '../widgets/shimmer_loading.dart';
 import 'notification_screen.dart';
 import 'tabs/mandatory_timetable_tab.dart';
+import 'tabs/exam_timetable_tab.dart';
 import 'schedule/campus_map_widget.dart';
 import 'schedule/lesson_detail_sheet.dart';
 import '../utils/campus_map_data.dart';
@@ -34,7 +35,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -48,7 +49,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       _highlightId = highlightId;
       _highlightLabel = highlightLabel;
     });
-    _tabController.animateTo(2);
+    _tabController.animateTo(3);
   }
 
   void _showLessonDetail(ScheduleItem lesson) {
@@ -71,7 +72,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               _highlightLabel = '$teacherName\'s Office';
             }
           });
-          _tabController.animateTo(2);
+          _tabController.animateTo(3);
         },
       ),
     );
@@ -100,6 +101,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
           tabs: const [
             Tab(text: 'Mandatory', icon: Icon(Icons.assignment_turned_in)),
             Tab(text: 'Target Timeline', icon: Icon(Icons.timeline)),
+            Tab(text: 'Exams', icon: Icon(Icons.school)),
             Tab(text: 'Map', icon: Icon(Icons.map)),
           ],
         ),
@@ -110,6 +112,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
         children: [
           const MandatoryTimetableTab(),
           _buildTargetTimelineTab(),
+          const ExamTimetableTab(),
           _buildMapTab(),
         ],
       ),
@@ -134,7 +137,10 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               Material(
                 color: Colors.transparent,
                 child: TabBar(
-                  labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  labelStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                   unselectedLabelColor: Colors.grey,
                   tabs: const [
                     Tab(text: 'Past Lessons'),
@@ -175,7 +181,10 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               children: [
                 Icon(Icons.auto_stories_outlined, size: 48, color: Colors.grey),
                 SizedBox(height: 12),
-                Text('No completed lessons yet.', style: TextStyle(color: Colors.grey)),
+                Text(
+                  'No completed lessons yet.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -185,25 +194,33 @@ class _ScheduleScreenState extends State<ScheduleScreen>
           itemCount: lessons.length,
           itemBuilder: (_, i) {
             final lesson = lessons[i];
-            final isPractical = lesson.report.isNotEmpty || lesson.practicalPictures.isNotEmpty;
+            final isPractical =
+                lesson.report.isNotEmpty || lesson.practicalPictures.isNotEmpty;
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: isPractical ? Colors.purple.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                  backgroundColor: isPractical
+                      ? Colors.purple.withValues(alpha: 0.1)
+                      : Colors.orange.withValues(alpha: 0.1),
                   child: Icon(
                     isPractical ? Icons.science : Icons.auto_stories,
                     color: isPractical ? Colors.purple : Colors.orange,
                   ),
                 ),
-                title: Text(lesson.topic, style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(
+                  lesson.topic,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(lesson.subtopic, style: const TextStyle(fontSize: 12)),
                     const SizedBox(height: 2),
-                    Text('${lesson.teacher} • ${_formatDate(lesson.date)}${isPractical ? ' • Practical' : ''}',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                    Text(
+                      '${lesson.teacher} • ${_formatDate(lesson.date)}${isPractical ? ' • Practical' : ''}',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    ),
                   ],
                 ),
                 isThreeLine: false,
@@ -233,22 +250,35 @@ class _ScheduleScreenState extends State<ScheduleScreen>
           if (item.isDefault) {
             return item.dayOfWeek != null && item.dayOfWeek! >= today.weekday;
           }
-          return item.date.isAfter(startOfToday.subtract(const Duration(seconds: 1)));
+          return item.date.isAfter(
+            startOfToday.subtract(const Duration(seconds: 1)),
+          );
         }).toList();
 
         upcoming.sort((a, b) => a.date.compareTo(b.date));
 
-        final practicals = upcoming.where((i) => i.description.contains('Practical')).toList();
-        final theory = upcoming.where((i) => !i.description.contains('Practical')).toList();
+        final practicals = upcoming
+            .where((i) => i.description.contains('Practical'))
+            .toList();
+        final theory = upcoming
+            .where((i) => !i.description.contains('Practical'))
+            .toList();
 
         if (upcoming.isEmpty) {
           return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.calendar_month_outlined, size: 48, color: Colors.grey),
+                Icon(
+                  Icons.calendar_month_outlined,
+                  size: 48,
+                  color: Colors.grey,
+                ),
                 SizedBox(height: 12),
-                Text('No upcoming lessons.', style: TextStyle(color: Colors.grey)),
+                Text(
+                  'No upcoming lessons.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -264,8 +294,14 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                   children: [
                     Icon(Icons.science, size: 18, color: Colors.purple),
                     const SizedBox(width: 6),
-                    Text('Upcoming Practicals (${practicals.length})',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.purple)),
+                    Text(
+                      'Upcoming Practicals (${practicals.length})',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Colors.purple,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -279,8 +315,14 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                   children: [
                     Icon(Icons.auto_stories, size: 18, color: Colors.orange),
                     const SizedBox(width: 6),
-                    Text('Upcoming Theory (${theory.length})',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.orange)),
+                    Text(
+                      'Upcoming Theory (${theory.length})',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Colors.orange,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -303,11 +345,20 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.1),
-          child: Icon(isPractical ? Icons.science : Icons.auto_stories, color: color, size: 20),
+          child: Icon(
+            isPractical ? Icons.science : Icons.auto_stories,
+            color: color,
+            size: 20,
+          ),
         ),
-        title: Text(item.subject, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-        subtitle: Text('$dateStr • ${item.startTime} - ${item.endTime} • ${item.teacher}',
-            style: const TextStyle(fontSize: 12)),
+        title: Text(
+          item.subject,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        subtitle: Text(
+          '$dateStr • ${item.startTime} - ${item.endTime} • ${item.teacher}',
+          style: const TextStyle(fontSize: 12),
+        ),
         trailing: const Icon(Icons.chevron_right, size: 18),
         onTap: () => _showLessonDetail(item),
       ),
@@ -315,7 +366,20 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   }
 
   String _formatDate(DateTime dt) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 }

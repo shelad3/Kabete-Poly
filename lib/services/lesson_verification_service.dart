@@ -7,15 +7,33 @@ class LessonVerificationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   String _docId(String classId, String subject, String date) {
-    return '${classId}_${subject}_$date'.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    return '${classId}_${subject}_$date'.replaceAll(
+      RegExp(r'[^a-zA-Z0-9_]'),
+      '_',
+    );
   }
 
-  Future<Map<String, dynamic>?> getVerification(String classId, String subject, String date) async {
-    final doc = await _db.collection('lesson_verifications').doc(_docId(classId, subject, date)).get();
+  Future<Map<String, dynamic>?> getVerification(
+    String classId,
+    String subject,
+    String date,
+  ) async {
+    final doc = await _db
+        .collection('lesson_verifications')
+        .doc(_docId(classId, subject, date))
+        .get();
     return doc.data();
   }
 
-  Future<void> vote(String classId, String subject, String date, String startTime, String endTime, String voterId, bool taught) async {
+  Future<void> vote(
+    String classId,
+    String subject,
+    String date,
+    String startTime,
+    String endTime,
+    String voterId,
+    bool taught,
+  ) async {
     final docId = _docId(classId, subject, date);
     final ref = _db.collection('lesson_verifications').doc(docId);
 
@@ -54,8 +72,12 @@ class LessonVerificationService {
       }
 
       // Check if confirmed
-      final classDoc = await transaction.get(_db.collection('classes').doc(classId));
-      final members = List.from((classDoc.data()?['members'] as List<dynamic>?) ?? []);
+      final classDoc = await transaction.get(
+        _db.collection('classes').doc(classId),
+      );
+      final members = List.from(
+        (classDoc.data()?['members'] as List<dynamic>?) ?? [],
+      );
       final totalStudents = members.length;
       final threshold = (totalStudents / 2).ceil();
 
@@ -70,7 +92,12 @@ class LessonVerificationService {
     });
   }
 
-  Future<void> removeVote(String classId, String subject, String date, String voterId) async {
+  Future<void> removeVote(
+    String classId,
+    String subject,
+    String date,
+    String voterId,
+  ) async {
     final docId = _docId(classId, subject, date);
     final ref = _db.collection('lesson_verifications').doc(docId);
 
@@ -103,8 +130,12 @@ class LessonVerificationService {
         .snapshots();
   }
 
-  Future<List<Map<String, dynamic>>> getVerifiedLessons(String? department) async {
-    Query q = _db.collection('lesson_verifications').where('isConfirmed', isEqualTo: true);
+  Future<List<Map<String, dynamic>>> getVerifiedLessons(
+    String? department,
+  ) async {
+    Query q = _db
+        .collection('lesson_verifications')
+        .where('isConfirmed', isEqualTo: true);
     final snap = await q.orderBy('date', descending: true).get();
     final results = <Map<String, dynamic>>[];
 
@@ -130,6 +161,9 @@ class LessonVerificationService {
   }
 
   Stream<QuerySnapshot> allVerificationsStream() {
-    return _db.collection('lesson_verifications').orderBy('date', descending: true).snapshots();
+    return _db
+        .collection('lesson_verifications')
+        .orderBy('date', descending: true)
+        .snapshots();
   }
 }

@@ -15,8 +15,13 @@ class FirestoreService {
 
   // --- Lessons ---
   Stream<List<Lesson>> getLessonsStream([String? classId]) {
-    Query query = _firestore.collection('lessons').orderBy('date', descending: true).limit(200);
-    if (classId != null && classId.isNotEmpty && classId != 'Global / General Assembly') {
+    Query query = _firestore
+        .collection('lessons')
+        .orderBy('date', descending: true)
+        .limit(200);
+    if (classId != null &&
+        classId.isNotEmpty &&
+        classId != 'Global / General Assembly') {
       query = query.where('classId', isEqualTo: classId);
     }
     return query.snapshots().map((snapshot) {
@@ -34,44 +39,58 @@ class FirestoreService {
   }
 
   Future<void> updateLesson(Lesson lesson) async {
-    await _firestore.collection('lessons').doc(lesson.id).update(lesson.toJson());
+    await _firestore
+        .collection('lessons')
+        .doc(lesson.id)
+        .update(lesson.toJson());
   }
 
   Future<void> deleteLesson(String lessonId) async {
     await _firestore.collection('lessons').doc(lessonId).delete();
   }
 
-  Stream<List<ScheduleItem>> getScheduleStream(String classId, DateTime currentDate) {
+  Stream<List<ScheduleItem>> getScheduleStream(
+    String classId,
+    DateTime currentDate,
+  ) {
     // 1. Get dynamic items for today specifically
-    final startOfDay = DateTime(currentDate.year, currentDate.month, currentDate.day);
+    final startOfDay = DateTime(
+      currentDate.year,
+      currentDate.month,
+      currentDate.day,
+    );
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     // For an ideal setup, we'd use a single Stream with an 'OR' query (not natively supported by Firestore).
     // Instead, we pull everything for the class and filter locally for maximum flexibility.
-    
+
     return _firestore
         .collection('schedules')
         .where('classId', isEqualTo: classId)
         .snapshots()
         .map((snapshot) {
-      final allItems = snapshot.docs.map((doc) => ScheduleItem.fromJson(doc.data(), doc.id)).toList();
-      
-      // Filter logic: 
-      // Keep if: (Is a default recurring item matching today's DayOfWeek) 
-      // OR (Is a specific dynamic item originally scheduled for today's Date)
-      final filteredList = allItems.where((item) {
-        if (item.isDefault) {
-          return item.dayOfWeek == currentDate.weekday;
-        } else {
-          return item.date.isAfter(startOfDay.subtract(const Duration(seconds: 1))) && 
-                 item.date.isBefore(endOfDay);
-        }
-      }).toList();
+          final allItems = snapshot.docs
+              .map((doc) => ScheduleItem.fromJson(doc.data(), doc.id))
+              .toList();
 
-      // Sort by start time natively in Dart
-      filteredList.sort((a, b) => a.startTime.compareTo(b.startTime));
-      return filteredList;
-    });
+          // Filter logic:
+          // Keep if: (Is a default recurring item matching today's DayOfWeek)
+          // OR (Is a specific dynamic item originally scheduled for today's Date)
+          final filteredList = allItems.where((item) {
+            if (item.isDefault) {
+              return item.dayOfWeek == currentDate.weekday;
+            } else {
+              return item.date.isAfter(
+                    startOfDay.subtract(const Duration(seconds: 1)),
+                  ) &&
+                  item.date.isBefore(endOfDay);
+            }
+          }).toList();
+
+          // Sort by start time natively in Dart
+          filteredList.sort((a, b) => a.startTime.compareTo(b.startTime));
+          return filteredList;
+        });
   }
 
   Stream<List<ScheduleItem>> getScheduleTimelineStream(String classId) {
@@ -81,8 +100,11 @@ class FirestoreService {
         .orderBy('date', descending: true)
         .limit(50)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => ScheduleItem.fromJson(doc.data(), doc.id)).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ScheduleItem.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Stream<List<ScheduleItem>> getDefaultScheduleStream(String classId) {
@@ -92,35 +114,49 @@ class FirestoreService {
         .where('isDefault', isEqualTo: true)
         .snapshots()
         .map((snapshot) {
-      final items = snapshot.docs.map((doc) => ScheduleItem.fromJson(doc.data(), doc.id)).toList();
-      items.sort((a, b) {
-        if (a.dayOfWeek != b.dayOfWeek) {
-          return (a.dayOfWeek ?? 0).compareTo(b.dayOfWeek ?? 0);
-        }
-        return a.startTime.compareTo(b.startTime);
-      });
-      return items;
-    });
+          final items = snapshot.docs
+              .map((doc) => ScheduleItem.fromJson(doc.data(), doc.id))
+              .toList();
+          items.sort((a, b) {
+            if (a.dayOfWeek != b.dayOfWeek) {
+              return (a.dayOfWeek ?? 0).compareTo(b.dayOfWeek ?? 0);
+            }
+            return a.startTime.compareTo(b.startTime);
+          });
+          return items;
+        });
   }
 
   Future<void> addScheduleItem(ScheduleItem item) async {
     await _firestore.collection('schedules').add(item.toJson());
   }
-  
+
   Future<void> deleteScheduleItem(String id) async {
     await _firestore.collection('schedules').doc(id).delete();
   }
 
   // --- Notifications ---
-  Stream<List<ClassNotification>> getNotificationsStream(String classId) {
+  Stream<List<ClassNotification>> getNotificationsStream(
+    String classId, {
+    String? studentId,
+  }) {
     return _firestore
         .collection('notifications')
-        .where('classId', whereIn: [classId, 'General']) // Get specific class + global announcements
+        .where('classId', whereIn: [classId, 'General'])
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ClassNotification.fromJson(doc.data(), doc.id)).toList();
-    });
+          return snapshot.docs
+              .map((doc) => ClassNotification.fromJson(doc.data(), doc.id))
+              .where((n) {
+                // Show if: no studentId filter, notification has no studentId (general),
+                // or notification targets this specific student
+                if (studentId == null) return true;
+                if (n.studentId.isEmpty) return true;
+                return n.studentId == studentId;
+              })
+              .toList();
+        });
   }
 
   Future<void> sendNotification(ClassNotification notification) async {
@@ -130,16 +166,35 @@ class FirestoreService {
   // --- Admin Stats ---
   Future<Map<String, int>> getAdminStats() async {
     try {
-      final studentsSnap = await _firestore.collection('users').where('role', isEqualTo: 'Student').count().get();
+      final studentsSnap = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'Student')
+          .count()
+          .get();
       final lessonsSnap = await _firestore.collection('lessons').count().get();
-      final helpRequestsSnap = await _firestore.collection('help_requests').where('status', isEqualTo: 'pending').count().get();
-      final classChangeSnap = await _firestore.collection('class_change_requests').where('status', isEqualTo: 'pending').count().get();
-      final errorReportsSnap = await _firestore.collection('error_reports').where('status', isEqualTo: 'pending').count().get();
-      
+      final helpRequestsSnap = await _firestore
+          .collection('help_requests')
+          .where('status', isEqualTo: 'pending')
+          .count()
+          .get();
+      final classChangeSnap = await _firestore
+          .collection('class_change_requests')
+          .where('status', isEqualTo: 'pending')
+          .count()
+          .get();
+      final errorReportsSnap = await _firestore
+          .collection('error_reports')
+          .where('status', isEqualTo: 'pending')
+          .count()
+          .get();
+
       return {
         'students': studentsSnap.count ?? 0,
         'lessons': lessonsSnap.count ?? 0,
-        'tickets': (helpRequestsSnap.count ?? 0) + (classChangeSnap.count ?? 0) + (errorReportsSnap.count ?? 0),
+        'tickets':
+            (helpRequestsSnap.count ?? 0) +
+            (classChangeSnap.count ?? 0) +
+            (errorReportsSnap.count ?? 0),
       };
     } catch (e) {
       return {'students': 0, 'lessons': 0, 'tickets': 0};
@@ -155,16 +210,24 @@ class FirestoreService {
 
       if (newPhone.isNotEmpty && newPhone != oldPhone) {
         await _firestore.runTransaction((transaction) async {
-          final phoneRef = _firestore.collection('field_indices').doc('phone_${_docKey(newPhone)}');
+          final phoneRef = _firestore
+              .collection('field_indices')
+              .doc('phone_${_docKey(newPhone)}');
           final phoneSnap = await transaction.get(phoneRef);
           if (phoneSnap.exists && phoneSnap.data()?['uid'] != uid) {
             throw Exception('Phone number "$newPhone" is already registered');
           }
           if (oldPhone.isNotEmpty) {
-            transaction.delete(_firestore.collection('field_indices').doc('phone_${_docKey(oldPhone)}'));
+            transaction.delete(
+              _firestore
+                  .collection('field_indices')
+                  .doc('phone_${_docKey(oldPhone)}'),
+            );
           }
           transaction.set(phoneRef, {
-            'uid': uid, 'value': newPhone, 'type': 'phone',
+            'uid': uid,
+            'value': newPhone,
+            'type': 'phone',
             'createdAt': FieldValue.serverTimestamp(),
           });
         });
@@ -174,20 +237,32 @@ class FirestoreService {
     if (data.containsKey('registrationNumber')) {
       final oldDoc = await _firestore.collection('users').doc(uid).get();
       final oldReg = oldDoc.data()?['registrationNumber'] as String? ?? '';
-      final newReg = (data['registrationNumber'] as String).trim().toUpperCase();
+      final newReg = (data['registrationNumber'] as String)
+          .trim()
+          .toUpperCase();
 
       if (newReg.isNotEmpty && newReg != oldReg) {
         await _firestore.runTransaction((transaction) async {
-          final regRef = _firestore.collection('field_indices').doc('regNo_${_docKey(newReg)}');
+          final regRef = _firestore
+              .collection('field_indices')
+              .doc('regNo_${_docKey(newReg)}');
           final regSnap = await transaction.get(regRef);
           if (regSnap.exists && regSnap.data()?['uid'] != uid) {
-            throw Exception('Registration number "$newReg" is already registered');
+            throw Exception(
+              'Registration number "$newReg" is already registered',
+            );
           }
           if (oldReg.isNotEmpty) {
-            transaction.delete(_firestore.collection('field_indices').doc('regNo_${_docKey(oldReg)}'));
+            transaction.delete(
+              _firestore
+                  .collection('field_indices')
+                  .doc('regNo_${_docKey(oldReg)}'),
+            );
           }
           transaction.set(regRef, {
-            'uid': uid, 'value': newReg, 'type': 'regNo',
+            'uid': uid,
+            'value': newReg,
+            'type': 'regNo',
             'createdAt': FieldValue.serverTimestamp(),
           });
         });
@@ -198,7 +273,10 @@ class FirestoreService {
   }
 
   Future<String> checkFieldUniqueness(String type, String value) async {
-    final doc = await _firestore.collection('field_indices').doc('${type}_${_docKey(value)}').get();
+    final doc = await _firestore
+        .collection('field_indices')
+        .doc('${type}_${_docKey(value)}')
+        .get();
     if (doc.exists) {
       final uid = doc.data()?['uid'] as String? ?? '';
       return uid; // returns the owner uid if taken, empty string if free
@@ -209,14 +287,25 @@ class FirestoreService {
   // --- Tickets ---
 
   Future<String> submitHelpRequest(HelpRequest request) async {
-    final doc = await _firestore.collection('help_requests').add(request.toJson());
+    final doc = await _firestore
+        .collection('help_requests')
+        .add(request.toJson());
     return doc.id;
   }
 
   Stream<List<HelpRequest>> getHelpRequestsStream({String? status}) {
-    Query q = _firestore.collection('help_requests').orderBy('timestamp', descending: true).limit(100);
+    Query q = _firestore
+        .collection('help_requests')
+        .orderBy('timestamp', descending: true)
+        .limit(100);
     if (status != null) q = q.where('status', isEqualTo: status);
-    return q.snapshots().map((s) => s.docs.map((d) => HelpRequest.fromJson(d.data() as Map<String, dynamic>, d.id)).toList());
+    return q.snapshots().map(
+      (s) => s.docs
+          .map(
+            (d) => HelpRequest.fromJson(d.data() as Map<String, dynamic>, d.id),
+          )
+          .toList(),
+    );
   }
 
   Future<void> resolveHelpRequest(String id, String resolvedBy) async {
@@ -230,18 +319,31 @@ class FirestoreService {
   // --- Error Reports ---
 
   Future<String> submitErrorReport(ErrorReport report) async {
-    final doc = await _firestore.collection('error_reports').add(report.toJson());
+    final doc = await _firestore
+        .collection('error_reports')
+        .add(report.toJson());
     return doc.id;
   }
 
   Stream<List<ErrorReport>> getErrorReportsStream({String? status}) {
-    Query q = _firestore.collection('error_reports').orderBy('timestamp', descending: true).limit(100);
+    Query q = _firestore
+        .collection('error_reports')
+        .orderBy('timestamp', descending: true)
+        .limit(100);
     if (status != null) q = q.where('status', isEqualTo: status);
-    return q.snapshots().map((s) => s.docs.map((d) => ErrorReport.fromJson(d.data() as Map<String, dynamic>, d.id)).toList());
+    return q.snapshots().map(
+      (s) => s.docs
+          .map(
+            (d) => ErrorReport.fromJson(d.data() as Map<String, dynamic>, d.id),
+          )
+          .toList(),
+    );
   }
 
   Future<void> updateErrorReportStatus(String id, String status) async {
-    await _firestore.collection('error_reports').doc(id).update({'status': status});
+    await _firestore.collection('error_reports').doc(id).update({
+      'status': status,
+    });
   }
 
   // --- Feedback ---
@@ -252,8 +354,15 @@ class FirestoreService {
   }
 
   Stream<List<AppFeedback>> getFeedbackStream() {
-    return _firestore.collection('feedback').orderBy('timestamp', descending: true).limit(100).snapshots()
-        .map((s) => s.docs.map((d) => AppFeedback.fromJson(d.data(), d.id)).toList());
+    return _firestore
+        .collection('feedback')
+        .orderBy('timestamp', descending: true)
+        .limit(100)
+        .snapshots()
+        .map(
+          (s) =>
+              s.docs.map((d) => AppFeedback.fromJson(d.data(), d.id)).toList(),
+        );
   }
 
   Future<void> markFeedbackRead(String id) async {
@@ -267,7 +376,11 @@ class FirestoreService {
     return doc.id;
   }
 
-  Stream<List<Alert>> getAlertsForUser(String userId, String regNo, List<String> enrolledClasses) {
+  Stream<List<Alert>> getAlertsForUser(
+    String userId,
+    String regNo,
+    List<String> enrolledClasses,
+  ) {
     // Get alerts targeted at: all, this user, this regNo, or any of their classes
     return _firestore
         .collection('alerts')
@@ -275,19 +388,29 @@ class FirestoreService {
         .orderBy('timestamp', descending: true)
         .limit(50)
         .snapshots()
-        .map((s) => s.docs
-          .map((d) => Alert.fromJson(d.data(), d.id))
-          .where((a) =>
-            a.targetType == 'all' ||
-            (a.targetType == 'user' && a.targetId == userId) ||
-            (a.targetType == 'regNo' && regNo.isNotEmpty && a.targetId == regNo) ||
-            (a.targetType == 'class' && enrolledClasses.contains(a.targetId))
-          )
-          .toList());
+        .map(
+          (s) => s.docs
+              .map((d) => Alert.fromJson(d.data(), d.id))
+              .where(
+                (a) =>
+                    a.targetType == 'all' ||
+                    (a.targetType == 'user' && a.targetId == userId) ||
+                    (a.targetType == 'regNo' &&
+                        regNo.isNotEmpty &&
+                        a.targetId == regNo) ||
+                    (a.targetType == 'class' &&
+                        enrolledClasses.contains(a.targetId)),
+              )
+              .toList(),
+        );
   }
 
   Stream<List<Alert>> getAllAlertsStream() {
-    return _firestore.collection('alerts').orderBy('timestamp', descending: true).limit(100).snapshots()
+    return _firestore
+        .collection('alerts')
+        .orderBy('timestamp', descending: true)
+        .limit(100)
+        .snapshots()
         .map((s) => s.docs.map((d) => Alert.fromJson(d.data(), d.id)).toList());
   }
 
@@ -299,7 +422,13 @@ class FirestoreService {
 
   // --- Class Change Requests (after limit reached) ---
 
-  Future<String> submitClassChangeRequest(String userId, String userName, String userEmail, String desiredClass, String reason) async {
+  Future<String> submitClassChangeRequest(
+    String userId,
+    String userName,
+    String userEmail,
+    String desiredClass,
+    String reason,
+  ) async {
     final doc = await _firestore.collection('class_change_requests').add({
       'userId': userId,
       'userName': userName,
@@ -313,7 +442,8 @@ class FirestoreService {
   }
 
   Stream<QuerySnapshot> getClassChangeRequestsStream() {
-    return _firestore.collection('class_change_requests')
+    return _firestore
+        .collection('class_change_requests')
         .orderBy('timestamp', descending: true)
         .snapshots();
   }
@@ -321,7 +451,9 @@ class FirestoreService {
   // --- Templates ---
 
   Future<String> saveLessonTemplate(LessonTemplate template) async {
-    final doc = await _firestore.collection('lesson_templates').add(template.toJson());
+    final doc = await _firestore
+        .collection('lesson_templates')
+        .add(template.toJson());
     return doc.id;
   }
 
@@ -335,11 +467,17 @@ class FirestoreService {
         .where('createdBy', isEqualTo: userId)
         .orderBy('name')
         .snapshots()
-        .map((snap) => snap.docs.map((d) => LessonTemplate.fromJson(d.data(), d.id)).toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => LessonTemplate.fromJson(d.data(), d.id))
+              .toList(),
+        );
   }
 
   Future<String> saveScheduleTemplate(ScheduleTemplate template) async {
-    final doc = await _firestore.collection('schedule_templates').add(template.toJson());
+    final doc = await _firestore
+        .collection('schedule_templates')
+        .add(template.toJson());
     return doc.id;
   }
 
@@ -353,12 +491,23 @@ class FirestoreService {
         .where('createdBy', isEqualTo: userId)
         .orderBy('name')
         .snapshots()
-        .map((snap) => snap.docs.map((d) => ScheduleTemplate.fromJson(d.data(), d.id)).toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => ScheduleTemplate.fromJson(d.data(), d.id))
+              .toList(),
+        );
   }
 
-  Future<void> approveClassChangeRequest(String requestId, String userId, String newClass) async {
+  Future<void> approveClassChangeRequest(
+    String requestId,
+    String userId,
+    String newClass,
+  ) async {
     final batch = _firestore.batch();
-    batch.update(_firestore.collection('class_change_requests').doc(requestId), {'status': 'approved'});
+    batch.update(
+      _firestore.collection('class_change_requests').doc(requestId),
+      {'status': 'approved'},
+    );
     batch.update(_firestore.collection('users').doc(userId), {
       'enrolledClasses': [newClass],
     });

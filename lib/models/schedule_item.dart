@@ -34,16 +34,20 @@ class ScheduleItem {
     this.dayOfWeek,
     List<String>? attachmentUrls,
     List<String>? attachmentNames,
-  })  : attachmentUrls = attachmentUrls ?? [],
-        attachmentNames = attachmentNames ?? [];
+  }) : attachmentUrls = attachmentUrls ?? [],
+       attachmentNames = attachmentNames ?? [];
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json, String id) {
     final urls = json['attachmentUrls'] != null
         ? List<String>.from(json['attachmentUrls'])
-        : (json['attachmentUrl'] != null ? [json['attachmentUrl'] as String] : <String>[]);
+        : (json['attachmentUrl'] != null
+              ? [json['attachmentUrl'] as String]
+              : <String>[]);
     final names = json['attachmentNames'] != null
         ? List<String>.from(json['attachmentNames'])
-        : (json['attachmentName'] != null ? [json['attachmentName'] as String] : <String>[]);
+        : (json['attachmentName'] != null
+              ? [json['attachmentName'] as String]
+              : <String>[]);
     return ScheduleItem(
       id: id,
       classId: json['classId'] ?? 'General',
@@ -56,8 +60,8 @@ class ScheduleItem {
       description: json['description'],
       date: json['date'] != null
           ? (json['date'] is String
-              ? DateTime.parse(json['date'])
-              : (json['date'] as dynamic).toDate() as DateTime)
+                ? DateTime.parse(json['date'])
+                : (json['date'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       isDefault: json['isDefault'] ?? false,
       dayOfWeek: json['dayOfWeek'],
@@ -86,15 +90,29 @@ class ScheduleItem {
 
   // Helper to get duration as a double for the progress bar
   double getProgress(DateTime now) {
-    if (now.year != date.year || now.month != date.month || now.day != date.day) {
+    if (now.year != date.year ||
+        now.month != date.month ||
+        now.day != date.day) {
       return now.isAfter(date) ? 1.0 : 0.0;
     }
 
     final startParts = startTime.split(':');
     final endParts = endTime.split(':');
-    
-    final start = DateTime(now.year, now.month, now.day, int.parse(startParts[0]), int.parse(startParts[1]));
-    final end = DateTime(now.year, now.month, now.day, int.parse(endParts[0]), int.parse(endParts[1]));
+
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(startParts[0]),
+      int.parse(startParts[1]),
+    );
+    final end = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(endParts[0]),
+      int.parse(endParts[1]),
+    );
 
     if (now.isBefore(start)) return 0.0;
     if (now.isAfter(end)) return 1.0;

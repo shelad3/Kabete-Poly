@@ -35,7 +35,8 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
-    final isStudent = user != null && (user.role == 'Student' || user.role == 'Leader');
+    final isStudent =
+        user != null && (user.role == 'Student' || user.role == 'Leader');
     final isTeacher = user != null && (user.isTeacher || user.isLeader);
     final hasEnrolledClass = user != null && user.enrolledClasses.isNotEmpty;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -56,7 +57,12 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
             stream: firestoreRef.snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Center(child: Text('Error loading timetable', style: TextStyle(color: Colors.red[400])));
+                return Center(
+                  child: Text(
+                    'Error loading timetable',
+                    style: TextStyle(color: Colors.red[400]),
+                  ),
+                );
               }
 
               // Build map of Firestore entries by day
@@ -70,22 +76,38 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
               }
 
               // Sort days by weekday order
-              final dayOrder = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4};
+              final dayOrder = {
+                'Monday': 0,
+                'Tuesday': 1,
+                'Wednesday': 2,
+                'Thursday': 3,
+                'Friday': 4,
+              };
               final sortedDays = entriesByDay.keys.toList()
-                ..sort((a, b) => (dayOrder[a] ?? 99).compareTo(dayOrder[b] ?? 99));
+                ..sort(
+                  (a, b) => (dayOrder[a] ?? 99).compareTo(dayOrder[b] ?? 99),
+                );
 
               if (sortedDays.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.calendar_month, size: 64, color: Colors.grey[300]),
+                      Icon(
+                        Icons.calendar_month,
+                        size: 64,
+                        color: Colors.grey[300],
+                      ),
                       const SizedBox(height: 16),
-                      Text('No timetable entries yet',
-                          style: TextStyle(color: Colors.grey[500], fontSize: 16)),
+                      Text(
+                        'No timetable entries yet',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                      ),
                       const SizedBox(height: 8),
-                      Text('Entries will appear here once uploaded to the database.',
-                          style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                      Text(
+                        'Entries will appear here once uploaded to the database.',
+                        style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                      ),
                     ],
                   ),
                 );
@@ -98,7 +120,11 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12, left: 4, top: 12),
+                        padding: const EdgeInsets.only(
+                          bottom: 12,
+                          left: 4,
+                          top: 12,
+                        ),
                         child: Text(
                           day,
                           style: TextStyle(
@@ -108,7 +134,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                           ),
                         ),
                       ),
-                      ...entries.map((lesson) => _buildMandatoryCard(lesson, day, isDark)),
+                      ...entries.map(
+                        (lesson) => _buildMandatoryCard(lesson, day, isDark),
+                      ),
                       const SizedBox(height: 8),
                     ],
                   );
@@ -121,13 +149,22 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     );
   }
 
-  Widget _buildHeader(bool isStudent, bool hasEnrolledClass, bool isTeacher, bool isDark) {
+  Widget _buildHeader(
+    bool isStudent,
+    bool hasEnrolledClass,
+    bool isTeacher,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A2A3E) : Colors.blue.withValues(alpha: 0.1),
+        color: isDark
+            ? const Color(0xFF2A2A3E)
+            : Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.blue.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.blue.withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,11 +174,19 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
             children: [
               Text(
                 'Department Timetable',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: isDark ? Colors.white54 : Colors.blueGrey),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: isDark ? Colors.white54 : Colors.blueGrey,
+                ),
               ),
               Text(
                 'Official Classes',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : null),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : null,
+                ),
               ),
             ],
           ),
@@ -156,21 +201,28 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ManageTimetableScreen(className: _selectedCohort),
+                        builder: (_) =>
+                            ManageTimetableScreen(className: _selectedCohort),
                       ),
                     );
                   },
                 ),
               isStudent
                   ? Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         _selectedCohort,
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
                       ),
                     )
                   : Container(
@@ -190,16 +242,25 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _selectedCohort,
-                          icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
-                          style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
-                          items: context.watch<ClassProvider>().availableClasses
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: Colors.blue,
+                          ),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                          items: context
+                              .watch<ClassProvider>()
+                              .availableClasses
                               .where((c) => c != 'Global / General Assembly')
                               .map((String cohort) {
-                            return DropdownMenuItem<String>(
-                              value: cohort,
-                              child: Text(cohort),
-                            );
-                          }).toList(),
+                                return DropdownMenuItem<String>(
+                                  value: cohort,
+                                  child: Text(cohort),
+                                );
+                              })
+                              .toList(),
                           onChanged: (String? newValue) {
                             if (newValue != null) {
                               setState(() => _selectedCohort = newValue);
@@ -215,7 +276,11 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     );
   }
 
-  Widget _buildMandatoryCard(Map<String, dynamic> lesson, String dayString, bool isDark) {
+  Widget _buildMandatoryCard(
+    Map<String, dynamic> lesson,
+    String dayString,
+    bool isDark,
+  ) {
     final Color stripColor = Color(lesson['color'] as int);
 
     return Container(
@@ -238,10 +303,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
         child: IntrinsicHeight(
           child: Row(
             children: [
-              Container(
-                width: 6,
-                color: stripColor,
-              ),
+              Container(width: 6, color: stripColor),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -252,7 +314,10 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: stripColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
@@ -262,7 +327,11 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                               children: [
                                 Text(
                                   lesson['time'],
-                                  style: TextStyle(color: stripColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                  style: TextStyle(
+                                    color: stripColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -273,9 +342,17 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.1),
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.grey.withValues(alpha: 0.1),
                               ),
-                              child: Icon(Icons.notifications_none, size: 18, color: isDark ? Colors.white54 : Colors.blueGrey),
+                              child: Icon(
+                                Icons.notifications_none,
+                                size: 18,
+                                color: isDark
+                                    ? Colors.white54
+                                    : Colors.blueGrey,
+                              ),
                             ),
                           ),
                         ],
@@ -283,21 +360,42 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       const SizedBox(height: 12),
                       Text(
                         lesson['unit'],
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : null),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : null,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 4),
-                          Text(lesson['room'], style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                          Text(
+                            lesson['room'],
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
                           const SizedBox(width: 16),
-                          const Icon(Icons.person_outline, size: 14, color: Colors.grey),
+                          const Icon(
+                            Icons.person_outline,
+                            size: 14,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               lesson['lecturer'],
-                              style: const TextStyle(color: Colors.grey, fontSize: 13),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 13,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -324,7 +422,15 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
       hour = int.tryParse(startChunk.substring(0, 2)) ?? 8;
       minute = int.tryParse(startChunk.substring(2, 4)) ?? 0;
     }
-    final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     final int dayIndex = days.indexOf(dayString) + 1;
     final uniqueId = lesson['unit'].hashCode.abs() % 10000;
 
@@ -340,7 +446,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Reminders Set! You will be alerted at 08:00 AM and 30m before ${lesson['unit']}.'),
+        content: Text(
+          'Reminders Set! You will be alerted at 08:00 AM and 30m before ${lesson['unit']}.',
+        ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
       ),

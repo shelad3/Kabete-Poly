@@ -16,7 +16,8 @@ class GuestHomeScreen extends StatefulWidget {
   State<GuestHomeScreen> createState() => _GuestHomeScreenState();
 }
 
-class _GuestHomeScreenState extends State<GuestHomeScreen> with TickerProviderStateMixin {
+class _GuestHomeScreenState extends State<GuestHomeScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -76,6 +77,8 @@ class CampusLegendTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Switch to Map tab and tap the layers button to view legend'));
+    return const Center(
+      child: Text('Switch to Map tab and tap the layers button to view legend'),
+    );
   }
 }

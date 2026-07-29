@@ -36,12 +36,18 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
               children: [
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'House Name', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'House Name',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: category,
-                  decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
                   items: const [
                     DropdownMenuItem(value: 'boys', child: Text('Boys')),
                     DropdownMenuItem(value: 'girls', child: Text('Girls')),
@@ -51,7 +57,10 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: descCtrl,
-                  decoration: const InputDecoration(labelText: 'Description (optional)', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    border: OutlineInputBorder(),
+                  ),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 12),
@@ -60,7 +69,10 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                     Expanded(
                       child: TextField(
                         controller: cubesCtrl,
-                        decoration: const InputDecoration(labelText: 'Total Cubes', border: OutlineInputBorder()),
+                        decoration: const InputDecoration(
+                          labelText: 'Total Cubes',
+                          border: OutlineInputBorder(),
+                        ),
                         keyboardType: TextInputType.number,
                       ),
                     ),
@@ -68,7 +80,10 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                     Expanded(
                       child: TextField(
                         controller: capacityCtrl,
-                        decoration: const InputDecoration(labelText: 'Max per Cube', border: OutlineInputBorder()),
+                        decoration: const InputDecoration(
+                          labelText: 'Max per Cube',
+                          border: OutlineInputBorder(),
+                        ),
                         keyboardType: TextInputType.number,
                       ),
                     ),
@@ -78,7 +93,10 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 final name = nameCtrl.text.trim();
@@ -89,16 +107,26 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                   return;
                 }
                 final totalCubes = int.tryParse(cubesCtrl.text.trim()) ?? 12;
-                final defaultCapacity = int.tryParse(capacityCtrl.text.trim()) ?? 4;
+                final defaultCapacity =
+                    int.tryParse(capacityCtrl.text.trim()) ?? 4;
                 try {
-                  final houseId = await _houseService.addHouse(House(
-                    id: '',
-                    name: name,
-                    category: category,
-                    totalCubes: totalCubes,
-                    description: descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
-                  ));
-                  await _cubeService.generateCubesForHouse(houseId, name, totalCubes, defaultCapacity: defaultCapacity);
+                  final houseId = await _houseService.addHouse(
+                    House(
+                      id: '',
+                      name: name,
+                      category: category,
+                      totalCubes: totalCubes,
+                      description: descCtrl.text.trim().isEmpty
+                          ? null
+                          : descCtrl.text.trim(),
+                    ),
+                  );
+                  await _cubeService.generateCubesForHouse(
+                    houseId,
+                    name,
+                    totalCubes,
+                    defaultCapacity: defaultCapacity,
+                  );
                   if (ctx.mounted) Navigator.pop(ctx);
                 } catch (e) {
                   if (ctx.mounted) {
@@ -122,7 +150,11 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
       appBar: AppBar(
         title: const Text('Manage Houses'),
         actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: _showAddDialog, tooltip: 'Add House'),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _showAddDialog,
+            tooltip: 'Add House',
+          ),
         ],
       ),
       body: StreamBuilder<List<House>>(
@@ -137,9 +169,16 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.workspaces_outlined, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.workspaces_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
-                  Text('No houses configured', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  Text(
+                    'No houses configured',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: _showAddDialog,
@@ -159,35 +198,62 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: (isBoys ? Colors.blue : Colors.pink).withValues(alpha: 0.1),
-                    child: Icon(isBoys ? Icons.male : Icons.female,
-                        color: isBoys ? Colors.blue : Colors.pink),
+                    backgroundColor: (isBoys ? Colors.blue : Colors.pink)
+                        .withValues(alpha: 0.1),
+                    child: Icon(
+                      isBoys ? Icons.male : Icons.female,
+                      color: isBoys ? Colors.blue : Colors.pink,
+                    ),
                   ),
-                  title: Text(h.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('${h.category.toUpperCase()} • ${h.totalCubes} cubes'),
+                  title: Text(
+                    h.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '${h.category.toUpperCase()} • ${h.totalCubes} cubes',
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.workspaces, color: Colors.indigo),
+                        icon: const Icon(
+                          Icons.workspaces,
+                          color: Colors.indigo,
+                        ),
                         tooltip: 'Manage Cubes',
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => ManageCubesScreen(houseId: h.id, houseName: h.name)),
+                          MaterialPageRoute(
+                            builder: (_) => ManageCubesScreen(
+                              houseId: h.id,
+                              houseName: h.name,
+                            ),
+                          ),
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                         onPressed: () async {
                           if (!context.mounted) return;
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
                               title: const Text('Delete House'),
-                              content: Text('Delete "${h.name}"? This will not delete cubes.'),
+                              content: Text(
+                                'Delete "${h.name}"? This will not delete cubes.',
+                              ),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                                ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Delete'),
+                                ),
                               ],
                             ),
                           );
@@ -196,13 +262,19 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                               await _houseService.deleteHouse(h.id);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('House deleted'), backgroundColor: Colors.green),
+                                  const SnackBar(
+                                    content: Text('House deleted'),
+                                    backgroundColor: Colors.green,
+                                  ),
                                 );
                               }
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Failed to delete house: $e'), backgroundColor: Colors.red),
+                                  SnackBar(
+                                    content: Text('Failed to delete house: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
                                 );
                               }
                             }

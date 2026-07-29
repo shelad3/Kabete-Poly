@@ -13,7 +13,7 @@ class KnpTheme {
   static const Color successColor = Color(0xFF388E3C);
   static const Color surfaceLight = Color(0xFFE8EAF6);
   static const Color selectedColor = Color(0xFFE8EAF6);
-  
+
   static ThemeData get theme {
     return ThemeData(
       useMaterial3: true,
@@ -49,9 +49,7 @@ class KnpTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: cardColor,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -62,10 +60,7 @@ class KnpTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -83,11 +78,12 @@ class KnpTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
       ),
-      drawerTheme: const DrawerThemeData(
-        backgroundColor: Colors.white,
-      ),
+      drawerTheme: const DrawerThemeData(backgroundColor: Colors.white),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: primaryColor,
         selectedItemColor: selectedColor,
@@ -100,9 +96,7 @@ class KnpTheme {
         space: 1,
         thickness: 1,
       ),
-      dialogTheme: const DialogThemeData(
-        backgroundColor: Colors.white,
-      ),
+      dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
       chipTheme: ChipThemeData(
         backgroundColor: surfaceLight,
         labelStyle: const TextStyle(color: primaryColor),

@@ -44,12 +44,17 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
         ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('school_info').doc('knp').snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('school_info')
+            .doc('knp')
+            .snapshots(),
         builder: (context, snap) {
           final data = snap.data?.data() as Map<String, dynamic>?;
-          final schoolName = data?['name'] as String? ?? 'Kabete National Polytechnique';
+          final schoolName =
+              data?['name'] as String? ?? 'Kabete National Polytechnique';
           final history = data?['history'] as String? ?? _defaultHistory();
-          final photoUrls = (data?['photoUrls'] as List<dynamic>?)?.cast<String>() ?? [];
+          final photoUrls =
+              (data?['photoUrls'] as List<dynamic>?)?.cast<String>() ?? [];
 
           if (_isEditing) {
             _nameCtrl.text = schoolName;
@@ -64,18 +69,29 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
                 if (_isEditing) ...[
                   TextField(
                     controller: _nameCtrl,
-                    decoration: const InputDecoration(labelText: 'School Name', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: 'School Name',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _historyCtrl,
                     maxLines: 10,
-                    decoration: const InputDecoration(labelText: 'History & Description', border: OutlineInputBorder(), alignLabelWithHint: true),
+                    decoration: const InputDecoration(
+                      labelText: 'History & Description',
+                      border: OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _photoUrlCtrl,
-                    decoration: const InputDecoration(labelText: 'Add Photo URL', border: OutlineInputBorder(), hintText: 'https://...'),
+                    decoration: const InputDecoration(
+                      labelText: 'Add Photo URL',
+                      border: OutlineInputBorder(),
+                      hintText: 'https://...',
+                    ),
                   ),
                   const SizedBox(height: 8),
                   if (_photoUrlCtrl.text.isNotEmpty && canEdit)
@@ -85,9 +101,12 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
                       onPressed: () {
                         final url = _photoUrlCtrl.text.trim();
                         if (url.isNotEmpty) {
-                          FirebaseFirestore.instance.collection('school_info').doc('knp').update({
-                            'photoUrls': FieldValue.arrayUnion([url]),
-                          });
+                          FirebaseFirestore.instance
+                              .collection('school_info')
+                              .doc('knp')
+                              .update({
+                                'photoUrls': FieldValue.arrayUnion([url]),
+                              });
                           _photoUrlCtrl.clear();
                         }
                       },
@@ -95,7 +114,13 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
                   const SizedBox(height: 16),
                   if (_saving) const LinearProgressIndicator(),
                 ] else ...[
-                  Text(schoolName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(
+                    schoolName,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   if (photoUrls.isNotEmpty) ...[
                     SizedBox(
@@ -111,24 +136,47 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
                                   padding: const EdgeInsets.only(right: 12),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(photoUrls[index], height: 200, width: 300, fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) => Container(height: 200, width: 300,
-                                        color: Colors.grey[200], child: const Icon(Icons.broken_image, size: 48))),
+                                    child: Image.network(
+                                      photoUrls[index],
+                                      height: 200,
+                                      width: 300,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) => Container(
+                                        height: 200,
+                                        width: 300,
+                                        color: Colors.grey[200],
+                                        child: const Icon(
+                                          Icons.broken_image,
+                                          size: 48,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 if (canEdit)
                                   Positioned(
-                                    top: 4, right: 16,
+                                    top: 4,
+                                    right: 16,
                                     child: CircleAvatar(
                                       backgroundColor: Colors.red,
                                       radius: 14,
                                       child: IconButton(
-                                        icon: const Icon(Icons.close, size: 14, color: Colors.white),
+                                        icon: const Icon(
+                                          Icons.close,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
                                         padding: EdgeInsets.zero,
                                         onPressed: () {
-                                          FirebaseFirestore.instance.collection('school_info').doc('knp').update({
-                                            'photoUrls': FieldValue.arrayRemove([photoUrls[index]]),
-                                          });
+                                          FirebaseFirestore.instance
+                                              .collection('school_info')
+                                              .doc('knp')
+                                              .update({
+                                                'photoUrls':
+                                                    FieldValue.arrayRemove([
+                                                      photoUrls[index],
+                                                    ]),
+                                              });
                                         },
                                       ),
                                     ),
@@ -142,7 +190,10 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  Text(history, style: const TextStyle(fontSize: 15, height: 1.6)),
+                  Text(
+                    history,
+                    style: const TextStyle(fontSize: 15, height: 1.6),
+                  ),
                 ],
               ],
             ),
@@ -159,13 +210,16 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
   Future<void> _saveInfo() async {
     setState(() => _saving = true);
     try {
-      await FirebaseFirestore.instance.collection('school_info').doc('knp').set({
-        'name': _nameCtrl.text.trim(),
-        'history': _historyCtrl.text.trim(),
-      }, SetOptions(merge: true));
+      await FirebaseFirestore.instance.collection('school_info').doc('knp').set(
+        {'name': _nameCtrl.text.trim(), 'history': _historyCtrl.text.trim()},
+        SetOptions(merge: true),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('School info updated'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('School info updated'),
+            backgroundColor: Colors.green,
+          ),
         );
         setState(() => _isEditing = false);
       }

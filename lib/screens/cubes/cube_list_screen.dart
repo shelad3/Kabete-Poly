@@ -38,10 +38,16 @@ class _CubeListScreenState extends State<CubeListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.workspaces_outlined, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.workspaces_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
-                  Text('No cubes in this house yet',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                  Text(
+                    'No cubes in this house yet',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
                 ],
               ),
             );
@@ -58,7 +64,8 @@ class _CubeListScreenState extends State<CubeListScreen> {
                     Expanded(
                       child: Text(
                         '${TermUtils.getCurrentTermLabel()} ${TermUtils.getCurrentYear()} — KSH 8,000 per term',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 13)),
+                        style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                      ),
                     ),
                   ],
                 ),
@@ -128,7 +135,11 @@ class _CubeTileState extends State<_CubeTile> {
     super.initState();
     _sub = widget.service
         .getAvailableCountStream(
-            widget.cube.id, widget.cube.maxOccupancy, widget.term, widget.year)
+          widget.cube.id,
+          widget.cube.maxOccupancy,
+          widget.term,
+          widget.year,
+        )
         .listen(
           (count) {
             if (mounted) {
@@ -175,17 +186,44 @@ class _CubeTileState extends State<_CubeTile> {
               color: full ? Colors.grey[400] : Colors.blue[400],
             ),
             const SizedBox(height: 4),
-            Text(widget.cube.label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(
+              widget.cube.label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
             const SizedBox(height: 2),
             if (_loading)
-              const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             else if (_error)
-              Text('Error', style: TextStyle(color: Colors.red[400], fontSize: 10, fontWeight: FontWeight.w600))
+              Text(
+                'Error',
+                style: TextStyle(
+                  color: Colors.red[400],
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
             else if (full)
-              Text('Full', style: TextStyle(color: Colors.red[400], fontSize: 10, fontWeight: FontWeight.w600))
+              Text(
+                'Full',
+                style: TextStyle(
+                  color: Colors.red[400],
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
             else
-              Text('$_available spots', style: TextStyle(color: Colors.green[600], fontSize: 10)),
-            Text('Max ${widget.cube.maxOccupancy}', style: TextStyle(color: Colors.grey[500], fontSize: 9)),
+              Text(
+                '$_available spots',
+                style: TextStyle(color: Colors.green[600], fontSize: 10),
+              ),
+            Text(
+              'Max ${widget.cube.maxOccupancy}',
+              style: TextStyle(color: Colors.grey[500], fontSize: 9),
+            ),
           ],
         ),
       ),

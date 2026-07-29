@@ -7,16 +7,20 @@ import '../models/house.dart';
 class HouseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Stream<List<House>> getHousesStream() =>
-    _db.collection('houses').orderBy('name').snapshots().map(
-      (snap) => snap.docs.map((d) => House.fromJson(d.data(), d.id)).toList(),
-    );
+  Stream<List<House>> getHousesStream() => _db
+      .collection('houses')
+      .orderBy('name')
+      .snapshots()
+      .map(
+        (snap) => snap.docs.map((d) => House.fromJson(d.data(), d.id)).toList(),
+      );
 
-  Stream<List<House>> getHousesByCategoryStream(String category) =>
-    _db.collection('houses')
+  Stream<List<House>> getHousesByCategoryStream(String category) => _db
+      .collection('houses')
       .where('category', isEqualTo: category)
       .orderBy('name')
-      .snapshots().map(
+      .snapshots()
+      .map(
         (snap) => snap.docs.map((d) => House.fromJson(d.data(), d.id)).toList(),
       );
 
@@ -32,8 +36,8 @@ class HouseService {
   }
 
   Future<void> updateHouse(String id, House house) =>
-    _db.collection('houses').doc(id).update(house.toJson());
+      _db.collection('houses').doc(id).update(house.toJson());
 
   Future<void> deleteHouse(String id) =>
-    _db.collection('houses').doc(id).delete();
+      _db.collection('houses').doc(id).delete();
 }

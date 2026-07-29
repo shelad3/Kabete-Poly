@@ -34,13 +34,13 @@ class UserSession {
       location: json['location'] ?? '',
       loginAt: json['loginAt'] != null
           ? (json['loginAt'] is String
-              ? DateTime.parse(json['loginAt'])
-              : (json['loginAt'] as dynamic).toDate() as DateTime)
+                ? DateTime.parse(json['loginAt'])
+                : (json['loginAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       lastActiveAt: json['lastActiveAt'] != null
           ? (json['lastActiveAt'] is String
-              ? DateTime.parse(json['lastActiveAt'])
-              : (json['lastActiveAt'] as dynamic).toDate() as DateTime)
+                ? DateTime.parse(json['lastActiveAt'])
+                : (json['lastActiveAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       isCurrentDevice: json['isCurrentDevice'] ?? false,
     );

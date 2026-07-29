@@ -13,10 +13,11 @@ class AssessmentEntry {
 
   Map<String, dynamic> toJson() => {'score': score, 'max': max};
 
-  factory AssessmentEntry.fromJson(Map<String, dynamic> json) => AssessmentEntry(
-    score: (json['score'] as num? ?? 0).toDouble(),
-    max: (json['max'] as num? ?? 30).toDouble(),
-  );
+  factory AssessmentEntry.fromJson(Map<String, dynamic> json) =>
+      AssessmentEntry(
+        score: (json['score'] as num? ?? 0).toDouble(),
+        max: (json['max'] as num? ?? 30).toDouble(),
+      );
 }
 
 class GradeRecord {
@@ -46,10 +47,11 @@ class GradeRecord {
     required this.teacherName,
     this.comments,
     DateTime? createdAt,
-  })  : assessments = assessments ?? {},
-        createdAt = createdAt ?? DateTime.now();
+  }) : assessments = assessments ?? {},
+       createdAt = createdAt ?? DateTime.now();
 
-  double get totalScore => assessments.values.fold(0.0, (sum, a) => sum + a.score);
+  double get totalScore =>
+      assessments.values.fold(0.0, (sum, a) => sum + a.score);
   double get totalMax => assessments.values.fold(0.0, (sum, a) => sum + a.max);
   double get percentage => totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
 
@@ -95,9 +97,12 @@ class GradeRecord {
       final oldExam = (json['examScore'] as num? ?? 0).toDouble();
       final oldExamMax = (json['examMax'] as num? ?? 40).toDouble();
 
-      if (oldCat1 > 0 || oldCat1Max != 30) assessments['cat1'] = AssessmentEntry(score: oldCat1, max: oldCat1Max);
-      if (oldCat2 > 0 || oldCat2Max != 30) assessments['cat2'] = AssessmentEntry(score: oldCat2, max: oldCat2Max);
-      if (oldExam > 0 || oldExamMax != 40) assessments['exam'] = AssessmentEntry(score: oldExam, max: oldExamMax);
+      if (oldCat1 > 0 || oldCat1Max != 30)
+        assessments['cat1'] = AssessmentEntry(score: oldCat1, max: oldCat1Max);
+      if (oldCat2 > 0 || oldCat2Max != 30)
+        assessments['cat2'] = AssessmentEntry(score: oldCat2, max: oldCat2Max);
+      if (oldExam > 0 || oldExamMax != 40)
+        assessments['exam'] = AssessmentEntry(score: oldExam, max: oldExamMax);
       // If still empty, add defaults
       if (assessments.isEmpty) {
         assessments['cat1'] = const AssessmentEntry();

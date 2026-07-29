@@ -34,7 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               const Text(
                 'KNP Management System',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A237E)),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A237E),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -79,10 +83,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: (_isLoading || _isGoogleLoading) ? null : _handleLogin,
-                child: _isLoading 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Sign In'),
+                onPressed: (_isLoading || _isGoogleLoading)
+                    ? null
+                    : _handleLogin,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('Sign In'),
               ),
               const SizedBox(height: 24),
               const Row(
@@ -97,9 +110,15 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                onPressed: (_isLoading || _isGoogleLoading) ? null : _handleGoogleSignIn,
-                icon: _isGoogleLoading 
-                    ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                onPressed: (_isLoading || _isGoogleLoading)
+                    ? null
+                    : _handleGoogleSignIn,
+                icon: _isGoogleLoading
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(FontAwesomeIcons.google, size: 18),
                 label: const Text('Continue with Google'),
                 style: OutlinedButton.styleFrom(
@@ -133,7 +152,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const RoleSelectionScreen(),
+                        ),
                       );
                     },
                     child: const Text('Register'),
@@ -148,11 +169,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    if (_loginController.text.trim().isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter email and password')));
+    if (_loginController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter email and password')),
+      );
       return;
     }
-    
+
     setState(() => _isLoading = true);
     try {
       await context.read<AuthProvider>().login(
@@ -196,7 +220,9 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Enter your email address to receive a password reset link.'),
+              const Text(
+                'Enter your email address to receive a password reset link.',
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: resetEmailController,
@@ -218,23 +244,38 @@ class _LoginScreenState extends State<LoginScreen> {
                 final email = resetEmailController.text.trim();
                 if (email.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter an email address')),
+                    const SnackBar(
+                      content: Text('Please enter an email address'),
+                    ),
                   );
                   return;
                 }
 
                 try {
-                  await context.read<AuthProvider>().sendPasswordResetEmail(email);
+                  await context.read<AuthProvider>().sendPasswordResetEmail(
+                    email,
+                  );
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password reset email sent! check your inbox.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+                      const SnackBar(
+                        content: Text(
+                          'Password reset email sent! check your inbox.',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}'), backgroundColor: Colors.red),
+                      SnackBar(
+                        content: Text(
+                          'Error: ${e.toString().replaceAll('Exception: ', '')}',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
                     );
                   }
                 }

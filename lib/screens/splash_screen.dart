@@ -67,7 +67,9 @@ class _SplashScreenState extends State<SplashScreen> {
             .timeout(const Duration(seconds: 15));
 
         if (doc.exists && mounted) {
-          final profile = UserProfile.fromJson(doc.data() as Map<String, dynamic>);
+          final profile = UserProfile.fromJson(
+            doc.data() as Map<String, dynamic>,
+          );
           final classProv = context.read<ClassProvider>();
 
           if (profile.enrolledClasses.isNotEmpty) {
@@ -119,7 +121,9 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       if (mounted) {
-        setState(() => _error = 'Could not load profile. Check your connection.');
+        setState(
+          () => _error = 'Could not load profile. Check your connection.',
+        );
       }
       return;
     }
@@ -191,12 +195,19 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const Spacer(flex: 1),
               if (_error != null) ...[
-                Icon(Icons.wifi_off, size: 48, color: Colors.white.withValues(alpha: 0.7)),
+                Icon(
+                  Icons.wifi_off,
+                  size: 48,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   _error!,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 OutlinedButton.icon(
@@ -208,13 +219,20 @@ class _SplashScreenState extends State<SplashScreen> {
                     _init();
                   },
                   icon: const Icon(Icons.refresh, color: Colors.white),
-                  label: const Text('Retry', style: TextStyle(color: Colors.white)),
+                  label: const Text(
+                    'Retry',
+                    style: TextStyle(color: Colors.white),
+                  ),
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               ] else ...[
-                CircularProgressIndicator(color: Colors.white.withValues(alpha: 0.8)),
+                CircularProgressIndicator(
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   _timeout ? 'Connection is slow...' : 'Loading...',

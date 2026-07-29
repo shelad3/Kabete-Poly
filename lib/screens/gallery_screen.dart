@@ -35,17 +35,25 @@ class _GalleryScreenState extends State<GalleryScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.photo_library_outlined,
-                    size: 64, color: Colors.grey[400]),
+                Icon(
+                  Icons.photo_library_outlined,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
                 const SizedBox(height: 16),
-                Text('No events yet',
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500)),
+                Text(
+                  'No events yet',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text('Event galleries will appear here',
-                    style: TextStyle(color: Colors.grey[500])),
+                Text(
+                  'Event galleries will appear here',
+                  style: TextStyle(color: Colors.grey[500]),
+                ),
               ],
             ),
           );
@@ -114,37 +122,53 @@ class _EventCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   if (description.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: Colors.grey[700])),
+                    Text(
+                      description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[700]),
+                    ),
                   ],
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today,
-                          size: 14, color: Colors.grey[600]),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: Colors.grey[600],
+                      ),
                       const SizedBox(width: 4),
-                      Text(dateStr,
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey[600])),
+                      Text(
+                        dateStr,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
                       if (photoCount > 0) ...[
                         const SizedBox(width: 16),
-                        Icon(Icons.photo,
-                            size: 14, color: Colors.grey[600]),
+                        Icon(Icons.photo, size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
-                        Text('$photoCount photos',
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[600])),
+                        Text(
+                          '$photoCount photos',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                       ],
                       const Spacer(),
-                      Icon(Icons.arrow_forward_ios,
-                          size: 14, color: Colors.grey[400]),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.grey[400],
+                      ),
                     ],
                   ),
                 ],
@@ -163,21 +187,24 @@ class _EventCard extends StatelessWidget {
       color: Colors.primaries[title.hashCode % Colors.primaries.length]
           .withValues(alpha: 0.3),
       child: Center(
-        child: Icon(Icons.photo_library_outlined,
-            size: 48, color: Colors.white70),
+        child: Icon(
+          Icons.photo_library_outlined,
+          size: 48,
+          color: Colors.white70,
+        ),
       ),
     );
   }
 
   void _openEventGallery(
-      BuildContext context, String eventId, Map<String, dynamic> event) {
+    BuildContext context,
+    String eventId,
+    Map<String, dynamic> event,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => _EventGalleryScreen(
-          eventId: eventId,
-          event: event,
-        ),
+        builder: (_) => _EventGalleryScreen(eventId: eventId, event: event),
       ),
     );
   }
@@ -187,14 +214,15 @@ class _EventGalleryScreen extends StatelessWidget {
   final String eventId;
   final Map<String, dynamic> event;
 
-  const _EventGalleryScreen(
-      {required this.eventId, required this.event});
+  const _EventGalleryScreen({required this.eventId, required this.event});
 
   @override
   Widget build(BuildContext context) {
     final title = event['title'] as String? ?? 'Event Gallery';
     final specialGuests =
-        (event['specialGuests'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+        (event['specialGuests'] as List<dynamic>?)
+            ?.cast<Map<String, dynamic>>() ??
+        [];
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
@@ -207,11 +235,14 @@ class _EventGalleryScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Special Guests',
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800])),
+                  Text(
+                    'Special Guests',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   SizedBox(
                     height: 80,
@@ -221,32 +252,34 @@ class _EventGalleryScreen extends StatelessWidget {
                       separatorBuilder: (_, __) => const SizedBox(width: 12),
                       itemBuilder: (_, i) {
                         final guest = specialGuests[i];
-                        final guestName =
-                            guest['name'] as String? ?? 'Guest';
-                        final guestRole =
-                            guest['role'] as String? ?? '';
+                        final guestName = guest['name'] as String? ?? 'Guest';
+                        final guestRole = guest['role'] as String? ?? '';
                         final guestPhoto = guest['photoUrl'] as String?;
                         return Column(
                           children: [
                             CircleAvatar(
                               radius: 28,
-                              backgroundImage: guestPhoto != null &&
-                                      guestPhoto.isNotEmpty
+                              backgroundImage:
+                                  guestPhoto != null && guestPhoto.isNotEmpty
                                   ? NetworkImage(guestPhoto)
                                   : null,
-                              child: guestPhoto == null ||
-                                      guestPhoto.isEmpty
+                              child: guestPhoto == null || guestPhoto.isEmpty
                                   ? Text(guestName[0].toUpperCase())
                                   : null,
                             ),
                             const SizedBox(height: 4),
-                            Text(guestName,
-                                style: const TextStyle(fontSize: 11)),
+                            Text(
+                              guestName,
+                              style: const TextStyle(fontSize: 11),
+                            ),
                             if (guestRole.isNotEmpty)
-                              Text(guestRole,
-                                  style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[600])),
+                              Text(
+                                guestRole,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
                           ],
                         );
                       },
@@ -274,11 +307,16 @@ class _EventGalleryScreen extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.photo_library_outlined,
-                            size: 48, color: Colors.grey[400]),
+                        Icon(
+                          Icons.photo_library_outlined,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 12),
-                        Text('No photos in this event',
-                            style: TextStyle(color: Colors.grey[600])),
+                        Text(
+                          'No photos in this event',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
                       ],
                     ),
                   );
@@ -301,8 +339,10 @@ class _EventGalleryScreen extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: Colors.grey[300],
-                          child:
-                              const Icon(Icons.broken_image, color: Colors.grey),
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     );

@@ -18,7 +18,10 @@ class TutorialService {
 
   /// Initializes and displays the tutorial overlay.
   /// If it has already been seen (via SharedPreferences), this quietly returns.
-  Future<void> showTutorialIfFirstLaunch(BuildContext context, {required bool canAddContent}) async {
+  Future<void> showTutorialIfFirstLaunch(
+    BuildContext context, {
+    required bool canAddContent,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final bool hasSeen = prefs.getBool(_firstLaunchKey) ?? false;
 
@@ -48,14 +51,14 @@ class TutorialService {
       paddingFocus: 10,
       opacityShadow: 0.8,
       onFinish: () {
-         debugPrint('Tutorial Finished');
+        debugPrint('Tutorial Finished');
       },
       onClickTarget: (target) {
-         debugPrint('Clicked target logic: $target');
+        debugPrint('Clicked target logic: $target');
       },
       onSkip: () {
-         debugPrint('Tutorial Skipped');
-         return true;
+        debugPrint('Tutorial Skipped');
+        return true;
       },
     );
   }
@@ -81,9 +84,10 @@ class TutorialService {
                     Text(
                       'Upload Content Here',
                       style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 24),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
                     ),
                     SizedBox(height: 10),
                     Text(
@@ -117,9 +121,10 @@ class TutorialService {
                   Text(
                     'View Timetables',
                     style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 24),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
                   ),
                   SizedBox(height: 10),
                   Text(
@@ -134,7 +139,7 @@ class TutorialService {
       ),
     );
 
-     // 3. Notification Logic
+    // 3. Notification Logic
     targets.add(
       TargetFocus(
         identify: 'Notifications',
@@ -151,9 +156,10 @@ class TutorialService {
                   Text(
                     'Stay Updated',
                     style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 24),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
                   ),
                   SizedBox(height: 10),
                   Text(

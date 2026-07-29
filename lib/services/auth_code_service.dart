@@ -91,14 +91,14 @@ class AuthCode {
       usedBy: json['usedBy'],
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is String
-              ? DateTime.parse(json['createdAt'])
-              : (json['createdAt'] as dynamic).toDate() as DateTime)
+                ? DateTime.parse(json['createdAt'])
+                : (json['createdAt'] as dynamic).toDate() as DateTime)
           : DateTime.now(),
       createdBy: json['createdBy'] ?? '',
       expiresAt: json['expiresAt'] != null
           ? (json['expiresAt'] is String
-              ? DateTime.parse(json['expiresAt'])
-              : (json['expiresAt'] as dynamic).toDate() as DateTime)
+                ? DateTime.parse(json['expiresAt'])
+                : (json['expiresAt'] as dynamic).toDate() as DateTime)
           : null,
       maxUses: json['maxUses'],
       useCount: json['useCount'] ?? 0,
@@ -132,12 +132,18 @@ class AuthCodeService {
         .collection('auth_codes')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => AuthCode.fromJson(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => AuthCode.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
-  Future<String> generateCode(String role, String createdBy, {AuthCodeRule? rule}) async {
+  Future<String> generateCode(
+    String role,
+    String createdBy, {
+    AuthCodeRule? rule,
+  }) async {
     final r = rule ?? AuthCodeRule.predefined[0];
     final code = _generateRandomCode();
     final now = DateTime.now();
@@ -152,7 +158,9 @@ class AuthCodeService {
       useCount: 0,
       ruleId: r.id,
     );
-    final doc = await _firestore.collection('auth_codes').add(authCode.toJson());
+    final doc = await _firestore
+        .collection('auth_codes')
+        .add(authCode.toJson());
     return doc.id;
   }
 
@@ -198,6 +206,9 @@ class AuthCodeService {
   }
 
   String _generateRandomCode() {
-    return List.generate(8, (_) => _chars[_random.nextInt(_chars.length)]).join();
+    return List.generate(
+      8,
+      (_) => _chars[_random.nextInt(_chars.length)],
+    ).join();
   }
 }
