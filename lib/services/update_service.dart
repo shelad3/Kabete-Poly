@@ -72,9 +72,12 @@ class UpdateService {
     } catch (e) {
       debugPrint('Error checking for updates: $e');
       if (showNoUpdateMsg && context.mounted) {
+        final msg = e.toString().contains('permission')
+            ? 'Updates not configured. Contact admin.'
+            : 'Check your internet connection.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Check your internet connection.'),
+          SnackBar(
+            content: Text(msg),
             backgroundColor: Colors.red,
           ),
         );

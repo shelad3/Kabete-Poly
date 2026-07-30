@@ -423,6 +423,14 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------- //
+    // App Updates (public read — needed before login)
+    // ---------------------------------------------------- //
+    match /app_updates/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------- //
     // Default: deny everything else
     // ---------------------------------------------------- //
     match /{document=**} {
