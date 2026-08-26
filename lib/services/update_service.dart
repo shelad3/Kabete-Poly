@@ -118,11 +118,15 @@ class UpdateService {
 
   static bool _isUpdateAvailable(String currentVersion, String latestVersion) {
     try {
-      List<int> currentParts = currentVersion
+      // Strip build numbers (e.g. "2.10.0+1" -> "2.10.0") before comparing
+      final currentClean = currentVersion.split('+').first;
+      final latestClean = latestVersion.split('+').first;
+
+      List<int> currentParts = currentClean
           .split('.')
           .map(int.parse)
           .toList();
-      List<int> latestParts = latestVersion.split('.').map(int.parse).toList();
+      List<int> latestParts = latestClean.split('.').map(int.parse).toList();
 
       for (int i = 0; i < currentParts.length && i < latestParts.length; i++) {
         if (latestParts[i] > currentParts[i]) return true;
