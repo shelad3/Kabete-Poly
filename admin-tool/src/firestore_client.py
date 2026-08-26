@@ -365,8 +365,10 @@ class FirestoreClient:
 
         batch = self.db.batch()
         for entry in entries:
+            # Strip class_id — it's redundant with the document path
+            data = {k: v for k, v in entry.items() if k != 'class_id'}
             ref = self.db.collection('classes').document(class_id).collection('timetable').document()
-            batch.set(ref, entry)
+            batch.set(ref, data)
         batch.commit()
         return len(entries)
 

@@ -34,6 +34,7 @@ class TimetableUploadTab(QWidget):
         self._class_groups: dict[str, list[int]] = {}
         self._duplicate_indices: set[int] = set()
         self._available_classes: list[str] = []
+        self._clear_existing: bool = False
         self._build_ui()
 
     def _build_ui(self):
@@ -122,6 +123,12 @@ class TimetableUploadTab(QWidget):
 
         layout.addWidget(class_rb)
         layout.addWidget(exam_rb)
+        layout.addSpacing(20)
+
+        self._clear_checkbox = QCheckBox('Delete all existing timetable data before uploading (replace mode)')
+        self._clear_checkbox.setStyleSheet('font-weight: bold; color: #C62828;')
+        layout.addWidget(self._clear_checkbox)
+
         layout.addStretch()
         return w
 
@@ -241,6 +248,19 @@ class TimetableUploadTab(QWidget):
     def _go_next(self):
         if self._current_step == 0:
             self._on_mode_changed()  # ensure mode is set
+            self._clear_existing = self._clear_checkbox.isChecked()
+            if self._clear_existing:
+                reply = QMessageBox.warning(
+                    self, 'Replace Mode',
+                    'You selected REPLACE MODE: all existing timetable data for '
+                    'the selected classes will be DELETED before uploading new data.\n\n'
+                    'This cannot be undone. Continue?',
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                )
+                if reply != QMessageBox.StandardButton.Yes:
+                    self._clear_existing = False
+                    self._clear_checkbox.setChecked(False)
+                    return
         elif self._current_step == 1:
             if not self._validate_step1():
                 return
@@ -279,6 +299,7 @@ class TimetableUploadTab(QWidget):
         self._class_groups = {}
         self._duplicate_indices.clear()
         self._file_path = ''
+        self._clear_existing = False
         self._file_display.setText('No file selected')
         self._preview_table.clear_data()
         self._stack.setCurrentIndex(0)
@@ -411,6 +432,19 @@ class TimetableUploadTab(QWidget):
         """Group parsed entries by detected class."""
         groups = defaultdict(list)
 
+        # Check if entries have class_id from multi-cohort parser
+        has_class_ids = any(e.get('class_id') for e in self._parsed_entries)
+
+        if has_class_ids:
+            # Group by class_id embedded in each entry
+            for i, entry in enumerate(self._parsed_entries):
+                cls = entry.get('class_id', '').strip().upper()
+                if cls:
+                    groups[cls].append(i)
+                else:
+                    groups['Unspecified'].append(i)
+            return dict(groups)
+
         # Use class_id from result header
         detected_class = getattr(result, 'class_id', '') or ''
 
@@ -473,6 +507,16 @@ class TimetableUploadTab(QWidget):
         self._preview_table.populate(self._parsed_entries, class_groups=self._class_groups)
 
     def _start_dup_check(self):
+        if self._clear_existing:
+            # Skip duplicate check in replace mode — we're deleting everything first
+            self._duplicate_indices.clear()
+            self._preview_table.set_duplicates(set())
+            selected = len(self._preview_table.get_selected_entries())
+            self._dup_status.setText('Replace mode — duplicate check skipped')
+            self._dup_detail.setText(f'{selected} entries ready to upload (existing data will be cleared)')
+            self._dup_progress.setVisible(False)
+            self._next_btn.setEnabled(selected > 0)
+            return
         self._dup_status.setText('Checking for duplicates in Firestore...')
         self._dup_progress.setVisible(True)
         QTimer.singleShot(100, self._do_dup_check)
@@ -574,9 +618,9 @@ class TimetableUploadTab(QWidget):
 
                 try:
                     if self._mode == 'exam':
-                        count = db.upload_exam_timetable_batch(class_id, group_entries)
+                        count = db.upload_exam_timetable_batch(class_id, group_entries, replace=self._clear_existing)
                     else:
-                        count = db.upload_timetable_batch(class_id, group_entries)
+                        count = db.upload_timetable_batch(class_id, group_entries, replace=self._clear_existing)
                     by_class[class_id] = by_class.get(class_id, 0) + count
                     total += count
                 except Exception as e:
@@ -588,6 +632,8 @@ class TimetableUploadTab(QWidget):
 
             # Summary
             parts = [f'{total} entries uploaded']
+            if self._clear_existing:
+                parts.append(' (replaced existing data)')
             if by_class:
                 parts.append(' (' + ', '.join(f'{k}: {v}' for k, v in by_class.items()) + ')')
             if errors:

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Kabete National Polytechnique
 
-"""PDF timetable parser using pdfplumber."""
+"""PDF timetable parser using pdfplumber — handles KNP master-grid format."""
 
 import re
 from typing import Optional
@@ -17,6 +17,7 @@ class TimetableParseResult:
         self.class_id: str = ''
         self.department: str = ''
         self.semester: str = ''
+        self.cohorts: list[str] = []
 
     @property
     def success_count(self) -> int:
@@ -27,12 +28,46 @@ class TimetableParseResult:
         return len(self.errors)
 
 
+# Known lecturer names to help split venue/subject/lecturer from messy cells.
+_LECTURER_HINTS = [
+    'mr.', 'mrs.', 'ms.', 'dr.', 'prof.', 'tr.', 'trainer',
+    'samuel', 'david', 'eva', 'sheila', 'ochieng', 'njuguna',
+    'vincent', 'wasonga', 'bornface', 'musyoka', 'felix', 'otieno',
+    'jack', 'mwatika', 'israel', 'nyakundi', 'janet', 'anyango',
+    'monday', 'wakyendo', 'lydia', 'morris', 'kimani', 'petronillah',
+    'miyogo', 'vivia', 'kemboi', 'festus', 'mutinda', 'justus',
+    'musasia', 'kennedy', 'muguro', 'ruth', 'kariuki', 'agnes',
+    'kirui', 'amos', 'sielei', 'moses', 'kenny', 'namasaka',
+    'charles', 'yegon', 'deborah', 'kwamboka', 'benjamin', 'ouko',
+    'eric', 'mawira', 'godfrey', 'kariuki', 'odhiambo', 'victor',
+    'obora', 'jerono', 'kairu', 'daniel', 'joyce', 'wambui',
+]
+
+
 class PdfTimetableParser:
-    """Parse PDF timetable files from Kenyan polytechnic format."""
+    """Parse KNP master-grid timetable PDFs.
+
+    The PDF has a consistent structure across all pages:
+      Row 0: 'KNPMASTER' header
+      Row 1: Day headers (Monday..Friday, each spanning 5 cols)
+      Row 2: Time slot headers (number + start/end time, repeated per day)
+      Rows 3+: One row per cohort. Col 0 = class ID, cols 1-25 = cells.
+
+    Each cell contains: VENUE\\nSubject\\nLecturer (or empty).
+    """
 
     DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     DAY_ABBR = {'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
                 'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday'}
+
+    # Time slots in order (slot number -> (start, end))
+    TIME_SLOTS = {
+        1: ('07:00', '09:00'),
+        2: ('09:00', '11:00'),
+        3: ('11:00', '13:00'),
+        4: ('13:00', '15:00'),
+        5: ('15:00', '17:00'),
+    }
 
     def parse(self, file_path: str) -> TimetableParseResult:
         result = TimetableParseResult()
@@ -45,134 +80,233 @@ class PdfTimetableParser:
         return result
 
     def _parse_page(self, page, page_num: int, result: TimetableParseResult):
-        text = page.extract_text() or ''
         tables = page.extract_tables()
-
-        # Try to extract header metadata
-        header_info = self._extract_header(text)
-        if header_info:
-            if not result.class_id and header_info.get('class_id'):
-                result.class_id = header_info['class_id']
-            if not result.department and header_info.get('department'):
-                result.department = header_info['department']
-            if not result.semester and header_info.get('semester'):
-                result.semester = header_info['semester']
-
-        if tables:
-            for table in tables:
-                self._parse_table(table, result)
-        else:
-            # Fallback: try line-by-line parsing
-            self._parse_text_lines(text, result)
-
-    def _extract_header(self, text: str) -> dict:
-        info = {}
-        lines = text.split('\n')[:20]
-        for line in lines:
-            line_lower = line.lower()
-            m = re.search(r'(?:class|cohort|batch|group)\s*[:\-]?\s*(\S+)', line_lower, re.IGNORECASE)
-            if m:
-                info['class_id'] = m.group(1).upper()
-            m = re.search(r'(?:department|dept|faculty)\s*[:\-]?\s*(.+)', line_lower, re.IGNORECASE)
-            if m:
-                info['department'] = m.group(1).strip()
-            m = re.search(r'(?:semester|term|sem)\s*[:\-]?\s*(\d+)', line_lower, re.IGNORECASE)
-            if m:
-                info['semester'] = f'Semester {m.group(1)}'
-        return info
-
-    def _parse_table(self, table: list[list], result: TimetableParseResult):
-        if not table or len(table) < 2:
+        if not tables:
             return
-        headers = [str(h).strip().lower() if h else '' for h in table[0]]
-        day_col = self._find_column(headers, ['day', 'day of week', 'weekday'])
-        time_col = self._find_column(headers, ['time', 'start time', 'start', 'period'])
-        end_time_col = self._find_column(headers, ['end time', 'end', 'to'])
-        unit_col = self._find_column(headers, ['unit', 'course', 'subject', 'module', 'course code', 'unit code'])
-        unit_name_col = self._find_column(headers, ['course name', 'unit name', 'subject name', 'description'])
-        venue_col = self._find_column(headers, ['venue', 'room', 'classroom', 'location', 'hall'])
-        lecturer_col = self._find_column(headers, ['lecturer', 'teacher', 'instructor', 'staff', 'facilitator'])
 
-        for row in table[1:]:
-            if not row or all(cell is None or str(cell).strip() == '' for cell in row):
+        for table in tables:
+            if not table or len(table) < 4:
                 continue
-            entry = self._build_entry(row, day_col, time_col, end_time_col,
-                                      unit_col, unit_name_col, venue_col, lecturer_col)
-            if entry:
-                result.entries.append(entry)
 
-    def _find_column(self, headers: list[str], candidates: list[str]) -> int:
-        for i, h in enumerate(headers):
-            for c in candidates:
-                if c in h:
-                    return i
-        return -1
-
-    def _build_entry(self, row: list, day_col: int, time_col: int, end_time_col: int,
-                     unit_col: int, unit_name_col: int, venue_col: int, lecturer_col: int) -> dict | None:
-        def cell(idx):
-            return str(row[idx]).strip() if 0 <= idx < len(row) and row[idx] else ''
-
-        day = self._normalize_day(cell(day_col)) if day_col >= 0 else ''
-        time_val = cell(time_col) if time_col >= 0 else ''
-        end_time = cell(end_time_col) if end_time_col >= 0 else ''
-
-        # Parse time range from single column if needed
-        if time_val and not end_time:
-            time_parts = re.split(r'\s*[-–—to]+\s*', time_val)
-            if len(time_parts) >= 2:
-                time_val = time_parts[0].strip()
-                end_time = time_parts[1].strip()
-
-        unit_code = cell(unit_col) if unit_col >= 0 else ''
-        unit_name = cell(unit_name_col) if unit_name_col >= 0 else ''
-        venue = cell(venue_col) if venue_col >= 0 else ''
-        lecturer = cell(lecturer_col) if lecturer_col >= 0 else ''
-
-        if not day and not unit_code:
-            return None
-
-        label = f'{unit_code} - {unit_name}' if unit_name else unit_code
-
-        return {
-            'day': day,
-            'time': self._normalize_time(time_val),
-            'endTime': self._normalize_time(end_time),
-            'unit': label,
-            'venue': venue,
-            'lecturer': lecturer,
-            'color': 4282339765,  # default blue
-        }
-
-    def _parse_text_lines(self, text: str, result: TimetableParseResult):
-        """Fallback parser for non-table PDFs — line-by-line heuristic."""
-        lines = text.split('\n')
-        current_day = ''
-        for line in lines:
-            line = line.strip()
-            if not line:
+            # Verify this is the master grid: row 0 should contain 'KNPMASTER'
+            row0_text = ' '.join(str(c) for c in table[0] if c)
+            if 'KNPMASTER' not in row0_text.upper():
                 continue
-            lower = line.lower()
-            # Check if line is a day header
-            for day in self.DAYS:
-                if day.lower() in lower and len(line) < 20:
-                    current_day = day
-                    break
-            # Match timetable lines: time + unit + venue pattern
-            m = re.match(
-                r'(\d{1,2}[:.]\d{2})\s*[-–—to]+\s*(\d{1,2}[:.]\d{2})\s+(.+?)(?:\s{2,}|\t)(.+?)(?:\s{2,}|\t)(.*)',
-                line,
-            )
+
+            # Extract time slots from row 2
+            time_slots = self._extract_time_slots(table[2])
+            if not time_slots:
+                result.errors.append(f'Page {page_num}: could not parse time slots')
+                continue
+
+            # Parse cohort rows (rows 3+)
+            for row_idx in range(3, len(table)):
+                row = table[row_idx]
+                if not row:
+                    continue
+                class_id = str(row[0]).strip() if row[0] else ''
+                if not class_id:
+                    continue
+
+                if class_id not in result.cohorts:
+                    result.cohorts.append(class_id)
+
+                # Parse each timeslot cell (cols 1-25)
+                for col_idx in range(1, min(26, len(row))):
+                    cell_text = str(row[col_idx]).strip() if row[col_idx] else ''
+                    if not cell_text:
+                        continue
+
+                    slot_num = self._col_to_slot(col_idx)
+                    if slot_num is None or slot_num not in time_slots:
+                        continue
+
+                    day, start_time, end_time = time_slots[slot_num]
+                    venue, subject, lecturer = self._parse_cell(cell_text)
+
+                    if not subject and not venue:
+                        continue
+
+                    result.entries.append({
+                        'class_id': class_id,
+                        'day': day,
+                        'time': start_time,
+                        'endTime': end_time,
+                        'unit': self._fix_text(subject),
+                        'venue': self._fix_text(venue),
+                        'lecturer': self._clean_lecturer(lecturer),
+                        'color': 4282339765,
+                    })
+
+    def _extract_time_slots(self, row: list) -> dict[int, tuple[str, str, str]]:
+        """Parse time slot header row into {col_index: (day, start, end)}.
+
+        Row 2 looks like:
+          [None, '1\\n07:00\\n09:00AM', '2\\n09:00\\n11:00AM', ..., '5\\n03:00\\n05:00PM',
+           '1\\n07:00\\n09:00AM', ...]  (repeated 5 times for 5 days)
+
+        Returns mapping of column index -> (day_name, start_time, end_time).
+        """
+        if not row:
+            return {}
+
+        # First figure out the day mapping from row 1
+        # But we can also just use the column position:
+        # cols 1-5 = Monday, 6-10 = Tuesday, 11-15 = Wednesday, 16-20 = Thursday, 21-25 = Friday
+        days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+
+        slots = {}
+        slot_re = re.compile(r'(\d)\s*\n\s*(\d{1,2}):(\d{2})\s*\n\s*(\d{1,2}):(\d{2})\s*(AM|PM)?', re.IGNORECASE)
+
+        for col_idx in range(1, min(26, len(row))):
+            cell = str(row[col_idx]) if row[col_idx] else ''
+            m = slot_re.search(cell)
             if m:
-                result.entries.append({
-                    'day': current_day,
-                    'time': self._normalize_time(m.group(1)),
-                    'endTime': self._normalize_time(m.group(2)),
-                    'unit': m.group(3).strip(),
-                    'venue': m.group(4).strip(),
-                    'lecturer': m.group(5).strip(),
-                    'color': 4282339765,
-                })
+                slot_num = int(m.group(1))
+                start_h = int(m.group(2))
+                start_m = int(m.group(3))
+                end_h = int(m.group(4))
+                end_m = int(m.group(5))
+                ampm = (m.group(6) or '').upper()
+
+                # Convert to 24h if AM/PM present
+                if ampm == 'PM' and start_h < 12:
+                    start_h += 12
+                if ampm == 'PM' and end_h < 12:
+                    end_h += 12
+
+                start = f'{start_h:02d}:{start_m:02d}'
+                end = f'{end_h:02d}:{end_m:02d}'
+
+                # Determine day from column position
+                day_idx = (col_idx - 1) // 5
+                if day_idx < len(days_order):
+                    day = days_order[day_idx]
+                else:
+                    day = ''
+
+                slots[col_idx] = (day, start, end)
+
+        return slots
+
+    def _col_to_slot(self, col_idx: int) -> int | None:
+        """Map column index (1-25) to slot number (1-5) within the day."""
+        if col_idx < 1 or col_idx > 25:
+            return None
+        return ((col_idx - 1) % 5) + 1
+
+    def _parse_cell(self, text: str) -> tuple[str, str, str]:
+        """Parse a cell's text into (venue, subject, lecturer).
+
+        Typical cell format:
+          VENUE_CODE\\nSubject Name\\nLECTURER NAME
+        or:
+          VENUE_NAME\\nSubject Name\\nLECTURER NAME
+
+        Some cells have messy line breaks or extra info. We use heuristics.
+        """
+        # Clean up known pdfplumber artifacts
+        text = text.replace('\\n', '\n')
+        lines = [l.strip() for l in text.split('\n') if l.strip()]
+
+        if not lines:
+            return '', '', ''
+
+        # Known venue patterns
+        venue_patterns = [
+            r'^E-\d[A-Z]?$',           # E-1E, E-2A, E-IB, etc.
+            r'^C\d+-\w+$',             # C12-G, C12-F
+            r'^ROOM\s',                # ROOM 201
+            r'LAB$',
+            r'LAB\s*\(',
+            r'WORKSHOP',
+            r'WORKSOP',
+            r'POWERLINES',
+            r'COMP\s',
+            r'TELECOM\s',
+            r'SOLAR\s',
+            r'ROBOTICS\s',
+            r'BLOCK\)',
+            r'\(OUTSIDE',
+            r'\(WRK',
+            r'SETUP\)',
+            r'ELECTRICAL WORKSHOP',
+            r'ELECTRONICS LAB',
+            r'ELECTRICAL AND',
+        ]
+
+        venue = ''
+        subject_lines = []
+        lecturer = ''
+
+        for i, line in enumerate(lines):
+            if self._is_venue(line, venue_patterns):
+                venue = line
+            elif self._is_lecturer(line):
+                lecturer = self._clean_lecturer(line)
+            else:
+                subject_lines.append(line)
+
+        # If we couldn't identify parts, use position heuristics
+        if not venue and not lecturer and len(lines) >= 2:
+            # First line is often venue
+            if self._looks_like_venue(lines[0]):
+                venue = lines[0]
+                subject_lines = lines[1:]
+            else:
+                subject_lines = lines
+
+        # Clean lecturer if it got mixed with subject
+        if lecturer and subject_lines:
+            # Remove lecturer name fragments from subject
+            cleaned = []
+            for sl in subject_lines:
+                if not any(hint in sl.lower() for hint in _LECTURER_HINTS):
+                    cleaned.append(sl)
+            if cleaned:
+                subject_lines = cleaned
+
+        subject = ' '.join(subject_lines).strip()
+
+        # Clean up common artifacts in subject
+        subject = re.sub(r'\s+', ' ', subject)
+        subject = subject.strip('- ')
+
+        return venue, subject, self._clean_lecturer(lecturer)
+
+    def _is_venue(self, line: str, patterns: list[str]) -> bool:
+        upper = line.upper()
+        for p in patterns:
+            if re.search(p, upper):
+                return True
+        return False
+
+    def _looks_like_venue(self, line: str) -> bool:
+        return self._is_venue(line, [
+            r'^E-\d', r'^C\d+', r'LAB', r'WORKSHOP', r'WORKSOP',
+            r'POWERLINES', r'COMP', r'TELECOM', r'SOLAR', r'ROBOTICS',
+            r'BLOCK', r'OUTSIDE', r'SETUP', r'ELECTRICAL',
+        ])
+
+    def _is_lecturer(self, line: str) -> bool:
+        lower = line.lower().strip()
+        for hint in _LECTURER_HINTS:
+            if hint in lower:
+                return True
+        # All-caps name pattern (e.g. "SAMUEL NJUGUNA")
+        if re.match(r'^[A-Z][A-Z\s.]+$', line.strip()) and len(line.strip()) > 3:
+            return True
+        return False
+
+    def _clean_lecturer(self, name: str) -> str:
+        name = name.strip()
+        # Remove artifacts like "(wrk shop)" etc.
+        name = re.sub(r'\(.*?\)', '', name).strip()
+        # Title case for display
+        parts = name.split()
+        if parts and all(p.isupper() or p[0].isupper() for p in parts):
+            return ' '.join(p.capitalize() if p.isupper() else p for p in parts)
+        return name
 
     def _normalize_day(self, day: str) -> str:
         lower = day.strip().lower()
@@ -181,7 +315,6 @@ class PdfTimetableParser:
         for d in self.DAYS:
             if d.lower() == lower:
                 return d
-        # Return as-is if not recognized
         return day.strip()
 
     def _normalize_time(self, t: str) -> str:
@@ -191,6 +324,46 @@ class PdfTimetableParser:
                 t = '0' + t
             return t
         return t
+
+    def _fix_text(self, text: str) -> str:
+        """Fix common PDF word-break artifacts and normalize whitespace."""
+        if not text:
+            return text
+        fixes = [
+            ('Microproc essor', 'Microprocessor'),
+            ('Microproce ssor', 'Microprocessor'),
+            ('Technolog y', 'Technology'),
+            ('managem ent', 'management'),
+            ('Mathem atics', 'Mathematics'),
+            ('Engineerin g', 'Engineering'),
+            ('Cont rol', 'Control'),
+            ('Measurem ent', 'Measurement'),
+            ('automatiom', 'automation'),
+            ('automatio n', 'automation'),
+            ('Maintenan ce', 'Maintenance'),
+            ('Maintenan\nce', 'Maintenance'),
+            ('Employabil ity', 'Employability'),
+            ('Princip les', 'Principles'),
+            ('ElectronicsI I', 'Electronics II'),
+            ('Installationpractical', 'Installation practical'),
+            ('Installationtheory', 'Installation theory'),
+            ('Measurementand', 'Measurement and'),
+            ('projectmanagement', 'project management'),
+            ('Systemsautomation', 'Systems automation'),
+            ('Systemsinstallation', 'Systems installation'),
+            ('SystemsOperations', 'Systems Operations'),
+            ('System s', 'Systems'),
+            ('Installationmaintenance', 'Installation maintenance'),
+        ]
+        for old, new in fixes:
+            text = text.replace(old, new)
+        # Fix venue fragments: "(OUTSIDE SETUP)" -> "WORKSHOP (OUTSIDE SETUP)"
+        text = re.sub(r'^\((OUTSIDE|WRK)\s*SHOP?\)', r'WORKSHOP \1', text)
+        text = re.sub(r'^BLOCK\)$', 'E BLOCK', text)
+        text = re.sub(r'^SETUP\)$', 'WORKSHOP (OUTSIDE SETUP)', text)
+        # Normalize whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
 
 
 class PdfExamTimetableParser:
@@ -273,7 +446,6 @@ class PdfExamTimetableParser:
         teacher = cell(teacher_col) if teacher_col >= 0 else ''
         exam_type = cell(type_col) if type_col >= 0 else 'final'
 
-        # Parse time range
         if start_time and not end_time:
             parts = re.split(r'\s*[-–—to]+\s*', start_time)
             if len(parts) >= 2:
@@ -285,7 +457,6 @@ class PdfExamTimetableParser:
 
         exam_type_lower = exam_type.lower()
         if exam_type_lower not in self.EXAM_TYPES:
-            # Try to detect from text
             for t in self.EXAM_TYPES:
                 if t in exam_type_lower:
                     exam_type_lower = t
@@ -304,19 +475,16 @@ class PdfExamTimetableParser:
         }
 
     def _parse_text_lines(self, text: str, result: TimetableParseResult):
-        """Fallback for non-table exam PDFs."""
         lines = text.split('\n')
         current_date = ''
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            # Detect date lines like "2026-04-15" or "15/04/2026"
             m = re.match(r'(\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})', line)
             if m:
                 current_date = m.group(1).replace('/', '-')
                 continue
-            # Detect exam lines: time + subject + room
             m = re.match(
                 r'(\d{1,2}[:.]\d{2})\s*[-–—to]+\s*(\d{1,2}[:.]\d{2})\s+(.+?)(?:\s{2,}|\t)(.+?)(?:\s{2,}|\t)(.*)',
                 line,
