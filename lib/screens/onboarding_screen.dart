@@ -61,6 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -77,12 +78,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(page.icon, size: 100, color: theme.primaryColor),
-                        const SizedBox(height: 40),
+                        Container(
+                          padding: const EdgeInsets.all(36),
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: primary.withValues(alpha: 0.12),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Icon(page.icon, size: 88, color: primary),
+                        ),
+                        const SizedBox(height: 44),
                         Text(
                           page.title,
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -91,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           page.description,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
-                            height: 1.5,
+                            height: 1.55,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -106,20 +118,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: List.generate(
                 _pages.length,
                 (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == i ? 24 : 8,
-                  height: 8,
+                  width: _currentPage == i ? 28 : 9,
+                  height: 9,
                   decoration: BoxDecoration(
                     color: _currentPage == i
-                        ? theme.primaryColor
-                        : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4),
+                        ? primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 36),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: SizedBox(
@@ -139,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       }
                     } else {
                       _controller.nextPage(
-                        duration: const Duration(milliseconds: 300),
+                        duration: const Duration(milliseconds: 350),
                         curve: Curves.easeInOut,
                       );
                     }
@@ -151,12 +164,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             if (_currentPage < _pages.length - 1)
-              TextButton(
-                onPressed: () {
-                  OnboardingScreen.markSeen();
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Skip'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: TextButton(
+                  onPressed: () {
+                    OnboardingScreen.markSeen();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Skip'),
+                ),
               ),
             if (_currentPage == _pages.length - 1) const SizedBox(height: 48),
           ],

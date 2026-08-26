@@ -26,7 +26,7 @@ class UserActionsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -74,13 +74,19 @@ class UserActionsSheet extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 user.designation!,
-                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
               ),
             ],
             const SizedBox(height: 4),
             Text(
               user.registrationNumber,
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
             const SizedBox(height: 24),
             if (hasPhone) ...[
@@ -112,7 +118,7 @@ class UserActionsSheet extends StatelessWidget {
               _ActionTile(
                 icon: Icons.sms,
                 label: 'Send SMS',
-                color: Colors.blue,
+                color: Theme.of(context).colorScheme.primary,
                 subtitle: user.mobileNumber,
                 onTap: () => launchUrl(Uri.parse('sms:${user.mobileNumber}')),
               ),
@@ -120,7 +126,7 @@ class UserActionsSheet extends StatelessWidget {
               _ActionTile(
                 icon: Icons.copy,
                 label: 'Copy Phone Number',
-                color: Colors.grey[700]!,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: user.mobileNumber));
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -136,16 +142,22 @@ class UserActionsSheet extends StatelessWidget {
                   horizontal: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.grey[500], size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       'No phone number available',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -234,7 +246,10 @@ class _ActionTile extends StatelessWidget {
                     if (subtitle != null)
                       Text(
                         subtitle!,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                   ],
                 ),

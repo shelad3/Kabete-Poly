@@ -72,7 +72,9 @@ class QuizResultsScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             '${quiz.durationMinutes} min · ${quiz.questionIds.length} questions',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -90,7 +92,7 @@ class QuizResultsScreen extends StatelessWidget {
                           'Submissions',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -132,7 +134,7 @@ class QuizResultsScreen extends StatelessWidget {
                             '${s.score}/${s.total} · ${_formatDate(s.submittedAt)}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),

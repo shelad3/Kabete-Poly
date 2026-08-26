@@ -52,6 +52,24 @@ class UpdateService {
 
       if (latestVersion.isEmpty || downloadUrl.isEmpty) return;
 
+      if (!isDirectApk(downloadUrl)) {
+        // A release PAGE (HTML) would download fine but fail to install with
+        // "unable to parse the package". Never surface it as an update.
+        debugPrint(
+          'UpdateService: app_updates/latest downloadUrl is not a direct APK '
+          'asset (got "$downloadUrl"). Config error — update suppressed.',
+        );
+        if (showNoUpdateMsg && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Update server misconfigured. Contact admin.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
       if (_isUpdateAvailable(currentVersion, latestVersion)) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('update_available', true);
@@ -82,6 +100,19 @@ class UpdateService {
           ),
         );
       }
+    }
+  }
+
+  /// Returns true when [url] points directly at an APK file (a GitHub
+  /// release *asset*), rather than a release *page* (which serves HTML and
+  /// fails Android's package parser).
+  static bool isDirectApk(String url) {
+    try {
+      final uri = Uri.parse(url);
+      final path = uri.path.toLowerCase();
+      return path.endsWith('.apk');
+    } catch (_) {
+      return false;
     }
   }
 

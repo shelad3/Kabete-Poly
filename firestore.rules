@@ -31,9 +31,11 @@ service cloud.firestore {
 
     // ---------------------------------------------------- //
     // Users Collection
+    // Read scoped: users may read their own profile; Leaders and above may
+    // read the directory. Blocks plain Students from bulk-harvesting PII.
     // ---------------------------------------------------- //
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (isOwner(userId) || isLeaderOrAbove());
       allow create, update: if isAuthenticated() && isOwner(userId);
       allow delete: if isAdmin();
     }
@@ -59,9 +61,14 @@ service cloud.firestore {
 
     // ---------------------------------------------------- //
     // Grades Collection
+    // Read scoped: a user may read only their own grades; Teachers and above
+    // may read any (class-wide reporting). Prevents students from querying
+    // the whole collection.
     // ---------------------------------------------------- //
     match /grades/{gradeId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isTeacherOrAbove()
+      );
       allow create, update: if isTeacherOrAbove();
       allow delete: if isTeacherOrAbove();
     }
@@ -154,19 +161,31 @@ service cloud.firestore {
 
     // ---------------------------------------------------- //
     // Alerts Collection
+    // Read: authenticated (alerts are broadcast announcements). Update:
+    // admins may edit; any user may only append their OWN id to readBy
+    // (mark-read), never rewrite other fields.
     // ---------------------------------------------------- //
     match /alerts/{alertId} {
       allow read: if isAuthenticated();
       allow create: if isAdmin();
-      allow update: if isAuthenticated();
+      allow update: if isAdmin() || (
+        isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']) &&
+        request.resource.data.readBy.hasAll(resource.data.readBy) &&
+        request.resource.data.readBy.size() >= resource.data.readBy.size() &&
+        request.resource.data.readBy.hasAny([request.auth.uid])
+      );
       allow delete: if isAdmin();
     }
 
     // ---------------------------------------------------- //
     // Attendance Collection
+    // Read scoped: own records or Teacher+ (class-wide views).
     // ---------------------------------------------------- //
     match /attendance/{attendanceId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid || isTeacherOrAbove()
+      );
       allow create: if isTeacherOrAbove();
       allow update, delete: if isTeacherOrAbove();
     }
@@ -193,11 +212,29 @@ service cloud.firestore {
 
     // ---------------------------------------------------- //
     // Lesson Verifications (Student vote taught/not taught)
+    // Students may create a fresh doc only if it casts THEIR OWN vote, and
+    // may update only by appending their own id to one of the vote arrays.
+    // Teachers confirm via isConfirmed.
     // ---------------------------------------------------- //
     match /lesson_verifications/{verificationId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();   // students create vote
-      allow update: if isAuthenticated();   // students update their vote
+      allow create: if isAuthenticated() &&
+        request.resource.data.votesFor.size() <= 1 &&
+        request.resource.data.votesAgainst.size() <= 1 &&
+        (request.resource.data.votesFor.hasAny([request.auth.uid]) ||
+         request.resource.data.votesAgainst.hasAny([request.auth.uid]));
+      allow update: if isTeacherOrAbove() || (
+        isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+          ['votesFor', 'votesAgainst']
+        ) &&
+        request.resource.data.votesFor.hasAll(resource.data.votesFor) &&
+        request.resource.data.votesAgainst.hasAll(resource.data.votesAgainst) &&
+        request.resource.data.votesFor.size() >= resource.data.votesFor.size() &&
+        request.resource.data.votesAgainst.size() >= resource.data.votesAgainst.size() &&
+        (request.resource.data.votesFor.hasAny([request.auth.uid]) ||
+         request.resource.data.votesAgainst.hasAny([request.auth.uid]))
+      );
       allow delete: if isAdmin();
     }
 
@@ -280,7 +317,8 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
         request.resource.data.studentId == request.auth.uid &&
-        request.resource.data.keys().hasAll(['studentId', 'cubeId', 'term', 'year', 'status']);
+        request.resource.data.keys().hasAll(['studentId', 'cubeId', 'term', 'year', 'status']) &&
+        request.resource.data.status == 'pending';  // students may only open as pending
       allow update: if isTeacherOrAbove() || (
         request.resource.data.studentId == request.auth.uid &&
         request.resource.data.status == 'cancelled'
@@ -361,7 +399,8 @@ service cloud.firestore {
         resource.data.studentId == request.auth.uid || isTeacherOrAbove()
       );
       allow create: if isAuthenticated() &&
-        request.resource.data.studentId == request.auth.uid;
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == 'pending';  // students may only initiate
       allow update: if isTeacherOrAbove();  // admin confirms/refunds
       allow delete: if false;
     }
@@ -372,7 +411,8 @@ service cloud.firestore {
     match /waitlist/{entryId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
-        request.resource.data.studentId == request.auth.uid;
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == 'waiting';  // students may only enqueue
       allow update: if isTeacherOrAbove() || (
         request.resource.data.studentId == request.auth.uid &&
         request.resource.data.status == 'expired'
@@ -416,7 +456,8 @@ service cloud.firestore {
         resource.data.studentId == request.auth.uid || isTeacherOrAbove()
       );
       allow create: if isAuthenticated() &&
-        request.resource.data.studentId == request.auth.uid;
+        request.resource.data.studentId == request.auth.uid &&
+        request.resource.data.status == 'registered';  // seat checks run in transaction
       allow delete: if isAuthenticated() && (
         resource.data.studentId == request.auth.uid || isTeacherOrAbove()
       );
@@ -424,10 +465,14 @@ service cloud.firestore {
 
     // ---------------------------------------------------- //
     // App Updates (public read — needed before login)
+    // Only admin-tool service accounts may create/update docs.
+    // Deletes are denied: keeping the last-known-good version prevents
+    // a stale client from losing update availability.
     // ---------------------------------------------------- //
     match /app_updates/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if false;
     }
 
     // ---------------------------------------------------- //

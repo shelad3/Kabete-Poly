@@ -98,21 +98,27 @@ class _HouseCategoryTab extends StatelessWidget {
                 Icon(
                   category == 'boys' ? Icons.male : Icons.female,
                   size: 64,
-                  color: Colors.grey[400],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   isNewStudent
                       ? 'No $category houses configured'
                       : 'No $category houses available',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 16,
+                  ),
                 ),
                 if (!isNewStudent)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       'Houses reserved for new students are hidden',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
               ],
@@ -144,7 +150,7 @@ class _HouseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isBoys = house.category == 'boys';
-    final color = isBoys ? Colors.blue : Colors.pink;
+    final color = isBoys ? Theme.of(context).colorScheme.primary : Colors.pink;
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
@@ -175,7 +181,10 @@ class _HouseCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 '${house.totalCubes} cubes',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
               if (house.reservedForNewStudents)
                 Container(
@@ -202,7 +211,10 @@ class _HouseCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   house.description!,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

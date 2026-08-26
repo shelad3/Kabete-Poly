@@ -11,7 +11,6 @@ import '../../services/payment_service.dart';
 import '../../services/auth_provider.dart';
 import '../../utils/term_utils.dart';
 import '../payment/payment_method_screen.dart';
-import 'booking_receipt_screen.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Cube cube;
@@ -104,7 +103,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(Icons.workspaces, size: 40, color: Colors.blue[400]),
+                    Icon(
+                      Icons.workspaces,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,12 +121,18 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                         ),
                         Text(
                           widget.house.name,
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                         Text(
                           'Max ${widget.cube.maxOccupancy} students',
                           style: TextStyle(
-                            color: Colors.grey[500],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
@@ -142,10 +151,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.calendar_month,
                           size: 18,
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -165,7 +174,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                         const SizedBox(width: 8),
                         Text(
                           'KES ${fee.toStringAsFixed(0)} per term',
-                          style: TextStyle(color: Colors.grey[700]),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -202,7 +215,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     : const Icon(Icons.book_online),
                 label: Text(_isBooking ? 'Booking...' : 'Confirm Booking'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                 ),
               ),

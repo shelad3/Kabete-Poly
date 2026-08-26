@@ -26,16 +26,16 @@ class _ExploreCardShimmer extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
       child: Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
+        baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        highlightColor: Theme.of(context).colorScheme.surface,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               height: 180,
               width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
             ),
@@ -48,7 +48,7 @@ class _ExploreCardShimmer extends StatelessWidget {
                     height: 20,
                     width: MediaQuery.of(context).size.width * 0.6,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -57,23 +57,23 @@ class _ExploreCardShimmer extends StatelessWidget {
                     height: 16,
                     width: MediaQuery.of(context).size.width * 0.4,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 12,
-                        backgroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
                       ),
                       const SizedBox(width: 8),
                       Container(
                         height: 14,
                         width: 100,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -103,7 +103,7 @@ class ShimmerScheduleList extends StatelessWidget {
             height: 20,
             width: MediaQuery.of(context).size.width * 0.5,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -112,7 +112,7 @@ class ShimmerScheduleList extends StatelessWidget {
             height: 14,
             width: MediaQuery.of(context).size.width * 0.35,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -130,12 +130,12 @@ class _ScheduleCardShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      highlightColor: Theme.of(context).colorScheme.surface,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
@@ -149,7 +149,7 @@ class _ScheduleCardShimmer extends StatelessWidget {
                     height: 30,
                     width: 100,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -161,7 +161,7 @@ class _ScheduleCardShimmer extends StatelessWidget {
                 height: 18,
                 width: MediaQuery.of(context).size.width * 0.5,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -172,7 +172,7 @@ class _ScheduleCardShimmer extends StatelessWidget {
                     height: 14,
                     width: 120,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -181,7 +181,7 @@ class _ScheduleCardShimmer extends StatelessWidget {
                     height: 14,
                     width: 100,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -212,13 +212,15 @@ class ShimmerForumMessages extends StatelessWidget {
               (i) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                 child: Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
+                  baseColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
+                  highlightColor: Theme.of(context).colorScheme.surface,
                   child: Container(
                     width: 100,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
@@ -253,8 +255,8 @@ class _MessageBubbleShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      highlightColor: Theme.of(context).colorScheme.surface,
       child: Row(
         mainAxisAlignment: isMe
             ? MainAxisAlignment.end
@@ -262,7 +264,10 @@ class _MessageBubbleShimmer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isMe)
-            const CircleAvatar(radius: 18, backgroundColor: Colors.white),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+            ),
           if (!isMe) const SizedBox(width: 8),
           Column(
             crossAxisAlignment: isMe
@@ -274,7 +279,7 @@ class _MessageBubbleShimmer extends StatelessWidget {
                   height: 12,
                   width: 80,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -283,7 +288,7 @@ class _MessageBubbleShimmer extends StatelessWidget {
                 height: 36,
                 width: MediaQuery.of(context).size.width * 0.5,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
@@ -316,15 +321,18 @@ class _NotificationCardShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      highlightColor: Theme.of(context).colorScheme.surface,
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CircleAvatar(radius: 24, backgroundColor: Colors.white),
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -337,7 +345,7 @@ class _NotificationCardShimmer extends StatelessWidget {
                           height: 16,
                           width: MediaQuery.of(context).size.width * 0.4,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -345,7 +353,7 @@ class _NotificationCardShimmer extends StatelessWidget {
                           height: 12,
                           width: 50,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -356,7 +364,7 @@ class _NotificationCardShimmer extends StatelessWidget {
                       height: 14,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -365,7 +373,7 @@ class _NotificationCardShimmer extends StatelessWidget {
                       height: 14,
                       width: MediaQuery.of(context).size.width * 0.6,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),

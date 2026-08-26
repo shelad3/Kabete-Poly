@@ -50,3 +50,19 @@ app.*.map.json
 # Secrets (API keys, passwords, etc)
 android/secrets.properties
 android/app/google-services.json
+
+# Tool configs
+.opencode/
+opencode.json
+
+# Session files
+session-ses_*.md
+
+# Admin tool venv & artifacts
+admin-tool/venv/
+admin-tool/__pycache__/
+admin-tool/src/__pycache__/
+admin-tool/src/venv/
+
+# Build artifacts
+android/.kotlin/

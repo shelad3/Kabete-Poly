@@ -41,12 +41,15 @@ class _CubeListScreenState extends State<CubeListScreen> {
                   Icon(
                     Icons.workspaces_outlined,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No cubes in this house yet',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -56,15 +59,22 @@ class _CubeListScreenState extends State<CubeListScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                color: Colors.grey[50],
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16, color: Colors.grey[700]),
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         '${TermUtils.getCurrentTermLabel()} ${TermUtils.getCurrentYear()} — KSH 8,000 per term',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -173,7 +183,9 @@ class _CubeTileState extends State<_CubeTile> {
     final full = !_loading && _available <= 0;
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: full ? Colors.grey[200] : null,
+      color: full
+          ? Theme.of(context).colorScheme.surfaceContainerHighest
+          : null,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: full ? null : widget.onTap,
@@ -183,7 +195,9 @@ class _CubeTileState extends State<_CubeTile> {
             Icon(
               full ? Icons.workspaces : Icons.workspaces,
               size: 28,
-              color: full ? Colors.grey[400] : Colors.blue[400],
+              color: full
+                  ? Theme.of(context).colorScheme.onSurfaceVariant
+                  : Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 4),
             Text(
@@ -222,7 +236,10 @@ class _CubeTileState extends State<_CubeTile> {
               ),
             Text(
               'Max ${widget.cube.maxOccupancy}',
-              style: TextStyle(color: Colors.grey[500], fontSize: 9),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 9,
+              ),
             ),
           ],
         ),

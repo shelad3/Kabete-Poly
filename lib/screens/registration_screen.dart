@@ -74,7 +74,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.grey[300],
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   backgroundImage: _profileImage != null
                       ? FileImage(_profileImage!)
                       : null,
@@ -201,9 +203,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             section.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 12,
                             ),
                           ),
@@ -226,17 +230,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       value: '__custom__',
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.edit,
                             size: 16,
-                            color: Colors.orange,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'Other (specify)',
                             style: TextStyle(
                               fontStyle: FontStyle.italic,
-                              color: Colors.orange[700],
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ],
@@ -310,13 +314,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             ),
                           );
                         }),
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
                       value: '__missing__',
                       child: Text(
                         'My class is not listed',
                         style: TextStyle(
                           fontStyle: FontStyle.italic,
-                          color: Colors.orange,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),
@@ -380,7 +384,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   TextSpan(
                                     text: 'sheldonramu8@gmail.com',
                                     style: TextStyle(
-                                      color: Colors.blue[700],
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       decoration: TextDecoration.underline,
                                       fontWeight: FontWeight.w600,
                                     ),

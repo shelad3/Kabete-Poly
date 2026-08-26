@@ -39,7 +39,7 @@ class _AvailableExamsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final classId = context.watch<ClassProvider>().currentClass;
-    if (classId == null || classId.isEmpty) {
+    if (classId.isEmpty) {
       return const Center(child: Text('No class selected.'));
     }
 
@@ -59,7 +59,7 @@ class _AvailableExamsTab extends StatelessWidget {
                 Icon(
                   Icons.school_outlined,
                   size: 64,
-                  color: Colors.grey.shade400,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -67,14 +67,16 @@ class _AvailableExamsTab extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Exam registration will appear here\nonce published by administration.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade500),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -125,11 +127,11 @@ class _ExamCardState extends State<_ExamCard> {
       case 'final':
         return Colors.red;
       case 'cat':
-        return Colors.teal;
+        return Theme.of(context).colorScheme.primary;
       case 'supplementary':
-        return Colors.purple;
+        return Theme.of(context).colorScheme.primary;
       default:
-        return Colors.blueGrey;
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
@@ -184,12 +186,15 @@ class _ExamCardState extends State<_ExamCard> {
                 Icon(
                   Icons.calendar_today,
                   size: 14,
-                  color: Colors.grey.shade500,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${exam.startDate.day}/${exam.startDate.month}/${exam.startDate.year} — ${exam.endDate.day}/${exam.endDate.month}/${exam.endDate.year}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -199,19 +204,26 @@ class _ExamCardState extends State<_ExamCard> {
                 Icon(
                   Icons.event_available,
                   size: 14,
-                  color: Colors.grey.shade500,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   'Registration deadline: ${exam.registrationDeadline.day}/${exam.registrationDeadline.month}/${exam.registrationDeadline.year}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(Icons.people, size: 14, color: Colors.grey.shade500),
+                Icon(
+                  Icons.people,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${exam.availableSeats} of ${exam.maxSeats} seats available',
@@ -219,7 +231,7 @@ class _ExamCardState extends State<_ExamCard> {
                     fontSize: 12,
                     color: exam.availableSeats < 20
                         ? Colors.red
-                        : Colors.grey.shade600,
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -273,13 +285,15 @@ class _ExamCardState extends State<_ExamCard> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   exam.hasStarted ? 'Exam in progress' : 'Registration closed',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
           ],
@@ -363,7 +377,7 @@ class _MyRegistrationsTab extends StatelessWidget {
                 Icon(
                   Icons.app_registration,
                   size: 64,
-                  color: Colors.grey.shade400,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -371,13 +385,15 @@ class _MyRegistrationsTab extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Register for exams from the Available tab.',
-                  style: TextStyle(color: Colors.grey.shade500),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -405,7 +421,10 @@ class _MyRegistrationsTab extends StatelessWidget {
                 ),
                 trailing: Text(
                   '${booking.registeredAt.day}/${booking.registeredAt.month}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             );

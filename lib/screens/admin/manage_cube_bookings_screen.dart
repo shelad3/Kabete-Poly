@@ -26,15 +26,15 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
       case 'pending':
         return Colors.orange;
       case 'confirmed':
-        return Colors.blue;
+        return Theme.of(context).colorScheme.primary;
       case 'checked_in':
         return Colors.green;
       case 'completed':
-        return Colors.grey;
+        return Theme.of(context).colorScheme.onSurfaceVariant;
       case 'cancelled':
         return Colors.red;
       default:
-        return Colors.grey;
+        return Theme.of(context).colorScheme.onSurfaceVariant;
     }
   }
 
@@ -130,11 +130,18 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.book_online, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.book_online,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No bookings found',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -190,7 +197,9 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                       const SizedBox(height: 6),
                       Text(
                         '${b.studentName} (${b.regNo})',
-                        style: TextStyle(color: Colors.grey[800]),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -233,13 +242,17 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                           Icon(
                             Icons.calendar_month,
                             size: 14,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Term ${b.term} ${b.year}',
                             style: TextStyle(
-                              color: Colors.grey[700],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 12,
                             ),
                           ),
@@ -255,7 +268,9 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                               icon: const Icon(Icons.check, size: 16),
                               label: const Text('Confirm'),
                               style: TextButton.styleFrom(
-                                foregroundColor: Colors.blue,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -289,7 +304,9 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                               icon: const Icon(Icons.done_all, size: 16),
                               label: const Text('Complete'),
                               style: TextButton.styleFrom(
-                                foregroundColor: Colors.grey,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -304,7 +321,9 @@ class _ManageCubeBookingsScreenState extends State<ManageCubeBookingsScreen> {
                             icon: const Icon(Icons.done_all, size: 16),
                             label: const Text('Mark Completed'),
                             style: TextButton.styleFrom(
-                              foregroundColor: Colors.grey,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),

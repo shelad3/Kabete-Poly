@@ -58,7 +58,10 @@ class ManageStudentsScreen extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '$regNo · $email\n${classes.length} class(es)',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   isThreeLine: true,
                 ),

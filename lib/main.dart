@@ -14,6 +14,7 @@ import 'services/class_provider.dart';
 import 'services/notification_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/analytics_service.dart';
+import 'services/crash_reporting.dart';
 import 'services/unread_badge_provider.dart';
 import 'services/connectivity_provider.dart';
 import 'providers/feature_flag_provider.dart';
@@ -28,15 +29,12 @@ import 'screens/onboarding_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  FlutterError.onError = (details) {
-    debugPrint('Unhandled Flutter error: ${details.exception}');
-  };
-
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
     } else {
       await Firebase.initializeApp();
+      setupCrashReporting();
     }
 
     if (!kIsWeb) {

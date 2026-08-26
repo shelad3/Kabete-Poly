@@ -27,11 +27,17 @@ class GuestHousesWidget extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.home_work, size: 64, color: Colors.grey[400]),
+                Icon(
+                  Icons.home_work,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'No houses listed yet',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -47,7 +53,7 @@ class GuestHousesWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -89,7 +95,7 @@ class _HouseCard extends StatelessWidget {
           style: TextStyle(
             color: house.reservedForNewStudents
                 ? Colors.orange[700]
-                : Colors.grey[600],
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 12,
           ),
         ),

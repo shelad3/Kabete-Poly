@@ -189,7 +189,9 @@ class _CreateQuizScreenState extends State<CreateQuizScreen> {
                 child: Center(
                   child: Text(
                     'Tap "Add" to create questions',
-                    style: TextStyle(color: Colors.grey[500]),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),

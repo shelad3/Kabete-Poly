@@ -2,7 +2,9 @@
 // Copyright (C) 2026 Kabete National Polytechnique
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/election.dart';
+import '../../services/auth_provider.dart';
 import '../../services/voting_service.dart';
 
 class VoteCastScreen extends StatefulWidget {
@@ -227,7 +229,11 @@ class _PositionSectionState extends State<_PositionSection> {
           children: [
             Row(
               children: [
-                Icon(Icons.person, color: Colors.indigo.shade600, size: 20),
+                Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   widget.position.title,
@@ -294,7 +300,9 @@ class _PositionSectionState extends State<_PositionSection> {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             )
                           : null,

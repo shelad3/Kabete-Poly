@@ -88,11 +88,15 @@ class _HelpScreenState extends State<HelpScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: remaining > 0
-                        ? Colors.blue.withValues(alpha: 0.1)
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.1)
                         : Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: remaining > 0 ? Colors.blue : Colors.orange,
+                      color: remaining > 0
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.orange,
                     ),
                   ),
                   child: Row(
@@ -101,7 +105,9 @@ class _HelpScreenState extends State<HelpScreen> {
                         remaining > 0
                             ? Icons.info_outline
                             : Icons.warning_amber,
-                        color: remaining > 0 ? Colors.blue : Colors.orange,
+                        color: remaining > 0
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.orange,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -111,7 +117,7 @@ class _HelpScreenState extends State<HelpScreen> {
                               : 'You have used all class changes. Submit a request below for assistance.',
                           style: TextStyle(
                             color: remaining > 0
-                                ? Colors.blue[800]
+                                ? Theme.of(context).colorScheme.primary
                                 : Colors.orange[800],
                           ),
                         ),
@@ -127,37 +133,63 @@ class _HelpScreenState extends State<HelpScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.person,
                             size: 16,
-                            color: Colors.grey,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'From: ${user?.fullName ?? "You"}',
-                            style: const TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.email, size: 16, color: Colors.grey),
+                          Icon(
+                            Icons.email,
+                            size: 16,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             user?.email ?? '',
-                            style: const TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.badge, size: 16, color: Colors.grey),
+                          Icon(
+                            Icons.badge,
+                            size: 16,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             user?.registrationNumber ?? '',
-                            style: const TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),

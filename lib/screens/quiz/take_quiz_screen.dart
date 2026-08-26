@@ -101,7 +101,10 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
           children: [
             Text(
               'Your Score',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -173,7 +176,9 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
             child: _questions != null
                 ? LinearProgressIndicator(
                     value: _answers.length / (_questions!.length),
-                    backgroundColor: Colors.grey[300],
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   )
                 : const SizedBox.shrink(),
           ),
@@ -195,7 +200,11 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
                       children: [
                         Text(
                           '${_answers.length}/${_questions!.length} answered',
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                         Row(
                           children: [
@@ -204,7 +213,9 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
                               size: 16,
                               color: _remainingSeconds < 60
                                   ? Colors.red
-                                  : Colors.grey,
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -236,7 +247,9 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
                               Text(
                                 'Question ${index + 1} of ${_questions!.length}',
                                 style: TextStyle(
-                                  color: Colors.grey[500],
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 13,
                                 ),
                               ),
@@ -270,7 +283,9 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
                                         border: Border.all(
                                           color: selected
                                               ? Theme.of(context).primaryColor
-                                              : Colors.grey[300]!,
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.outlineVariant,
                                           width: selected ? 2 : 1,
                                         ),
                                       ),
@@ -282,7 +297,9 @@ class _TakeQuizScreenState extends State<TakeQuizScreen> {
                                                 : Icons.radio_button_off,
                                             color: selected
                                                 ? Theme.of(context).primaryColor
-                                                : Colors.grey,
+                                                : Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
                                             size: 20,
                                           ),
                                           const SizedBox(width: 12),

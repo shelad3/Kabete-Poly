@@ -27,7 +27,10 @@ class _FeatureFlagManagementScreenState
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               'Enable or disable features on the go',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
           ),
           Expanded(
@@ -35,14 +38,18 @@ class _FeatureFlagManagementScreenState
               builder: (context, provider, _) {
                 final flags = provider.getAllFlags();
                 if (flags.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.flag_outlined, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text('No feature flags found'),
-                        Text('Defaults will be seeded on first load.'),
+                        Icon(
+                          Icons.flag_outlined,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('No feature flags found'),
+                        const Text('Defaults will be seeded on first load.'),
                       ],
                     ),
                   );
@@ -86,34 +93,34 @@ class _FeatureFlagTileState extends State<_FeatureFlagTile> {
   }
 
   Color _getIconColor() {
-    if (!_enabled) return Colors.grey;
+    if (!_enabled) return Theme.of(context).colorScheme.onSurfaceVariant;
     switch (widget.flag.name) {
       case 'hostel_booking':
-        return Colors.indigo;
+        return Theme.of(context).colorScheme.primary;
       case 'quizzes':
         return Colors.orange;
       case 'forum':
-        return Colors.blue;
+        return Theme.of(context).colorScheme.primary;
       case 'report_cards':
         return Colors.green;
       case 'grades':
-        return Colors.amber;
+        return Theme.of(context).colorScheme.primary;
       case 'timetable':
-        return Colors.cyan;
+        return Theme.of(context).colorScheme.primary;
       case 'notifications':
         return Colors.red;
       case 'gallery':
         return Colors.pink;
       case 'campus_map':
-        return Colors.teal;
+        return Theme.of(context).colorScheme.primary;
       case 'lesson_verification':
-        return Colors.deepPurple;
+        return Theme.of(context).colorScheme.primary;
       case 'exam_booking':
         return Colors.deepOrange;
       case 'voting':
-        return Colors.purple;
+        return Theme.of(context).colorScheme.primary;
       default:
-        return Colors.blueGrey;
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
@@ -158,7 +165,7 @@ class _FeatureFlagTileState extends State<_FeatureFlagTile> {
       enabled: value,
       autoDisableAt: _autoDisableAt,
       autoEnableAt: _autoEnableAt,
-      adminUid: authProvider.currentUserId ?? '',
+      adminUid: authProvider.currentUserId,
     );
   }
 
@@ -204,7 +211,7 @@ class _FeatureFlagTileState extends State<_FeatureFlagTile> {
       enabled: _enabled,
       autoDisableAt: _autoDisableAt,
       autoEnableAt: _autoEnableAt,
-      adminUid: authProvider.currentUserId ?? '',
+      adminUid: authProvider.currentUserId,
     );
   }
 
@@ -270,7 +277,9 @@ class _FeatureFlagTileState extends State<_FeatureFlagTile> {
                           widget.flag.description,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                     ],
@@ -290,7 +299,7 @@ class _FeatureFlagTileState extends State<_FeatureFlagTile> {
                   'Disabled message: "${widget.flag.disabledMessage}"',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -298,14 +307,18 @@ class _FeatureFlagTileState extends State<_FeatureFlagTile> {
             const Divider(height: 20),
             Row(
               children: [
-                Icon(Icons.schedule, size: 16, color: Colors.grey.shade500),
+                Icon(
+                  Icons.schedule,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Schedule',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade700,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const Spacer(),

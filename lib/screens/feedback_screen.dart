@@ -79,17 +79,24 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.amber.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.amber),
-                    SizedBox(width: 12),
-                    Expanded(
+                    Icon(
+                      Icons.lightbulb_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
                       child: Text(
                         'We value your input! Share your suggestions, feature requests, or any thoughts about the app.',
                         style: TextStyle(fontSize: 13),
@@ -111,7 +118,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   return IconButton(
                     icon: Icon(
                       starIdx <= _rating ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 36,
                     ),
                     onPressed: () => setState(

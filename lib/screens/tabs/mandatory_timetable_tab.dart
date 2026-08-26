@@ -96,17 +96,23 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       Icon(
                         Icons.calendar_month,
                         size: 64,
-                        color: Colors.grey[300],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'No timetable entries yet',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Entries will appear here once uploaded to the database.',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -130,7 +136,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white70 : Colors.blueGrey,
+                            color: isDark
+                                ? Colors.white70
+                                : Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
@@ -160,10 +168,12 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
       decoration: BoxDecoration(
         color: isDark
             ? const Color(0xFF2A2A3E)
-            : Colors.blue.withValues(alpha: 0.1),
+            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.blue.withValues(alpha: 0.2),
+          color: isDark
+              ? Colors.white10
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -177,7 +187,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
-                  color: isDark ? Colors.white54 : Colors.blueGrey,
+                  color: isDark
+                      ? Colors.white54
+                      : Theme.of(context).colorScheme.primary,
                 ),
               ),
               Text(
@@ -214,21 +226,25 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         _selectedCohort,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     )
                   : Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+                        color: isDark
+                            ? const Color(0xFF1A1A2E)
+                            : Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: isDark
                             ? null
@@ -242,9 +258,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _selectedCohort,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_drop_down,
-                            color: Colors.blue,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -286,7 +302,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A2A3E) : Colors.white,
+        color: isDark
+            ? const Color(0xFF2A2A3E)
+            : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: isDark
             ? null
@@ -344,14 +362,17 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                                 shape: BoxShape.circle,
                                 color: isDark
                                     ? Colors.white10
-                                    : Colors.grey.withValues(alpha: 0.1),
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant
+                                          .withValues(alpha: 0.1),
                               ),
                               child: Icon(
                                 Icons.notifications_none,
                                 size: 18,
                                 color: isDark
                                     ? Colors.white54
-                                    : Colors.blueGrey,
+                                    : Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ),
@@ -369,35 +390,47 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            lesson['room'],
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Icon(
-                            Icons.person_outline,
-                            size: 14,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              lesson['lecturer'],
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 13,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(width: 4),
+                              Text(
+                                lesson['room'],
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Icon(
+                                Icons.person_outline,
+                                size: 14,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  lesson['lecturer'],
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    fontSize: 13,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

@@ -172,12 +172,15 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                   Icon(
                     Icons.workspaces_outlined,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No houses configured',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
@@ -216,9 +219,9 @@ class _ManageHousesScreenState extends State<ManageHousesScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.workspaces,
-                          color: Colors.indigo,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         tooltip: 'Manage Cubes',
                         onPressed: () => Navigator.push(

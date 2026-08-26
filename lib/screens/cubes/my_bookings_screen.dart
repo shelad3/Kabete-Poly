@@ -3,7 +3,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../services/cube_service.dart';
 import '../../services/auth_provider.dart';
 import '../../models/cube_booking.dart';
@@ -25,15 +24,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       case 'pending':
         return Colors.orange;
       case 'confirmed':
-        return Colors.blue;
+        return Theme.of(context).colorScheme.primary;
       case 'checked_in':
         return Colors.green;
       case 'completed':
-        return Colors.grey;
+        return Theme.of(context).colorScheme.onSurfaceVariant;
       case 'cancelled':
         return Colors.red;
       default:
-        return Colors.grey;
+        return Theme.of(context).colorScheme.onSurfaceVariant;
     }
   }
 
@@ -117,16 +116,25 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.book_online, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.book_online,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No bookings this term',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Book a cubicle from the Houses tab',
-                    style: TextStyle(color: Colors.grey[500]),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -286,7 +294,10 @@ class _EnhancedBookingCard extends StatelessWidget {
               ),
               child: Text(
                 statusDescription(booking.status),
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -308,11 +319,18 @@ class _EnhancedBookingCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.calendar_month, size: 14, color: Colors.grey[600]),
+                Icon(
+                  Icons.calendar_month,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   'Term ${booking.term} ${booking.year}',
-                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -366,7 +384,7 @@ class _WaitlistSection extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),

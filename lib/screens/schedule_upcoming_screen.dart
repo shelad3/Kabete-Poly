@@ -312,7 +312,7 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                       return ListTile(
                         leading: Icon(
                           t.isPractical ? Icons.science : Icons.book,
-                          color: t.isPractical ? Colors.purple : Colors.orange,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         title: Text(t.name),
                         subtitle: Text(
@@ -363,19 +363,25 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                 _showTemplatePicker();
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'save_template',
                 child: ListTile(
-                  leading: Icon(Icons.save_as, color: Colors.teal),
-                  title: Text('Save as Template'),
+                  leading: Icon(
+                    Icons.save_as,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Save as Template'),
                   dense: true,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'load_template',
                 child: ListTile(
-                  leading: Icon(Icons.file_copy, color: Colors.blue),
-                  title: Text('Load Template'),
+                  leading: Icon(
+                    Icons.file_copy,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Load Template'),
                   dense: true,
                 ),
               ),
@@ -420,11 +426,11 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 '1. Topic & Details',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
@@ -459,22 +465,22 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
               ),
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 '2. Class Type',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
               Card(
-                color: widget.isPractical
-                    ? Colors.purple.withValues(alpha: 0.1)
-                    : Colors.orange.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 child: ListTile(
                   leading: Icon(
                     widget.isPractical ? Icons.science : Icons.book,
-                    color: widget.isPractical ? Colors.purple : Colors.orange,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   title: Text(
                     widget.isPractical
@@ -482,27 +488,33 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                         : 'Normal Theory Class',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: widget.isPractical ? Colors.purple : Colors.orange,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 '3. Attachments (Optional)',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.05),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -512,9 +524,9 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
                           margin: const EdgeInsets.only(bottom: 4),
                           child: ListTile(
                             dense: true,
-                            leading: const Icon(
+                            leading: Icon(
                               Icons.insert_drive_file,
-                              color: Colors.blue,
+                              color: Theme.of(context).colorScheme.primary,
                               size: 20,
                             ),
                             title: Text(
@@ -554,11 +566,11 @@ class _ScheduleUpcomingScreenState extends State<ScheduleUpcomingScreen> {
               ),
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 '4. Schedule Timeline',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),

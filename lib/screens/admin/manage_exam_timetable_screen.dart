@@ -4,8 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/exam_timetable_entry.dart';
-import '../../services/class_provider.dart';
-import 'package:provider/provider.dart';
 
 class ManageExamTimetableScreen extends StatefulWidget {
   const ManageExamTimetableScreen({super.key});
@@ -47,14 +45,18 @@ class _ManageExamTimetableScreenState extends State<ManageExamTimetableScreen> {
       body: _isLoadingClasses
           ? const Center(child: CircularProgressIndicator())
           : _classes.isEmpty
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.school_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('No classes found'),
-                  Text('Create a class first.'),
+                  Icon(
+                    Icons.school_outlined,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('No classes found'),
+                  const Text('Create a class first.'),
                 ],
               ),
             )

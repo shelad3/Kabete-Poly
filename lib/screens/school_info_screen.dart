@@ -144,7 +144,9 @@ class _SchoolInfoScreenState extends State<SchoolInfoScreen> {
                                       errorBuilder: (_, _, _) => Container(
                                         height: 200,
                                         width: 300,
-                                        color: Colors.grey[200],
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surfaceContainerHighest,
                                         child: const Icon(
                                           Icons.broken_image,
                                           size: 48,

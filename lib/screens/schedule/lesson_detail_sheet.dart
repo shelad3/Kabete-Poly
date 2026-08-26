@@ -38,7 +38,7 @@ class LessonDetailSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -95,7 +95,9 @@ class LessonDetailSheet extends StatelessWidget {
                         Text(
                           DateFormat('MMM dd, yyyy').format(lesson.date),
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
@@ -112,7 +114,7 @@ class LessonDetailSheet extends StatelessWidget {
           _buildOption(
             context,
             icon: Icons.schedule,
-            iconColor: Colors.teal,
+            iconColor: Theme.of(context).colorScheme.primary,
             title: '${lesson.startTime} - ${lesson.endTime}',
             subtitle: _durationText(),
             onTap: null,
@@ -135,7 +137,7 @@ class LessonDetailSheet extends StatelessWidget {
           _buildOption(
             context,
             icon: Icons.person,
-            iconColor: Colors.blue,
+            iconColor: Theme.of(context).colorScheme.primary,
             title: 'Teacher: ${lesson.teacher}',
             subtitle: teacherLocation != null
                 ? 'Office: ${teacherLocation.name}'
@@ -154,7 +156,7 @@ class LessonDetailSheet extends StatelessWidget {
             _buildOption(
               context,
               icon: Icons.description,
-              iconColor: Colors.grey,
+              iconColor: Theme.of(context).colorScheme.onSurfaceVariant,
               title: lesson.description,
               subtitle: 'Additional details',
               onTap: null,
@@ -165,7 +167,7 @@ class LessonDetailSheet extends StatelessWidget {
             _buildOption(
               context,
               icon: Icons.attach_file,
-              iconColor: Colors.blue,
+              iconColor: Theme.of(context).colorScheme.primary,
               title: '${lesson.attachmentUrls.length} Attachment(s)',
               subtitle: 'Tap to view',
               onTap: () {
@@ -179,7 +181,7 @@ class LessonDetailSheet extends StatelessWidget {
           _buildOption(
             context,
             icon: Icons.alarm,
-            iconColor: Colors.orange,
+            iconColor: Theme.of(context).colorScheme.primary,
             title: 'Set Reminder',
             subtitle: 'Get notified before this lesson starts',
             onTap: () {
@@ -243,13 +245,19 @@ class LessonDetailSheet extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               if (onTap != null)
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
+                Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
             ],
           ),
         ),
@@ -276,7 +284,10 @@ class LessonDetailSheet extends StatelessWidget {
             const SizedBox(height: 12),
             ...List.generate(lesson.attachmentUrls.length, (i) {
               return ListTile(
-                leading: const Icon(Icons.picture_as_pdf, color: Colors.blue),
+                leading: Icon(
+                  Icons.picture_as_pdf,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: Text(
                   i < lesson.attachmentNames.length
                       ? lesson.attachmentNames[i]

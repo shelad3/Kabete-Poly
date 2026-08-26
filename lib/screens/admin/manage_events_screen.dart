@@ -82,11 +82,18 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.event, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.event,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No events yet',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
@@ -133,7 +140,12 @@ class _ManageEventsScreenState extends State<ManageEventsScreen> {
                           ),
                         )
                       : CircleAvatar(
-                          child: Icon(Icons.image, color: Colors.grey[400]),
+                          child: Icon(
+                            Icons.image,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                   title: Text(
                     data['title'] ?? '',
@@ -475,7 +487,9 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                             errorBuilder: (_, __, ___) => Container(
                               width: 100,
                               height: 100,
-                              color: Colors.grey[300],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               child: const Icon(Icons.broken_image),
                             ),
                           ),
@@ -491,7 +505,7 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue,
+                              color: Theme.of(context).colorScheme.primary,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text(
@@ -511,13 +525,17 @@ class _EventFormScreenState extends State<_EventFormScreen> {
               Container(
                 height: 100,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text(
                     'No photos selected (optional)',
-                    style: TextStyle(color: Colors.grey[500]),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -556,7 +574,9 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   'No special guests added',
-                  style: TextStyle(color: Colors.grey[500]),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             const SizedBox(height: 24),
@@ -578,7 +598,7 @@ class _EventFormScreenState extends State<_EventFormScreen> {
                       : (_isEdit ? 'Update Event' : 'Create Event Gallery'),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                 ),
               ),

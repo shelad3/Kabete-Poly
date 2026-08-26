@@ -46,10 +46,12 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Colors.blue.withValues(alpha: 0.15),
-                    child: const Icon(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
+                    child: Icon(
                       Icons.school,
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -57,9 +59,12 @@ class _ManageClassesScreenState extends State<ManageClassesScreen> {
                     className,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
+                  subtitle: Text(
                     'Firestore-managed',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   trailing: IconButton(
                     icon: const Icon(

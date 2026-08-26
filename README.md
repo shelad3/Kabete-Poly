@@ -3,7 +3,7 @@
   <p><strong>A Digital Classroom Platform for Kabete National Polytechnique</strong></p>
   <br>
   <p>
-    <img src="https://img.shields.io/badge/version-2.7.0-blue" alt="Version">
+    <img src="https://img.shields.io/badge/version-2.9.0-blue" alt="Version">
     <img src="https://img.shields.io/badge/platform-Android-brightgreen" alt="Platform">
     <img src="https://img.shields.io/badge/Framework-Flutter-02569B?logo=flutter" alt="Flutter">
     <img src="https://img.shields.io/badge/Backend-Firebase-FFCA28?logo=firebase" alt="Firebase">
@@ -17,11 +17,11 @@
 
 KNP Management System is a mobile application built for Kabete National Polytechnique that replaces paper-based lesson distribution, WhatsApp timetable confusion, and scattered grade records with a single, real-time digital platform.
 
-- **Students:** Browse lessons, view timetables, check grades, participate in class forums
-- **Teachers:** Post lesson materials, schedule classes, view student grades
-- **Admins:** Manage classes, timetable entries, user roles & alerts via a Windows desktop tool
+- **Students:** Browse lessons, view timetables, check grades, book hostel cubicles, register for exams, participate in class forums & quizzes, vote in student leader elections
+- **Teachers:** Post lesson materials, schedule classes, manage grades, create quizzes, verify lesson attendance
+- **Admins:** Manage classes, timetable entries, user roles & alerts, houses/cubicles, payments, exam timetables, feature flags via a Python desktop tool
 
-Built entirely by **Sheldon Ramu** (Electrical Engineering student) over 4 months — Flutter, Firebase, and Python were all learned during development.
+Built entirely by **Sheldon Ramu** (Electrical Engineering student) — Flutter, Firebase, and Python were all learned during development.
 
 ---
 
@@ -30,12 +30,22 @@ Built entirely by **Sheldon Ramu** (Electrical Engineering student) over 4 month
 | Feature | Description |
 |---------|-------------|
 | **Lesson Archive** | Teachers upload notes + PDF attachments per class. Students browse newest-first. |
-| **Real-time Timetable** | Weekly class schedules that update instantly via Firestore. Offline cached. |
+| **Real-time Timetable** | Weekly class schedules that update instantly via Firestore. Offline cached. 4 tabs: Mandatory / Target Timeline / Exams / Map. |
+| **Exam Timetable** | Categorized exams (final/midterm/CAT/practical) grouped by date, with admin CRUD. |
 | **Grades Portal** | CAT1, CAT2, and Exam results published by teachers. Students see only their own. |
 | **Class Forums** | Per-class discussion channels (Global announcements + Public chat). |
-| **Push Notifications** | FCM-based alerts for new lessons, schedule changes, and grade posts. |
+| **Push Notifications** | FCM-based alerts for new lessons, schedule changes, and grade posts, split into class notifications + admin alerts with badges. |
+| **Hostel Booking** | Browse houses, live cubicle availability, transactional booking (atomic double-booking + capacity check), receipts, waitlist. |
+| **Payments** | Booking fee flow: method selection (M-Pesa/card/cash), phone number, animated status screen, admin payment dashboard. |
+| **Exam Booking** | Students register for exams with seat-capacity limits enforced atomically. |
+| **Student Leader Voting** | Position-based elections with SHA-256 ballot hashing, live results with charts, admin election management. |
+| **Quizzes** | In-class quizzes with scoring, results, and teacher-created questions. |
+| **School ID Card** | Digital ID with photo, regNo, gender, nationality, school seal. |
+| **Feature Flags** | 12 remote-configurable feature toggles with schedule support, managed from app + admin tool. |
 | **Campus Map** | Google Maps with pinned lecture halls, labs, and faculty offices. |
-| **Auto-update** | Checks GitHub Releases on startup, downloads new APK with progress bar. |
+| **QR Attendance** | Time-based QR codes (60s expiry, FLAG_SECURE anti-screenshot) verified against class rosters. |
+| **Event Gallery** | Campus events with Cloudinary-hosted photos. |
+| **Auto-update** | Checks Firestore `app_updates/latest` on startup, downloads new APK with progress bar. |
 | **Faculty Directory** | Contact information for all lecturers and staff. |
 | **Offline Mode** | Firestore persistence caches lessons, timetable, and messages after first load. |
 
@@ -45,13 +55,13 @@ Built entirely by **Sheldon Ramu** (Electrical Engineering student) over 4 month
 
 ```
 Frontend         Flutter 3.x / Dart 3.x
-Backend          Firebase (Firestore, Auth, Cloud Messaging)
+Backend          Firebase (Firestore, Auth, Cloud Messaging, Storage)
 File Storage     Cloudinary
 Maps             Google Maps SDK (Android)
 State Mgmt       Provider + ChangeNotifier
-Admin Tool       Python 3.12+ / PyQt6 / Firebase Admin SDK
+Admin Tool       Python 3.12+ / PyQt6 / Firebase Admin SDK / pdfplumber / pandas
 Auth             Firebase Auth (email/password + Google Sign-In)
-Updates          GitHub Releases API
+Updates          Firestore app_updates/latest → GitHub Release asset download
 ```
 
 ---
@@ -61,8 +71,9 @@ Updates          GitHub Releases API
 ```
 lib/
 ├── main.dart                          # App entry point, providers, MaterialApp
-├── models/                            # Data classes (UserProfile, Lesson, GradeRecord, etc.)
-├── screens/                           # UI screens
+├── models/                            # 22 data models (UserProfile, Lesson, GradeRecord,
+│                                      #   CubeBooking, Payment, Election, Exam, FeatureFlag...)
+├── screens/                           # 66 UI screens
 │   ├── splash_screen.dart             # Custom branded splash with auto-login
 │   ├── login_screen.dart              # Email/password login
 │   ├── registration_screen.dart       # Multi-step registration with role selection
@@ -70,36 +81,59 @@ lib/
 │   ├── guest_home_screen.dart         # Limited view for unauthenticated users
 │   ├── onboarding_screen.dart         # First-launch walkthrough
 │   ├── settings_screen.dart           # Profile, theme, notifications, version info
-│   ├── admin/                         # Admin-only screens
-│   └── ...                            # Explore, Forums, Grades, Schedule, etc.
-├── services/                          # Business logic & Firebase integration
+│   ├── admin/                         # Admin-only screens (17)
+│   ├── cubes/                         # Hostel booking screens (5)
+│   ├── payment/                       # Payment method + status screens (2)
+│   ├── voting/                        # Voting dashboard, cast, results (3)
+│   ├── exam_booking/                  # Exam registration (1)
+│   ├── quiz/                          # Quiz engine (4)
+│   ├── grades/                        # Grade report + manage (2)
+│   ├── schedule/                      # Campus map + lesson detail (2)
+│   ├── tabs/                          # Mandatory + Exam timetable tabs (2)
+│   ├── users/                         # Users tab + actions (2)
+│   └── ...                            # Explore, Forums, Gallery, School ID Card, etc.
+├── services/                          # 24 services & providers
 │   ├── auth_provider.dart             # Auth state management
 │   ├── class_provider.dart            # Available classes from Firestore
 │   ├── firestore_service.dart         # CRUD operations
-│   ├── update_service.dart            # GitHub release check + APK download
+│   ├── cube_service.dart              # Transactional bookings + waitlist
+│   ├── voting_service.dart            # SHA-256 ballot hashing + atomic castVote
+│   ├── exam_booking_service.dart      # Atomic exam registration
+│   ├── payment_service.dart           # Payment CRUD + admin override
+│   ├── feature_flag_service.dart      # Firestore-backed feature toggles
+│   ├── update_service.dart            # Firestore update check + APK download
 │   └── ...
+├── providers/                         # ChangeNotifier providers
 ├── theme/                             # App theming (KNP brand, light, dark)
 ├── utils/                             # Helpers (campus map data, role data, date utils)
-└── widgets/                           # Reusable widgets (drawer, shimmer loading)
+└── widgets/                           # Reusable widgets (drawer, shimmer, feature gate)
 
 android/                               # Android platform configuration
 ├── app/src/main/
 │   ├── AndroidManifest.xml
 │   ├── res/values/styles.xml          # Launch theme (splash background color)
-│   ├── res/drawable/launch_background.xml
 │   └── ...
 
-admin-tool/                            # Windows desktop admin application (Python)
-├── main.py                            # PyQt6 GUI entry point
-├── build_exe.bat                      # PyInstaller build script
+admin-tool/                            # Desktop admin application (Python)
+├── main.py                            # PyQt6 GUI entry point — 8 tabs
 ├── requirements.txt                   # Python dependencies
 ├── src/
-│   ├── firestore_client.py            # Firebase Admin SDK wrapper
+│   ├── firestore_client.py            # Firebase Admin SDK wrapper (all collections)
 │   ├── firebase_auth_client.py        # Firebase Auth REST API client
 │   ├── grade_editor.py                # Grade entry table widget
 │   ├── timetable_editor.py            # Timetable CRUD widget
-│   ├── config_manager.py              # Persistent settings (%APPDATA%)
-│   ├── migrate_timetable.py           # Bulk timetable upload script
+│   ├── timetable_upload_tab.py        # 6-step wizard (mode select → file → parse → preview → verify → upload)
+│   ├── pdf_parser.py                  # PDF timetable parsing (class + exam)
+│   ├── csv_parser.py                  # CSV timetable parsing (class + exam)
+│   ├── preview_table_widget.py        # Grouped, selectable, duplicate-aware preview
+│   ├── verification_dialog.py         # Conflict detection (venue/lecturer/duplicate)
+│   ├── exam_timetable_tab.py          # Exam timetable CRUD
+│   ├── payment_dashboard.py           # Payment summary + manual overrides
+│   ├── feature_flag_manager.py        # Toggle/edit/seed feature flags
+│   ├── report_card_generator.py       # Batch PDF report cards (fpdf2)
+│   ├── analytics_dashboard.py         # Grade distribution charts (matplotlib)
+│   ├── qr_generator.py                # Printable A4 QR card PDFs
+│   ├── csv_import_dialog.py           # Bulk CSV import with duplicate detection
 │   └── models.py                      # Data classes
 └── ADMIN_TOOL_GUIDE.md               # ICT teacher / security audit guide
 
@@ -165,13 +199,7 @@ flutter pub get
 # Build release APK
 flutter build apk --release
 
-# Output: build/app/outputs/flutter-apk/app-release.apk
-```
-
-To generate a signed bundle for Play Store (if ever needed):
-
-```bash
-flutter build appbundle --release
+# Output: build/app/outputs/flutter-apk/app-release.apk (~67 MB)
 ```
 
 ---
@@ -185,9 +213,10 @@ App starts
   │
   └── UpdateService.checkForUpdate()
         │
-        ├── GET https://api.github.com/repos/shelad3/KNP-Management-System/releases/latest
+        ├── GET app_updates/latest from Firestore
+        │     (public read — runs before login)
         │
-        ├── Compare tag_name vs current version (from package_info_plus)
+        ├── Compare version vs current version (from package_info_plus)
         │     │
         │     ├── Same version → do nothing
         │     │
@@ -195,11 +224,13 @@ App starts
         │           │
         │           └── User taps "Download"
         │                 │
-        │                 ├── Stream APK from release asset URL
+        │                 ├── Stream APK from downloadUrl
         │                 ├── Show progress (MB downloaded / total MB)
         │                 ├── Verify file size against Content-Length header
         │                 └── Open system installer via OpenFile plugin
 ```
+
+> **Important:** `downloadUrl` must point to a **direct APK file** (e.g. a GitHub release asset like `https://github.com/shelad3/Kabete-Poly/releases/download/v2.9.0+1/app-release.apk`), NOT the release page. Pointing at a release page makes the app download HTML as a `.apk` and Android fails with "unable to parse the package".
 
 ### To publish a new update:
 
@@ -207,21 +238,24 @@ App starts
 # 1. Bump version in pubspec.yaml
 #    version: x.y.z+build
 
-# 2. Update version string in lib/screens/splash_screen.dart
-#    (if the hardcoded string is present)
-
-# 3. Build the APK
+# 2. Build the APK
 flutter build apk --release
 
-# 4. Create a GitHub Release
-gh release create v2.x.x                                \
-    "build/app/outputs/flutter-apk/app-release.apk"      \
-    --repo shelad3/KNP-Management-System                 \
-    --title "v2.x.x"                                     \
+# 3. Create a GitHub Release with the APK attached as an asset
+gh release create v2.9.0+1                             \
+    "build/app/outputs/flutter-apk/app-release.apk"    \
+    --repo shelad3/Kabete-Poly                          \
+    --title "v2.9.0+1"                                  \
     --notes "Description of changes"
+
+# 4. Update the Firestore document app_updates/latest:
+#    { version: "2.9.0",
+#      downloadUrl: "https://github.com/shelad3/Kabete-Poly/releases/download/v2.9.0%2B1/app-release.apk",
+#      releaseNotes: "..." }
+#    (easiest via admin-tool Python SDK script, see AGENTS.md)
 ```
 
-The app will detect the new version on next launch.
+The app will detect the new version on next launch. Legacy app versions still check `api.github.com/repos/shelad3/Kabete-Poly/releases/latest` and will see the same release.
 
 ---
 
@@ -235,10 +269,7 @@ Deploy indexes after any query changes:
 firebase deploy --only firestore:indexes
 ```
 
-Current indexes include:
-- `timetable` subcollection: `day ASC, time ASC`
-- `messages`: `classId ASC, channelId ASC, timestamp ASC`
-- `lessons`: `classId ASC, createdAt DESC`
+Current indexes cover: messages, notifications, lessons, schedules, auth_codes, auth_code_usage, alerts, lesson_verifications, cubes, cube_bookings (#1–#3), houses, exam_bookings, payments.
 
 ### Security Rules
 
@@ -247,9 +278,11 @@ firebase deploy --only firestore:rules
 ```
 
 Rules enforce:
-- Students read only their enrolled classes' data
+- Students read only their own grades and enrolled classes' data
 - Teachers can write lessons, grades, and schedule entries
 - Officials (admins) have full access
+- `houses`, `cubes`, `field_indices`, `app_updates` are public-read
+- `cube_bookings` authenticated read/create/update
 - No client-side bypass — rules evaluated on every request
 
 ### Required Firebase Services
@@ -257,22 +290,24 @@ Rules enforce:
 | Service | Purpose |
 |---------|---------|
 | Firebase Auth | Email/password + Google Sign-In |
-| Cloud Firestore | All app data (lessons, users, grades, messages, timetable) |
+| Cloud Firestore | All app data (lessons, users, grades, messages, timetable, bookings, payments, elections, exams, feature flags) |
 | Firebase Cloud Messaging | Push notifications (class topics) |
+| Firebase Storage | Legacy images (new uploads go to Cloudinary) |
 | Firebase Hosting (optional) | Landing page or admin dashboard |
 
 ---
 
-## Windows Admin Tool
+## Windows/Linux Admin Tool
 
-A standalone desktop application for managing timetable entries, grades, and classes.
+A standalone desktop application for managing timetable entries, grades, classes, payments, exam timetables, and feature flags.
 
 ### Run from Source
 
 ```bash
 cd admin-tool
 python -m venv venv
-venv\Scripts\activate      # Windows
+source venv/bin/activate      # Linux/Mac
+venv\Scripts\activate         # Windows
 pip install -r requirements.txt
 python main.py
 ```
@@ -284,66 +319,20 @@ build_exe.bat
 # Output: dist\KabeteAdminTool.exe
 ```
 
-### What It Can Do
+### The 8 Tabs
 
-- Login via Firebase Auth (requires Teacher/Official role)
-- Select any class from a dropdown
-- View/edit/add/delete timetable entries
-- Enter and batch-save student grades (CAT1, CAT2, Exam)
-- Add/delete classes
-- Migrate bulk timetable data from JSON
+| Tab | Function |
+|-----|----------|
+| Grade Entry | Enter/edit CAT1/CAT2/Exam per student + CSV bulk import |
+| Timetable Editor | Create/edit class schedules + CSV bulk import |
+| Timetable Upload | 6-step wizard: mode (class/exam) → file (PDF/CSV) → parse → preview & select → verify duplicates → batch upload |
+| Report Cards | Select class/term/year → generate PDF report cards for all students |
+| Exam Timetable | CRUD exam entries with type color-coding (final/midterm/CAT/practical) |
+| Payments | Summary stats, status filter, color-coded table, manual mark-completed/refunded |
+| Feature Flags | List/toggle/edit/seed the 12 feature flags |
+| Analytics | Grade distribution charts, subject averages, pass/fail rates |
 
-See [admin-tool/ADMIN_TOOL_GUIDE.md](admin-tool/ADMIN_TOOL_GUIDE.md) for security audit info, PyInstaller false-positive notes, and IT admin FAQ.
-
----
-
-## Timetable Data Migration
-
-The original timetable was hardcoded as an 8,296-line Dart map (`TimetableData.cohorts`). As of v2.6.0, all timetable data lives in Firestore.
-
-To upload new timetable data from a JSON file:
-
-```bash
-cd admin-tool
-source venv/bin/activate    # Linux/Mac
-# or venv\Scripts\activate  # Windows
-
-python -m src.migrate_timetable --json path/to/data.json --clear
-```
-
-The JSON format:
-
-```json
-{
-  "CLASS & NAME": {
-    "Monday": [
-      {"time": "8:00 - 10:00", "unit": "Subject Name", "room": "C1-A", "lecturer": "John Doe", "color": 4282339765}
-    ],
-    "Tuesday": [...]
-  }
-}
-```
-
-> Class names with `/` are automatically sanitized to ` & ` because Firestore paths do not support `/` in document IDs.
-
----
-
-## FAQ for Developers
-
-**Q: Why Provider instead of Riverpod/Bloc?**
-A: The project started when Provider was the recommended approach in Flutter docs. It is simple, well-understood, and sufficient for this app's complexity. Migration to Riverpod would be straightforward if needed.
-
-**Q: Why Cloudinary instead of Firebase Storage?**
-A: Firebase Storage requires the user to be authenticated. Cloudinary allows generating unsigned upload URLs for specific use cases. Also, Cloudinary's free tier (25 GB) was more generous at the time.
-
-**Q: Why is the timetable a subcollection?**
-A: A class can have 50+ timetable entries. Firestore documents have a 1 MiB limit. Storing entries as an array inside the class document risks hitting that limit. Subcollections scale independently.
-
-**Q: Why is the admin tool separate instead of a web dashboard?**
-A: A web dashboard would require Firebase Hosting + Cloud Functions + a frontend framework. The Python/PyQt6 approach was faster to build for a single admin user. It also works offline (except for Firestore reads).
-
-**Q: How do I add a new class?**
-A: Add a document to the `classes` collection in Firestore with a `createdAt` timestamp. The class name is the document ID. The app picks it up automatically on next load.
+Also includes: **QR Code Generator** → A4 PDF with all student QR cards (8 per page).
 
 ---
 
@@ -351,12 +340,20 @@ A: Add a document to the `classes` collection in Firestore with a `createdAt` ti
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.9.0+1 | Jul 2026 | Admin tool overhaul (timetable upload wizard, exam timetable, payments, feature flags), school ID card, feature flags, payments flow, student leader voting, exam booking, exam timetable tab |
+| 2.8.7+1 | Jun 2026 | Notification overhaul, target timeline, explore restructure, house error handling |
+| 2.8.6+1 | Jun 2026 | Firestore auto-update (moved from GitHub API) |
+| 2.8.4+1 | Jun 2026 | Cube booking fixes, event gallery Cloudinary, attachment open fixes |
+| 2.8.3+1 | Jun 2026 | Notification overhaul, target timeline, explore restructure, house error handling |
+| 2.8.2 | Jun 2026 | Full cube booking overhaul — houses, term-based booking, 8k fee, auto-generate cubes |
+| 2.8.1 | Jun 2026 | Houses rename, gallery in guest mode, optional event photos, explore spacing |
+| 2.8.0 | Jun 2026 | QR activation, lesson verification, modular grading, gallery, community tab |
+| 2.7.1 | Jun 2026 | Native splash collage (10 campus photos), bug fixes |
 | 2.7.0 | Jun 2026 | Eliminate splash flash, admin tool fixes, timetable PDF extraction |
 | 2.6.0 | Jun 2026 | Remove hardcoded TimetableData; classes from Firestore only |
-| 2.5.0 | Jun 2026 | Timetable migrated to Firestore-only; cloud icon removed |
+| 2.5.0 | Jun 2026 | Timetable migrated to Firestore-only |
 | 2.4.3 | Jun 2026 | Grades permission fix, timetable composite index deployed |
 | 2.4.2 | Jun 2026 | Download progress MB counter, HEAD content-length integrity check |
-| 2.4.1 | Jun 2026 | Login/guest reactivity fixed via ValueKey on MaterialApp |
 | 2.4.0 | Jun 2026 | Grades module, push notifications, forum channels |
 | 2.3.0 | May 2026 | Class forums, messaging, campus map |
 | 2.2.0 | May 2026 | Timetable tab, auto-update system, Windows admin tool |
@@ -377,4 +374,4 @@ GNU AGPL v3 — see [LICENSE](LICENSE).
 **Sheldon Ramu** — Electrical Engineering, Kabete National Polytechnique  
 GitHub: [@shelad3](https://github.com/shelad3)  
 Project: [github.com/shelad3/Kabete-Poly](https://github.com/shelad3/Kabete-Poly)  
-Download: [github.com/shelad3/KNP-Management-System](https://github.com/shelad3/KNP-Management-System)
+Download: [github.com/shelad3/Kabete-Poly/releases](https://github.com/shelad3/Kabete-Poly/releases)

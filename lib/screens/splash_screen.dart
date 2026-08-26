@@ -147,17 +147,21 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     return Scaffold(
       body: Container(
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).primaryColor,
-              Color.lerp(Theme.of(context).primaryColor, Colors.black, 0.3)!,
+              primary,
+              Color.lerp(primary, Colors.black, 0.18)!,
+              Color.lerp(primary, Colors.black, 0.38)!,
             ],
+            stops: const [0.0, 0.55, 1.0],
           ),
         ),
         child: SafeArea(
@@ -165,47 +169,76 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 2),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.6, end: 1),
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeOutBack,
+                builder: (context, scale, child) =>
+                    Transform.scale(scale: scale, child: child),
+                child: Container(
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 30,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.school_rounded, size: 72, color: Colors.white),
                 ),
-                child: const Icon(Icons.school, size: 80, color: Colors.white),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 36),
               const Text(
                 'Kabete National Polytechnique',
                 style: TextStyle(
                   fontSize: 26,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   color: Colors.white,
-                  letterSpacing: 1,
+                  letterSpacing: 0.5,
                 ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
+              Container(
+                height: 3,
+                width: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF8F00),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
-                'Bidii Na Uanimifu',
+                'Bidii Na Uaminifu',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 15,
+                  letterSpacing: 2.5,
+                  color: Colors.white.withValues(alpha: 0.85),
                   height: 1.5,
                 ),
               ),
               const Spacer(flex: 1),
               if (_error != null) ...[
                 Icon(
-                  Icons.wifi_off,
+                  Icons.wifi_off_rounded,
                   size: 48,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withValues(alpha: 0.75),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   _error!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 14,
                   ),
                 ),
@@ -230,15 +263,20 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
               ] else ...[
-                CircularProgressIndicator(
-                  color: Colors.white.withValues(alpha: 0.8),
+                SizedBox(
+                  height: 34,
+                  width: 34,
+                  child: CircularProgressIndicator(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    strokeWidth: 3,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 20),
                 Text(
-                  _timeout ? 'Connection is slow...' : 'Loading...',
+                  _timeout ? 'Connection is slow...' : 'Loading your portal...',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -247,7 +285,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 'v2.7.1',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.4),
+                  letterSpacing: 1,
+                  color: Colors.white.withValues(alpha: 0.45),
                 ),
               ),
               const SizedBox(height: 24),

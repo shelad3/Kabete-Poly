@@ -61,12 +61,15 @@ class QuizListScreen extends StatelessWidget {
                       Icon(
                         Icons.quiz_outlined,
                         size: 64,
-                        color: Colors.grey[400],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'No quizzes yet',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       if (canCreate) ...[
                         const SizedBox(height: 8),
@@ -149,7 +152,10 @@ class QuizListScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         quiz.description,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
                         maxLines: 2,
                       ),
                     ],
@@ -159,42 +165,42 @@ class QuizListScreen extends StatelessWidget {
                         Icon(
                           Icons.timer_outlined,
                           size: 14,
-                          color: Colors.grey[500],
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${quiz.durationMinutes} min',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(width: 16),
                         Icon(
                           Icons.quiz_outlined,
                           size: 14,
-                          color: Colors.grey[500],
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${quiz.questionIds.length} questions',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(width: 16),
                         Icon(
                           Icons.person_outline,
                           size: 14,
-                          color: Colors.grey[500],
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           quiz.createdBy,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -202,7 +208,10 @@ class QuizListScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

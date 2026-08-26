@@ -49,13 +49,17 @@ class _ResultsScreenState extends State<ResultsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _results.isEmpty
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.bar_chart, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('Results not yet available'),
+                  Icon(
+                    Icons.bar_chart,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Results not yet available'),
                 ],
               ),
             )
@@ -64,7 +68,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
               children: [
                 // Summary card
                 Card(
-                  color: Colors.indigo.shade50,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.08),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
@@ -73,7 +79,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         _SummaryStat(
                           label: 'Positions',
                           value: '${_results.length}',
-                          color: Colors.indigo,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         _SummaryStat(
                           label: 'Total Votes',
@@ -128,16 +134,20 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                   Row(
                                     children: [
                                       if (isWinner)
-                                        const Icon(
+                                        Icon(
                                           Icons.emoji_events,
-                                          color: Colors.amber,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
                                           size: 20,
                                         ),
                                       if (!isWinner)
                                         Text(
                                           '${candidate.candidateNumber}',
                                           style: TextStyle(
-                                            color: Colors.grey.shade500,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -158,7 +168,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                           fontWeight: FontWeight.w600,
                                           color: isWinner
                                               ? Colors.green.shade700
-                                              : Colors.grey.shade700,
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -171,10 +183,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                           ? candidate.voteCount /
                                                 totalForPosition
                                           : 0,
-                                      backgroundColor: Colors.grey.shade200,
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainerHighest,
                                       color: isWinner
                                           ? Colors.green
-                                          : Colors.indigo.shade300,
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                       minHeight: 8,
                                     ),
                                   ),

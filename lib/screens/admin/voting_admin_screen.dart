@@ -2,7 +2,6 @@
 // Copyright (C) 2026 Kabete National Polytechnique
 
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/election.dart';
 import '../../services/voting_service.dart';
 

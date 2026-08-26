@@ -22,6 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -30,32 +32,42 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
-              const Icon(Icons.school, size: 64, color: Color(0xFF1A237E)),
-              const SizedBox(height: 16),
-              const Text(
-                'KNP Management System',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A237E),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
                 ),
+                child: Icon(Icons.school_rounded, size: 40, color: primary),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 20),
               Text(
                 'Kabete National Polytechnique',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 6),
+              Text(
+                'Bidii Na Uaminifu',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+
+              const SizedBox(height: 36),
               Text(
                 'Welcome Back',
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: theme.textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
               Text(
                 'Sign in to continue',
-                style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 40),
               TextField(
                 controller: _loginController,
                 decoration: const InputDecoration(
@@ -121,12 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       )
                     : const Icon(FontAwesomeIcons.google, size: 18),
                 label: const Text('Continue with Google'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
@@ -135,19 +141,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 icon: const Icon(Icons.explore_outlined, size: 18),
                 label: const Text('Continue as Guest'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  side: BorderSide(color: Colors.grey[400]!),
-                ),
               ),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account?"),
+                  Text(
+                    "Don't have an account?",
+                    style: theme.textTheme.bodyMedium,
+                  ),
                   TextButton(
                     onPressed: () {
                       Navigator.push(

@@ -86,13 +86,13 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
                     upcoming
                         .where((i) => i.description.contains('Practical'))
                         .toList(),
-                    Colors.purple,
+                    Theme.of(context).colorScheme.primary,
                   ),
                   _buildLessonList(
                     upcoming
                         .where((i) => !i.description.contains('Practical'))
                         .toList(),
-                    Colors.orange,
+                    Theme.of(context).colorScheme.primary,
                   ),
                 ],
               );
@@ -105,13 +105,22 @@ class _IncomingLessonsScreenState extends State<IncomingLessonsScreen>
 
   Widget _buildLessonList(List<ScheduleItem> items, Color color) {
     if (items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_month_outlined, size: 48, color: Colors.grey),
-            SizedBox(height: 12),
-            Text('No upcoming lessons.', style: TextStyle(color: Colors.grey)),
+            Icon(
+              Icons.calendar_month_outlined,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No upcoming lessons.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       );

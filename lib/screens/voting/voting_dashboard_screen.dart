@@ -32,7 +32,7 @@ class VotingDashboardScreen extends StatelessWidget {
                   Icon(
                     Icons.how_to_vote,
                     size: 64,
-                    color: Colors.grey.shade400,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -40,13 +40,15 @@ class VotingDashboardScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Elections will appear here once created.',
-                    style: TextStyle(color: Colors.grey.shade500),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -143,12 +145,15 @@ class _ElectionCard extends StatelessWidget {
                 Icon(
                   Icons.calendar_today,
                   size: 14,
-                  color: Colors.grey.shade500,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${election.startDate.day}/${election.startDate.month} — ${election.endDate.day}/${election.endDate.month}/${election.endDate.year}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -205,7 +210,7 @@ class _ElectionCard extends StatelessWidget {
                         : 'Voting opens ${election.startDate.day}/${election.startDate.month}',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
                     ),
                   ),

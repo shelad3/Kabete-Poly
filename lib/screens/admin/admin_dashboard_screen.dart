@@ -10,7 +10,6 @@ import '../../services/class_provider.dart';
 import '../../services/firestore_service.dart';
 import '../notification_screen.dart';
 import '../explore_screen.dart';
-import '../cubes/my_bookings_screen.dart';
 import 'manage_houses_screen.dart';
 import 'manage_cube_bookings_screen.dart';
 import 'manage_auth_codes_screen.dart';
@@ -86,7 +85,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.people,
               'Manage Users',
               '$_totalStudents registered students',
-              Colors.blue,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageStudentsScreen()),
@@ -108,7 +107,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.vpn_key,
               'Auth Codes',
               'Generate registration keys',
-              Colors.purple,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -121,7 +120,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.calendar_month,
               'Timetable Manager',
               'Add/edit schedule entries',
-              Colors.cyan,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -145,7 +144,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.assignment,
               'Manage Grades',
               'Enter & view student grades',
-              Colors.amber,
+              Theme.of(context).colorScheme.primary,
               onTap: () => _selectClassAndNavigate(context),
             ),
             _buildActionCard(
@@ -153,7 +152,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.confirmation_number,
               'Manage Tickets',
               'Help requests, errors, feedback',
-              Colors.teal,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageTicketsScreen()),
@@ -175,7 +174,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.workspaces,
               'Manage Houses',
               'Configure houses & cube capacities',
-              Colors.indigo,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageHousesScreen()),
@@ -186,7 +185,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.book_online,
               'Cube Bookings',
               'View & manage all bookings',
-              Colors.deepPurple,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -218,7 +217,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.notifications_active,
               'Send Alert',
               'Target user, class, or all',
-              Colors.indigo,
+              Theme.of(context).colorScheme.primary,
               onTap: () => _showAlertDialog(context),
             ),
             _buildActionCard(
@@ -237,7 +236,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.flag,
               'Feature Flags',
               'Enable/disable features on the go',
-              Colors.teal,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -263,7 +262,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.how_to_vote,
               'Student Elections',
               'Create & manage elections',
-              Colors.purple,
+              Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const VotingAdminScreen()),
@@ -291,7 +290,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             context,
             'Total Students',
             '$_totalStudents',
-            Colors.blue,
+            Theme.of(context).colorScheme.primary,
           ),
         ),
         const SizedBox(width: 16),
@@ -323,7 +322,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(color: Colors.grey[800], fontSize: 14)),
+          Text(
+            title,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
             count,
@@ -357,10 +362,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         onTap: onTap,
       ),

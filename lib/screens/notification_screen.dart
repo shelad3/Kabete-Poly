@@ -256,7 +256,10 @@ class _NotificationScreenState extends State<NotificationScreen>
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Colors.blue),
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     const Text(
                       'Current Version',
@@ -278,7 +281,10 @@ class _NotificationScreenState extends State<NotificationScreen>
                 const SizedBox(height: 4),
                 Text(
                   'Build ${_packageInfo!.buildNumber}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -323,7 +329,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                       _pendingUpdate!['notes']!,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[700],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         height: 1.4,
                       ),
                     ),
@@ -358,7 +364,10 @@ class _NotificationScreenState extends State<NotificationScreen>
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.search, color: Colors.blue),
+                    Icon(
+                      Icons.search,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     const Text(
                       'Check for Updates',
@@ -452,7 +461,10 @@ class _NotificationScreenState extends State<NotificationScreen>
                       const SizedBox(width: 8),
                       Text(
                         notify.timeAgo,
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),

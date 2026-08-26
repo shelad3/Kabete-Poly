@@ -71,14 +71,18 @@ class _AdminTimetableManagerScreenState
                               Icon(
                                 Icons.calendar_month_outlined,
                                 size: 64,
-                                color: Colors.grey[400],
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'No official timetable entries for $_currentClassId.',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.grey[600],
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -86,7 +90,9 @@ class _AdminTimetableManagerScreenState
                                 'Tap + to add the first entry.',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey[500],
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -118,10 +124,12 @@ class _AdminTimetableManagerScreenState
                                 ),
                                 child: Text(
                                   _weekdays[dayInt] ?? 'Unknown Day',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.blueGrey,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ),
                               ),

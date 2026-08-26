@@ -364,7 +364,6 @@ class _ForumScreenState extends State<ForumScreen> {
       itemCount: channels.length,
       itemBuilder: (context, index) {
         final ch = channels[index];
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         final isAdmin = user?.isAdmin ?? false;
         final isTeacher = user?.isTeacher ?? false;
         final canEdit = isTeacher || isAdmin;
@@ -392,8 +391,8 @@ class _ForumScreenState extends State<ForumScreen> {
                       child: Container(
                         width: 10,
                         height: 10,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.error,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -414,8 +413,8 @@ class _ForumScreenState extends State<ForumScreen> {
                     width: 8,
                     height: 8,
                     margin: const EdgeInsets.only(left: 6),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.error,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -425,7 +424,7 @@ class _ForumScreenState extends State<ForumScreen> {
               ch.isAnnouncement ? 'Announcements' : 'Open discussion',
               style: TextStyle(
                 fontSize: 13,
-                color: isDark ? Colors.white54 : Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             trailing: Row(
@@ -496,7 +495,11 @@ class _ForumScreenState extends State<ForumScreen> {
                         ),
                     ],
                   ),
-                const Icon(Icons.chevron_right, size: 18),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ],
             ),
             onTap: () {
@@ -606,7 +609,6 @@ class _ForumScreenState extends State<ForumScreen> {
 
   Widget _buildMessageBubble(ChatMessage msg) {
     final currentUser = context.read<AuthProvider>().currentUser;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     bool isMe = currentUser != null && msg.senderName == currentUser.fullName;
 
     return Padding(
@@ -620,7 +622,8 @@ class _ForumScreenState extends State<ForumScreen> {
           if (!isMe)
             CircleAvatar(
               radius: 18,
-              backgroundColor: Colors.grey[200],
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
               backgroundImage: msg.senderAvatarUrl.isNotEmpty
                   ? NetworkImage(msg.senderAvatarUrl)
                   : null,
@@ -628,7 +631,7 @@ class _ForumScreenState extends State<ForumScreen> {
                   ? Text(
                       msg.senderName[0].toUpperCase(),
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -659,8 +662,8 @@ class _ForumScreenState extends State<ForumScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isMe
-                      ? Theme.of(context).primaryColor
-                      : (isDark ? const Color(0xFF2A2A3E) : Colors.grey[200]),
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -672,15 +675,18 @@ class _ForumScreenState extends State<ForumScreen> {
                   msg.text,
                   style: TextStyle(
                     color: isMe
-                        ? Colors.white
-                        : (isDark ? Colors.white70 : Colors.black87),
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 DateFormat('HH:mm').format(msg.timestamp),
-                style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -701,29 +707,34 @@ class _ForumScreenState extends State<ForumScreen> {
     if (!canPost) {
       return Container(
         padding: const EdgeInsets.all(16),
-        color: Colors.grey[100],
-        child: const Row(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock, size: 16, color: Colors.grey),
-            SizedBox(width: 8),
+            Icon(
+              Icons.lock,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
             Text(
               'Only admins and teachers can post in this channel.',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
       );
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.white10 : Colors.black12,
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -744,9 +755,8 @@ class _ForumScreenState extends State<ForumScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: isDark
-                      ? const Color(0xFF2A2A3E)
-                      : Colors.grey[100],
+                  fillColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 10,

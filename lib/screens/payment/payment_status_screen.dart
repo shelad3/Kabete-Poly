@@ -31,7 +31,6 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen>
   StreamSubscription? _paymentSub;
   Payment? _payment;
   bool _timedOut = false;
-  DateTime? _startTime;
 
   @override
   void initState() {
@@ -40,7 +39,6 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    _startTime = DateTime.now();
     _listenToPayment();
 
     // Timeout after 5 minutes
@@ -181,7 +179,10 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen>
                         ? 'The payment is still being processed. You will receive a notification once it completes.'
                         : 'Please wait while we confirm your payment.\nDo not close this screen.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
 
                   if (payment != null) ...[
@@ -189,7 +190,9 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen>
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -249,7 +252,10 @@ class _InfoRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         Text(
           value,

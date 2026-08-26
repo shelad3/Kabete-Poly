@@ -37,7 +37,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
         bottom: TabBar(
           controller: _tabController,
           labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
           indicatorColor: Theme.of(context).colorScheme.primary,
           indicatorWeight: 3,
           tabs: const [
@@ -69,15 +69,21 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.campaign_outlined, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
+                Icon(
+                  Icons.campaign_outlined,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 16),
                 Text(
                   'No announcements yet',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -115,19 +121,21 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
 
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.notifications_off_outlined,
                   size: 64,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'No alerts sent yet',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -162,7 +170,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
         typeIcon = Icons.cancel_outlined;
         break;
       case 'event':
-        typeColor = Colors.blue;
+        typeColor = Theme.of(context).colorScheme.primary;
         typeIcon = Icons.event;
         break;
       case 'deadline':
@@ -170,7 +178,7 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
         typeIcon = Icons.timer_outlined;
         break;
       default:
-        typeColor = Colors.grey;
+        typeColor = Theme.of(context).colorScheme.onSurfaceVariant;
         typeIcon = Icons.notifications_none;
     }
 
@@ -198,7 +206,10 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
               children: [
                 Text(
                   notification.timeAgo,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -259,11 +270,11 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
         typeIcon = Icons.warning_amber;
         break;
       case 'class_update':
-        typeColor = Colors.blue;
+        typeColor = Theme.of(context).colorScheme.primary;
         typeIcon = Icons.school;
         break;
       default:
-        typeColor = Colors.indigo;
+        typeColor = Theme.of(context).colorScheme.primary;
         typeIcon = Icons.campaign;
     }
 
@@ -287,12 +298,18 @@ class _ManageAlertsScreenState extends State<ManageAlertsScreen>
               children: [
                 Text(
                   'To: ${alert.targetType}',
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'By: ${alert.senderName}',
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

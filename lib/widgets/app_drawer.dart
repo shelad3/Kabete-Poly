@@ -23,38 +23,56 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          UserAccountsDrawerHeader(
-            decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-            accountName: Text(
-              '${user.fullName} (${user.role})',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Color.lerp(
+                    Theme.of(context).colorScheme.primary,
+                    Colors.black,
+                    0.25,
+                  )!,
+                ],
+              ),
             ),
-            accountEmail: Text(user.email),
-            currentAccountPicture: user.profilePhotoUrl.isNotEmpty
-                ? CircleAvatar(
-                    backgroundImage: NetworkImage(user.profilePhotoUrl),
-                  )
-                : CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      user.fullName[0].toUpperCase(),
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontSize: 24,
+            child: UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(color: Colors.transparent),
+              accountName: Text(
+                '${user.fullName} (${user.role})',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              accountEmail: Text(user.email),
+              currentAccountPicture: user.profilePhotoUrl.isNotEmpty
+                  ? CircleAvatar(
+                      backgroundColor: Colors.white,
+                      backgroundImage: NetworkImage(user.profilePhotoUrl),
+                    )
+                  : CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        user.fullName[0].toUpperCase(),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
+            ),
           ),
 
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               'MY CLASSES',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
           ),
 
@@ -76,14 +94,17 @@ class AppDrawer extends StatelessWidget {
                 if (user.enrolledClasses.isEmpty &&
                     user.role != 'Official' &&
                     user.role != 'Teacher')
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 16.0,
                       vertical: 8.0,
                     ),
                     child: Text(
                       'You are not enrolled in any specific cohorts yet.',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
 
@@ -100,11 +121,11 @@ class AppDrawer extends StatelessWidget {
                       (user.role == 'Official' || user.role == 'Teacher')
                           ? 'ADMINISTRATION (ALL CLASSES)'
                           : 'EXPLORE OTHER COHORTS',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ),
                   ...classProvider.availableClasses
@@ -125,7 +146,10 @@ class AppDrawer extends StatelessWidget {
           const Divider(),
 
           ListTile(
-            leading: const Icon(Icons.devices, color: Colors.blueGrey),
+            leading: Icon(
+              Icons.devices,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             title: const Text('My Devices'),
             onTap: () {
               Navigator.pop(context);
@@ -141,11 +165,11 @@ class AppDrawer extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               'APPEARANCE',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
           ),
           _ThemeTile(),
@@ -209,7 +233,7 @@ class _ThemeTile extends StatelessWidget {
         AppThemeMode.knp => Icons.palette,
         AppThemeMode.light => Icons.light_mode,
         AppThemeMode.dark => Icons.dark_mode,
-      }, color: Colors.blueGrey),
+      }, color: Theme.of(context).colorScheme.onSurfaceVariant),
       title: Text(switch (themeNotifier.mode) {
         AppThemeMode.knp => 'KNP Theme',
         AppThemeMode.light => 'Light Theme',

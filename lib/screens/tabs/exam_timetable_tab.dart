@@ -15,15 +15,19 @@ class ExamTimetableTab extends StatelessWidget {
     return Consumer<ClassProvider>(
       builder: (context, classProvider, _) {
         final classId = classProvider.currentClass;
-        if (classId == null || classId.isEmpty) {
-          return const Center(
+        if (classId.isEmpty) {
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.school_outlined, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text('No class selected'),
-                Text('Join a class to view exam timetables'),
+                Icon(
+                  Icons.school_outlined,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 16),
+                const Text('No class selected'),
+                const Text('Join a class to view exam timetables'),
               ],
             ),
           );
@@ -67,7 +71,7 @@ class ExamTimetableTab extends StatelessWidget {
                     Icon(
                       Icons.event_available,
                       size: 64,
-                      color: Colors.grey.shade400,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -75,7 +79,7 @@ class ExamTimetableTab extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -83,7 +87,7 @@ class ExamTimetableTab extends StatelessWidget {
                       'Exam timetables will appear here\nonce published by your lecturer.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.grey.shade500,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 14,
                       ),
                     ),
@@ -201,7 +205,9 @@ class _DateHeader extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: isPast ? Colors.grey.shade300 : Colors.indigo.shade600,
+            color: isPast
+                ? Theme.of(context).colorScheme.surfaceContainerHighest
+                : Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -236,12 +242,17 @@ class _DateHeader extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
-                color: isPast ? Colors.grey : Colors.black87,
+                color: isPast
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Colors.black87,
               ),
             ),
             Text(
               '$count exam${count > 1 ? 's' : ''}',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -320,12 +331,15 @@ class _ExamCard extends StatelessWidget {
                   Icon(
                     Icons.access_time,
                     size: 14,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${entry.startTime} — ${entry.endTime}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -335,23 +349,29 @@ class _ExamCard extends StatelessWidget {
                   Icon(
                     Icons.location_on_outlined,
                     size: 14,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     entry.room,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Icon(
                     Icons.person_outline,
                     size: 14,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     entry.teacher,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -362,15 +382,21 @@ class _ExamCard extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.amber.shade50,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber.shade200),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     entry.instructions!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.amber.shade900,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),

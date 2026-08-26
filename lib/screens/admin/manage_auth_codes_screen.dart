@@ -100,7 +100,9 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                               desc.toString(),
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey[600],
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                         ],
@@ -138,7 +140,10 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                 const Spacer(),
                 Text(
                   'Tap to revoke',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -203,7 +208,9 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                                     code.isUsed ||
                                         code.isExpired ||
                                         code.isExhausted
-                                    ? Colors.grey
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant
                                     : Colors.green,
                               ),
                             ),
@@ -212,7 +219,9 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                                 rule.label,
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey[500],
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             if (code.useCount > 0 || code.maxUses != null)
@@ -220,7 +229,9 @@ class _ManageAuthCodesScreenState extends State<ManageAuthCodesScreen> {
                                 'Used ${code.useCount}x${code.maxUses != null ? ' / ${code.maxUses}x max' : ''}',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey[500],
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                           ],

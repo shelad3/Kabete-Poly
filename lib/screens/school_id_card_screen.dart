@@ -64,11 +64,22 @@ class _IDCardFront extends StatelessWidget {
                 const SizedBox(height: 20),
                 _DividerLine(),
                 const SizedBox(height: 16),
-                _InfoRow(label: 'Reg No:', value: user.registrationNumber ?? ''),
+                _InfoRow(
+                  label: 'Reg No:',
+                  value: user.registrationNumber ?? '',
+                ),
                 const SizedBox(height: 4),
-                _InfoRow(label: 'Gender:', value: user.gender?.isNotEmpty == true ? user.gender : '—'),
+                _InfoRow(
+                  label: 'Gender:',
+                  value: user.gender?.isNotEmpty == true ? user.gender : '—',
+                ),
                 const SizedBox(height: 4),
-                _InfoRow(label: 'Nationality:', value: user.nationality?.isNotEmpty == true ? user.nationality : 'Kenyan'),
+                _InfoRow(
+                  label: 'Nationality:',
+                  value: user.nationality?.isNotEmpty == true
+                      ? user.nationality
+                      : 'Kenyan',
+                ),
                 const SizedBox(height: 4),
                 _InfoRow(label: 'Role:', value: user.role ?? 'Student'),
                 const SizedBox(height: 20),
@@ -154,11 +165,22 @@ class _PhotoSection extends StatelessWidget {
                 ? Image.network(
                     user.profilePhotoUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, e, s) => const Icon(Icons.person, size: 48, color: Colors.grey),
-                    loadingBuilder: (_, child, progress) =>
-                        progress == null ? child : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    errorBuilder: (_, e, s) => Icon(
+                      Icons.person,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    loadingBuilder: (_, child, progress) => progress == null
+                        ? child
+                        : const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                   )
-                : const Icon(Icons.person, size: 48, color: Colors.grey),
+                : Icon(
+                    Icons.person,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
           ),
         ),
         const SizedBox(width: 16),
@@ -178,7 +200,10 @@ class _PhotoSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   borderRadius: BorderRadius.circular(4),
@@ -235,7 +260,7 @@ class _InfoRow extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -292,7 +317,11 @@ class _BottomSeals extends StatelessWidget {
                 border: Border.all(color: Colors.green.shade700, width: 2),
                 color: Colors.green.shade50,
               ),
-              child: Icon(Icons.verified_user, color: Colors.green.shade700, size: 28),
+              child: Icon(
+                Icons.verified_user,
+                color: Colors.green.shade700,
+                size: 28,
+              ),
             ),
             const SizedBox(height: 4),
             Text(

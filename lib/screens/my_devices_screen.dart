@@ -40,11 +40,18 @@ class MyDevicesScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.devices, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.devices,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No active sessions',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -68,7 +75,9 @@ class MyDevicesScreen extends StatelessWidget {
                           'Your account is signed in on the devices listed below.',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[700],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -110,7 +119,9 @@ class MyDevicesScreen extends StatelessWidget {
               children: [
                 Icon(
                   isCurrent ? Icons.phone_android : Icons.devices,
-                  color: isCurrent ? Colors.green : Colors.grey[600],
+                  color: isCurrent
+                      ? Colors.green
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                   size: 32,
                 ),
                 const SizedBox(width: 12),
@@ -155,7 +166,10 @@ class MyDevicesScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         session.deviceType,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -165,11 +179,17 @@ class MyDevicesScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Signed in: ${_formatDate(session.loginAt)}',
-              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             Text(
               'Last active: ${_formatDate(session.lastActiveAt)}',
-              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             if (!isCurrent) ...[
               const SizedBox(height: 12),

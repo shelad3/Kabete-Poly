@@ -128,19 +128,25 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
                   _showTemplatePicker();
               },
               itemBuilder: (_) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'save_template',
                   child: ListTile(
-                    leading: Icon(Icons.save_as, color: Colors.teal),
-                    title: Text('Save as Template'),
+                    leading: Icon(
+                      Icons.save_as,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: const Text('Save as Template'),
                     dense: true,
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'load_template',
                   child: ListTile(
-                    leading: Icon(Icons.file_copy, color: Colors.blue),
-                    title: Text('Load Template'),
+                    leading: Icon(
+                      Icons.file_copy,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: const Text('Load Template'),
                     dense: true,
                   ),
                 ),
@@ -358,9 +364,9 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
                     itemBuilder: (_, i) {
                       final t = templates[i];
                       return ListTile(
-                        leading: const Icon(
+                        leading: Icon(
                           Icons.description,
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         title: Text(t.name),
                         subtitle: Text(
@@ -405,16 +411,21 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.05),
+        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.attach_file, color: Colors.blue),
+              Icon(
+                Icons.attach_file,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Attachments',
@@ -423,7 +434,10 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
               const Spacer(),
               Text(
                 '${_attachments.length} file(s)',
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -434,9 +448,9 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
                 margin: const EdgeInsets.only(bottom: 6),
                 child: ListTile(
                   dense: true,
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.insert_drive_file,
-                    color: Colors.blue,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 20,
                   ),
                   title: Text(
@@ -460,8 +474,8 @@ class _AddLessonScreenState extends State<AddLessonScreen> {
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Add Files'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.blue,
-              side: const BorderSide(color: Colors.blue),
+              foregroundColor: Theme.of(context).colorScheme.primary,
+              side: BorderSide(color: Theme.of(context).colorScheme.primary),
             ),
           ),
         ],

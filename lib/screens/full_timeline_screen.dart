@@ -182,8 +182,14 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.teal.withValues(alpha: 0.1),
-                  child: const Icon(Icons.quiz, color: Colors.teal, size: 20),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  child: Icon(
+                    Icons.quiz,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
                 title: Text(
                   q.title,
@@ -195,7 +201,10 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
                 ),
                 trailing: Text(
                   '${q.durationMinutes} min',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             );
@@ -207,7 +216,7 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
 
   Widget _buildLessonItem(Lesson lesson) {
     final isPractical = lesson.report.isNotEmpty;
-    final color = isPractical ? Colors.purple : Colors.orange;
+    final color = Theme.of(context).colorScheme.primary;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -227,7 +236,11 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
           '${lesson.subtopic} • ${DateFormat('MMM dd, yyyy').format(lesson.date)}',
           style: const TextStyle(fontSize: 12),
         ),
-        trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+        trailing: Icon(
+          Icons.chevron_right,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -252,7 +265,11 @@ class _FullTimelineScreenState extends State<FullTimelineScreen>
           '${item.startTime}-${item.endTime} • ${item.room} • ${DateFormat('MMM dd, yyyy').format(item.date)}',
           style: const TextStyle(fontSize: 12),
         ),
-        trailing: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+        trailing: Icon(
+          Icons.chevron_right,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

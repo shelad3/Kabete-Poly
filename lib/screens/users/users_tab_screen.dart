@@ -96,11 +96,17 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'Failed to load users',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -125,11 +131,18 @@ class _UsersTabScreenState extends State<UsersTabScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_outline, size: 48, color: Colors.grey[300]),
+                Icon(
+                  Icons.people_outline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'No users found',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
@@ -185,7 +198,9 @@ class _FilterChip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Material(
-        color: selected ? color : Colors.grey[200],
+        color: selected
+            ? color
+            : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
@@ -195,7 +210,9 @@ class _FilterChip extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.white : Colors.grey[700],
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 13,
               ),
@@ -288,7 +305,13 @@ class _UserCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         if (user.mobileNumber.isNotEmpty)
-                          Icon(Icons.phone, size: 14, color: Colors.grey[400]),
+                          Icon(
+                            Icons.phone,
+                            size: 14,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         if (user.mobileNumber.isNotEmpty)
                           const SizedBox(width: 4),
                         Text(
@@ -296,7 +319,9 @@ class _UserCard extends StatelessWidget {
                               ? user.mobileNumber
                               : 'No phone',
                           style: TextStyle(
-                            color: Colors.grey[500],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
@@ -305,7 +330,11 @@ class _UserCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[300], size: 20),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
             ],
           ),
         ),

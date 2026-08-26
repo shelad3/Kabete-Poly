@@ -136,7 +136,9 @@ class RoleSelectionScreen extends StatelessWidget {
             Text(
               'Your $role key is valid. Redirecting to registration...',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(
+                color: Theme.of(screenContext).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 24),
             const SizedBox(
@@ -174,10 +176,12 @@ class RoleSelectionScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Please select your role to continue registration. Elevated profiles require an access key.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 48),
             _buildRoleButton(
@@ -211,9 +215,15 @@ class RoleSelectionScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.05),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 children: [
@@ -221,7 +231,7 @@ class RoleSelectionScreen extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Colors.blue[700],
+                        color: Theme.of(context).colorScheme.primary,
                         size: 18,
                       ),
                       const SizedBox(width: 8),
@@ -231,7 +241,7 @@ class RoleSelectionScreen extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
-                            color: Colors.blue[700],
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
@@ -249,13 +259,16 @@ class RoleSelectionScreen extends StatelessWidget {
                     },
                     child: Text.rich(
                       TextSpan(
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         children: [
                           const TextSpan(text: 'Contact '),
                           TextSpan(
                             text: 'sheldonramu8@gmail.com',
                             style: TextStyle(
-                              color: Colors.blue[700],
+                              color: Theme.of(context).colorScheme.primary,
                               decoration: TextDecoration.underline,
                               fontWeight: FontWeight.w600,
                             ),
@@ -316,12 +329,18 @@ class RoleSelectionScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.grey),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

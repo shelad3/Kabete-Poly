@@ -76,11 +76,11 @@ class LessonDetailScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildNotesTab(),
-            _buildSummaryTab(),
-            _buildPracticalTab(),
-            _buildReportTab(),
-            _buildNBsTab(),
+            _buildNotesTab(context),
+            _buildSummaryTab(context),
+            _buildPracticalTab(context),
+            _buildReportTab(context),
+            _buildNBsTab(context),
           ],
         ),
       ),
@@ -135,7 +135,7 @@ class LessonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNotesTab() {
+  Widget _buildNotesTab(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -176,18 +176,26 @@ class LessonDetailScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.attach_file, color: Colors.blue, size: 20),
-                      SizedBox(width: 8),
-                      Text(
+                      Icon(
+                        Icons.attach_file,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
                         'Attachments',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
@@ -199,9 +207,9 @@ class LessonDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.picture_as_pdf,
-                            color: Colors.blue,
+                            color: Theme.of(context).colorScheme.primary,
                             size: 24,
                           ),
                           const SizedBox(width: 12),
@@ -228,7 +236,9 @@ class LessonDetailScreen extends StatelessWidget {
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -258,24 +268,28 @@ class LessonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryTab() {
+  Widget _buildSummaryTab(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.amber[50],
+            color: Theme.of(context).colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.amber[200]!),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.summarize_outlined,
                 size: 48,
-                color: Colors.amber,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 16),
               const Text(
@@ -298,7 +312,7 @@ class LessonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPracticalTab() {
+  Widget _buildPracticalTab(BuildContext context) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -319,7 +333,7 @@ class LessonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReportTab() {
+  Widget _buildReportTab(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Card(
@@ -328,11 +342,14 @@ class LessonDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.assignment, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text(
+                  Icon(
+                    Icons.assignment,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
                     'Post-Practical Report',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -350,14 +367,22 @@ class LessonDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNBsTab() {
+  Widget _buildNBsTab(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          _buildNBItem('Note 1', lesson.nb1, Colors.blue),
+          _buildNBItem(
+            'Note 1',
+            lesson.nb1,
+            Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 20),
-          _buildNBItem('Note 2', lesson.nb2, Colors.purple),
+          _buildNBItem(
+            'Note 2',
+            lesson.nb2,
+            Theme.of(context).colorScheme.primary,
+          ),
         ],
       ),
     );

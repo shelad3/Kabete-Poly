@@ -38,21 +38,23 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 Icon(
                   Icons.photo_library_outlined,
                   size: 64,
-                  color: Colors.grey[400],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No events yet',
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Event galleries will appear here',
-                  style: TextStyle(color: Colors.grey[500]),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -135,7 +137,9 @@ class _EventCard extends StatelessWidget {
                       description,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey[700]),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 8),
@@ -144,22 +148,31 @@ class _EventCard extends StatelessWidget {
                       Icon(
                         Icons.calendar_today,
                         size: 14,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         dateStr,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       if (photoCount > 0) ...[
                         const SizedBox(width: 16),
-                        Icon(Icons.photo, size: 14, color: Colors.grey[600]),
+                        Icon(
+                          Icons.photo,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '$photoCount photos',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -167,7 +180,7 @@ class _EventCard extends StatelessWidget {
                       Icon(
                         Icons.arrow_forward_ios,
                         size: 14,
-                        color: Colors.grey[400],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
@@ -231,7 +244,7 @@ class _EventGalleryScreen extends StatelessWidget {
           if (specialGuests.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.all(12),
-              color: Colors.grey[100],
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -240,7 +253,7 @@ class _EventGalleryScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -277,7 +290,9 @@ class _EventGalleryScreen extends StatelessWidget {
                                 guestRole,
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: Colors.grey[600],
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                           ],
@@ -310,12 +325,16 @@ class _EventGalleryScreen extends StatelessWidget {
                         Icon(
                           Icons.photo_library_outlined,
                           size: 48,
-                          color: Colors.grey[400],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           'No photos in this event',
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -338,10 +357,14 @@ class _EventGalleryScreen extends StatelessWidget {
                         url,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          color: Colors.grey[300],
-                          child: const Icon(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          child: Icon(
                             Icons.broken_image,
-                            color: Colors.grey,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),

@@ -301,6 +301,48 @@
               "order": "ASCENDING"
             }
           ]
+        },
+        {
+          "collectionGroup": "exam_bookings",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "studentId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "registeredAt",
+              "order": "DESCENDING"
+            }
+          ]
+        },
+        {
+          "collectionGroup": "exam_bookings",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "studentId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "examId",
+              "order": "ASCENDING"
+            }
+          ]
+        },
+        {
+          "collectionGroup": "payments",
+          "queryScope": "COLLECTION",
+          "fields": [
+            {
+              "fieldPath": "studentId",
+              "order": "ASCENDING"
+            },
+            {
+              "fieldPath": "initiatedAt",
+              "order": "DESCENDING"
+            }
+          ]
         }
     ],
     "fieldOverrides": []

@@ -75,10 +75,12 @@ class _HelpRequestsTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
         if (items.isEmpty)
-          return const Center(
+          return Center(
             child: Text(
               'No help requests yet.',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           );
         return ListView.builder(
@@ -152,10 +154,12 @@ class _ClassChangeRequestsTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         final docs = snap.data!.docs;
         if (docs.isEmpty)
-          return const Center(
+          return Center(
             child: Text(
               'No class change requests.',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           );
         return ListView.builder(
@@ -177,14 +181,14 @@ class _ClassChangeRequestsTab extends StatelessWidget {
                     CircleAvatar(
                       backgroundColor: status == 'approved'
                           ? Colors.green[100]
-                          : Colors.blue[100],
+                          : Theme.of(context).colorScheme.primaryContainer,
                       child: Icon(
                         status == 'approved'
                             ? Icons.check_circle
                             : Icons.swap_horiz,
                         color: status == 'approved'
                             ? Colors.green
-                            : Colors.blue,
+                            : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -199,9 +203,11 @@ class _ClassChangeRequestsTab extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             d['userEmail'] ?? '',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -214,9 +220,11 @@ class _ClassChangeRequestsTab extends StatelessWidget {
                               padding: const EdgeInsets.only(top: 2),
                               child: Text(
                                 'Reason: ${d['reason']}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -272,10 +280,12 @@ class _ErrorReportsTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
         if (items.isEmpty)
-          return const Center(
+          return Center(
             child: Text(
               'No error reports.',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           );
         return ListView.builder(
@@ -346,10 +356,12 @@ class _FeedbackTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         final items = snap.data!;
         if (items.isEmpty)
-          return const Center(
+          return Center(
             child: Text(
               'No feedback yet.',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           );
         return ListView.builder(
@@ -367,7 +379,9 @@ class _FeedbackTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CircleAvatar(
-                      backgroundColor: Colors.amber[100],
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer,
                       child: Text(
                         item.rating != null ? '${item.rating}' : '☆',
                         style: const TextStyle(fontWeight: FontWeight.bold),

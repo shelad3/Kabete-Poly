@@ -70,7 +70,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           }
         },
         type: BottomNavigationBarType.fixed,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
         items: [
           const BottomNavigationBarItem(
             icon: Icon(Icons.admin_panel_settings),

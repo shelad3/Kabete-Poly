@@ -97,7 +97,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.indigo.shade50,
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -113,7 +115,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                     children: [
                       Text(
                         '${widget.houseName} — Cube ${widget.cubeNumber}',
-                        style: TextStyle(color: Colors.grey.shade700),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(),
                     ],
@@ -131,10 +135,10 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                       ),
                       Text(
                         'KES ${PaymentService.cubeBookingAmount.toStringAsFixed(0)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.indigo,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ],
@@ -179,11 +183,10 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               icon: Icons.credit_card,
               title: 'Card',
               subtitle: 'Debit or Credit Card',
-              color: Colors.blue,
+              color: Theme.of(context).colorScheme.primary,
               isSelected: _selectedMethod == PaymentMethod.card,
               onTap: () => setState(() => _selectedMethod = PaymentMethod.card),
             ),
-
             // Phone number input for mobile money
             if (_selectedMethod == PaymentMethod.mpesa ||
                 _selectedMethod == PaymentMethod.airtel) ...[
@@ -238,7 +241,10 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
             Text(
               'Payment is processed securely. Your cubicle will be confirmed automatically upon successful payment.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -270,7 +276,9 @@ class _PaymentOption extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isSelected ? color : Colors.grey.shade200,
+          color: isSelected
+              ? color
+              : Theme.of(context).colorScheme.outlineVariant,
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -305,7 +313,7 @@ class _PaymentOption extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

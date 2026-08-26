@@ -196,19 +196,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             _buildSettingsSection(context, 'Options', [
               ListTile(
-                leading: const Icon(Icons.class_, color: Colors.blue),
+                leading: Icon(
+                  Icons.class_,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: const Text(
                   'Enrolled Classes ',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
                 trailing: Text(
                   '${user?.enrolledClasses.length ?? 0} classes',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
                 onTap: () => _showClassManagement(context, user),
               ),
               ListTile(
-                leading: const Icon(Icons.qr_code, color: Colors.indigo),
+                leading: Icon(
+                  Icons.qr_code,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: const Text(
                   'My QR Code',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
@@ -217,19 +226,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'Show for attendance scanning',
                   style: TextStyle(fontSize: 12),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => _showQrCode(context, user),
               ),
             ]),
             _buildSettingsSection(context, 'Appearance', [
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.palette_outlined,
-                  color: Colors.purple,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Theme',
@@ -260,79 +269,82 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             _buildSettingsSection(context, 'App Preferences', [
               ListTile(
-                leading: const Icon(Icons.edit_outlined, color: Colors.teal),
+                leading: Icon(
+                  Icons.edit_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: const Text(
                   'Edit Profile',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => _showEditProfile(context, user),
               ),
               ListTile(
                 leading: Icon(
                   Icons.lock_reset,
-                  color: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Change Password',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => _showPasswordResetDialog(context, user?.email),
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.notifications_outlined,
-                  color: Colors.cyan,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Notification Preferences',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => _showNotificationPrefs(context),
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.delete_sweep_outlined,
-                  color: Colors.orange,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Clear Cache',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: _clearCache,
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.support_agent_outlined,
-                  color: Colors.indigo,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Help & Support',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => Navigator.push(
                   context,
@@ -340,18 +352,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.bug_report_outlined,
-                  color: Colors.redAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Report an Error',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => Navigator.push(
                   context,
@@ -359,18 +371,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.feedback_outlined,
-                  color: Colors.amber,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Send Feedback',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () => Navigator.push(
                   context,
@@ -378,18 +390,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.system_update_alt,
-                  color: Colors.blueAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text(
                   'Check for Updates',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.refresh,
                   size: 18,
-                  color: Colors.blueAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -402,18 +414,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
             _buildSettingsSection(context, 'Institution', [
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.contact_phone_outlined,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 title: const Text(
                   'Faculty & Staff Directory',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onTap: () {
                   Navigator.push(
@@ -425,14 +437,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.info_outline, color: Colors.grey),
+                leading: Icon(
+                  Icons.info_outline,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 title: const Text(
                   'About Kabete Poly App',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
                 trailing: Text(
                   _appVersion,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
                 ),
                 onTap: () => _showAboutDialog(context),
               ),
@@ -1195,14 +1213,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String value,
   ) {
     return ListTile(
-      leading: Icon(icon, color: Colors.grey[700]),
+      leading: Icon(
+        icon,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
       title: Text(
         label,
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       ),
       trailing: Text(
         value,
-        style: const TextStyle(color: Colors.grey, fontSize: 14),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontSize: 14,
+        ),
       ),
     );
   }
@@ -1255,11 +1279,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.info, color: Colors.blue),
-            SizedBox(width: 10),
-            Text('About Kabete Poly'),
+            Icon(
+              Icons.info,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 10),
+            const Text('About Kabete Poly'),
           ],
         ),
         content: Column(
@@ -1275,12 +1302,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Kabete Poly App provides students and faculty with scheduling, document sharing, and real-time alerts.',
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Built with Flutter & Firebase.',
               style: TextStyle(
                 fontStyle: FontStyle.italic,
                 fontSize: 12,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

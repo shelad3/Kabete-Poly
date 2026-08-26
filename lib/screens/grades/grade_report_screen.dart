@@ -35,11 +35,11 @@ class GradeReportScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.grade_outlined, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.grade_outlined, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   const SizedBox(height: 16),
                   Text(
                     'No grades recorded yet',
-                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -73,7 +73,7 @@ class GradeReportScreen extends StatelessWidget {
                           Text(
                             'Overall Average',
                             style: TextStyle(
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                               fontSize: 13,
                             ),
                           ),
@@ -99,7 +99,7 @@ class GradeReportScreen extends StatelessWidget {
                     ),
                     Text(
                       '${grades.length} subjects',
-                      style: TextStyle(color: Colors.grey[500]),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -163,6 +163,7 @@ class GradeReportScreen extends StatelessWidget {
                                 ) {
                                   return Expanded(
                                     child: _buildMiniBadge(
+                                      context,
                                       e.key,
                                       '${e.value.score.toStringAsFixed(0)}/${e.value.max.toStringAsFixed(0)}',
                                     ),
@@ -173,7 +174,7 @@ class GradeReportScreen extends StatelessWidget {
                                 Text(
                                   '+${g.assessments.length - 3} more',
                                   style: TextStyle(
-                                    color: Colors.grey[400],
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                                     fontSize: 11,
                                   ),
                                 ),
@@ -183,7 +184,7 @@ class GradeReportScreen extends StatelessWidget {
                                 Text(
                                   g.comments!,
                                   style: TextStyle(
-                                    color: Colors.grey[500],
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                                     fontSize: 12,
                                     fontStyle: FontStyle.italic,
                                   ),
@@ -197,7 +198,7 @@ class GradeReportScreen extends StatelessWidget {
                                   Text(
                                     'Tap for details',
                                     style: TextStyle(
-                                      color: Colors.grey[400],
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       fontSize: 10,
                                     ),
                                   ),
@@ -205,7 +206,7 @@ class GradeReportScreen extends StatelessWidget {
                                   Text(
                                     '${g.term} ${g.academicYear}',
                                     style: TextStyle(
-                                      color: Colors.grey[400],
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       fontSize: 11,
                                     ),
                                   ),
@@ -252,7 +253,7 @@ class GradeReportScreen extends StatelessWidget {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: Theme.of(context).colorScheme.outlineVariant,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -273,12 +274,12 @@ class GradeReportScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           g.classId,
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                         Text(
                           '${g.term} ${g.academicYear}',
                           style: TextStyle(
-                            color: Colors.grey[500],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
@@ -298,7 +299,7 @@ class GradeReportScreen extends StatelessWidget {
                           CircularProgressIndicator(
                             value: g.percentage / 100,
                             strokeWidth: 10,
-                            backgroundColor: Colors.grey[200],
+                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             valueColor: AlwaysStoppedAnimation<Color>(
                               _gradeColor(g.grade),
                             ),
@@ -319,7 +320,7 @@ class GradeReportScreen extends StatelessWidget {
                                   '${g.percentage.toStringAsFixed(1)}%',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey[600],
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ],
@@ -339,7 +340,7 @@ class GradeReportScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -351,7 +352,7 @@ class GradeReportScreen extends StatelessWidget {
                             vertical: 10,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(12),
                             ),
@@ -393,7 +394,7 @@ class GradeReportScreen extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               border: Border(
-                                top: BorderSide(color: Colors.grey.shade200),
+                                top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
                               ),
                             ),
                             child: Row(
@@ -438,14 +439,18 @@ class GradeReportScreen extends StatelessWidget {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF1A237E,
-                            ).withValues(alpha: 0.05),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.05),
                             borderRadius: const BorderRadius.vertical(
                               bottom: Radius.circular(12),
                             ),
                             border: Border(
-                              top: BorderSide(color: Colors.grey.shade300),
+                              top: BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              ),
                             ),
                           ),
                           child: Row(
@@ -500,9 +505,13 @@ class GradeReportScreen extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
                       ),
                       child: Text(
                         g.comments!,
@@ -523,7 +532,7 @@ class GradeReportScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Teacher: ${g.teacherName}',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 11),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11),
                   ),
                 ],
               ),
@@ -555,13 +564,13 @@ class GradeReportScreen extends StatelessWidget {
           );
         }
         if (snap.hasError || !snap.hasData) {
-          return Text('No records', style: TextStyle(color: Colors.grey[500]));
+          return Text('No records', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant));
         }
         final records = snap.data!.docs;
         if (records.isEmpty) {
           return Text(
             'No attendance records found',
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           );
         }
 
@@ -584,7 +593,7 @@ class GradeReportScreen extends StatelessWidget {
                 const Spacer(),
                 Text(
                   '${(present / records.length * 100).toStringAsFixed(0)}% attendance',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
                 ),
               ],
             ),
@@ -621,18 +630,23 @@ class GradeReportScreen extends StatelessWidget {
     return key[0].toUpperCase() + key.substring(1);
   }
 
-  Widget _buildMiniBadge(String label, String value) {
+  Widget _buildMiniBadge(BuildContext context, String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.08),
+        color: Theme.of(
+          context,
+        ).colorScheme.outlineVariant.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
           Text(
             _assessmentLabel(label),
-            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+            style: TextStyle(
+              fontSize: 10,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 2),
           Text(

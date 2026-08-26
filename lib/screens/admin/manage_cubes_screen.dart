@@ -24,7 +24,7 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
   Future<void> _editCube(Cube cube) async {
     final capCtrl = TextEditingController(text: cube.maxOccupancy.toString());
     String? side = cube.side;
-    final confirmed = await showDialog<bool>(
+    await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDState) => AlertDialog(
@@ -106,12 +106,15 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
                   Icon(
                     Icons.workspaces_outlined,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No cubes in this house',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -128,11 +131,13 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
                     child: Text(
                       '${c.cubeNumber}',
                       style: TextStyle(
-                        color: Colors.blue[700],
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -143,7 +148,10 @@ class _ManageCubesScreenState extends State<ManageCubesScreen> {
                   ),
                   subtitle: Text('Max ${c.maxOccupancy} students$sideLabel'),
                   trailing: IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    icon: Icon(
+                      Icons.edit,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     onPressed: () => _editCube(c),
                   ),
                 ),

@@ -49,11 +49,18 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.calendar_month, size: 64, color: Colors.grey[300]),
+                  Icon(
+                    Icons.calendar_month,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No timetable entries yet',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
@@ -81,10 +88,10 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
                     padding: const EdgeInsets.only(top: 8, bottom: 4, left: 4),
                     child: Text(
                       day,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: Colors.blueGrey,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -158,7 +165,9 @@ class _ManageTimetableScreenState extends State<ManageTimetableScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),

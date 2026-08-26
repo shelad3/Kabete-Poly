@@ -141,7 +141,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
-                  unselectedLabelColor: Colors.grey,
+                  unselectedLabelColor:
+                      Theme.of(context).colorScheme.onSurfaceVariant,
                   tabs: const [
                     Tab(text: 'Past Lessons'),
                     Tab(text: 'Upcoming Lessons'),
@@ -175,15 +176,21 @@ class _ScheduleScreenState extends State<ScheduleScreen>
         }
         final lessons = snapshot.data ?? [];
         if (lessons.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.auto_stories_outlined, size: 48, color: Colors.grey),
-                SizedBox(height: 12),
+                Icon(
+                  Icons.auto_stories_outlined,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 12),
                 Text(
                   'No completed lessons yet.',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -219,7 +226,10 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const SizedBox(height: 2),
                     Text(
                       '${lesson.teacher} • ${_formatDate(lesson.date)}${isPractical ? ' • Practical' : ''}',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -265,19 +275,21 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             .toList();
 
         if (upcoming.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   Icons.calendar_month_outlined,
                   size: 48,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Text(
                   'No upcoming lessons.',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -359,7 +371,11 @@ class _ScheduleScreenState extends State<ScheduleScreen>
           '$dateStr • ${item.startTime} - ${item.endTime} • ${item.teacher}',
           style: const TextStyle(fontSize: 12),
         ),
-        trailing: const Icon(Icons.chevron_right, size: 18),
+        trailing: Icon(
+          Icons.chevron_right,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         onTap: () => _showLessonDetail(item),
       ),
     );

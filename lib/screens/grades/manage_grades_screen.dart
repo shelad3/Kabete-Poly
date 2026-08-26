@@ -67,8 +67,6 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
       maxCtrls['exam'] = TextEditingController(text: '100');
     }
 
-    void rebuild() => setState(() {});
-
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -331,14 +329,18 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                             Icon(
                               Icons.people_outline,
                               size: 64,
-                              color: Colors.grey[400],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'No students enrolled',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[600],
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -393,7 +395,9 @@ class _ManageGradesScreenState extends State<ManageGradesScreen> {
                               '$regNo · ${studentGrades.length} subjects${avg != null ? ' · Avg: ${avg.toStringAsFixed(1)}%' : ''}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             children: [

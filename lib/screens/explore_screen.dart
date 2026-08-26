@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/unread_badge_provider.dart';
 import '../services/cube_service.dart';
-import '../providers/feature_flag_provider.dart';
 import '../widgets/feature_gate.dart';
 import '../widgets/app_drawer.dart';
 import 'incoming_lessons_screen.dart';
@@ -51,10 +50,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text('Upcoming practical & theory'),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () => Navigator.push(
                       context,
@@ -79,8 +78,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               child: Container(
                                 width: 8,
                                 height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.error,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -95,10 +94,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     subtitle: const Text(
                       'Past theory, practical, quizzes & completed lessons',
                     ),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () => Navigator.push(
                       context,
@@ -120,10 +119,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text('Practice assessments'),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () {
                       if (!checkFeatureEnabled(context, 'quizzes')) return;
@@ -148,10 +147,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text('View report card & performance'),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () {
                       if (!checkFeatureEnabled(context, 'grades')) return;
@@ -176,10 +175,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text('Reserve a lab workstation'),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () async {
                       if (!checkFeatureEnabled(context, 'hostel_booking'))
@@ -223,10 +222,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text('View & cancel cubicle bookings'),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () {
                       if (!checkFeatureEnabled(context, 'hostel_booking'))
@@ -252,10 +251,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text('View your official student ID'),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () => Navigator.push(
                       context,
@@ -277,10 +276,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: const Text('Register for examinations'),
-                    trailing: const Icon(
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     onTap: () {
                       if (!checkFeatureEnabled(context, 'exam_booking')) return;

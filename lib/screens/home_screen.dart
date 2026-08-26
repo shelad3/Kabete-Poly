@@ -83,20 +83,23 @@ class _HomeScreenState extends State<HomeScreen> {
     const SettingsScreen(),
   ];
 
-  List<BottomNavigationBarItem> _buildNavItems(UnreadBadgeProvider badge) => [
-    const BottomNavigationBarItem(
+  List<NavigationDestination> _buildNavItems(UnreadBadgeProvider badge) => [
+    const NavigationDestination(
       icon: Icon(Icons.explore_outlined),
+      selectedIcon: Icon(Icons.explore_rounded),
       label: 'Explore',
     ),
-    const BottomNavigationBarItem(
+    const NavigationDestination(
       icon: Icon(Icons.calendar_month_outlined),
+      selectedIcon: Icon(Icons.calendar_month_rounded),
       label: 'Schedule',
     ),
-    const BottomNavigationBarItem(
+    const NavigationDestination(
       icon: Icon(Icons.forum_outlined),
+      selectedIcon: Icon(Icons.forum_rounded),
       label: 'Community',
     ),
-    BottomNavigationBarItem(
+    NavigationDestination(
       icon: badge.totalUnread > 0
           ? Badge(
               label: Text(
@@ -106,10 +109,20 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(Icons.notifications_none_outlined),
             )
           : const Icon(Icons.notifications_none_outlined),
+      selectedIcon: badge.totalUnread > 0
+          ? Badge(
+              label: Text(
+                badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString(),
+                style: const TextStyle(fontSize: 10, color: Colors.white),
+              ),
+              child: const Icon(Icons.notifications_rounded),
+            )
+          : const Icon(Icons.notifications_rounded),
       label: 'Alerts',
     ),
-    const BottomNavigationBarItem(
+    const NavigationDestination(
       icon: Icon(Icons.settings_outlined),
+      selectedIcon: Icon(Icons.settings_rounded),
       label: 'Settings',
     ),
   ];
@@ -136,9 +149,9 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         children: _buildScreens(),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex.clamp(0, _buildNavItems(badge).length - 1),
-        onTap: (index) {
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex.clamp(0, _buildNavItems(badge).length - 1),
+        onDestinationSelected: (index) {
           setState(() => _currentIndex = index);
           _pageController.animateToPage(
             index,
@@ -150,9 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
             context.read<UnreadBadgeProvider>().resetAlertCount();
           }
         },
-        type: BottomNavigationBarType.fixed,
-        unselectedItemColor: Colors.grey,
-        items: _buildNavItems(badge),
+        destinations: _buildNavItems(badge),
       ),
       floatingActionButton: Consumer<AuthProvider>(
         builder: (context, auth, _) {

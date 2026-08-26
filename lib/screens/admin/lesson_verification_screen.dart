@@ -32,7 +32,7 @@ class _LessonVerificationScreenState extends State<LessonVerificationScreen> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: Colors.grey.shade50,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Row(
               children: [
                 const Text(
@@ -73,20 +73,33 @@ class _LessonVerificationScreenState extends State<LessonVerificationScreen> {
                 }
                 final docs = snap.data?.docs ?? [];
                 if (docs.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.how_to_vote, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
+                        Icon(
+                          Icons.how_to_vote,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 16),
                         Text(
                           'No lesson verifications yet',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 16,
+                          ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Students vote during live lessons',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -108,7 +121,10 @@ class _LessonVerificationScreenState extends State<LessonVerificationScreen> {
                   return Center(
                     child: Text(
                       'No verifications for $_departmentFilter',
-                      style: const TextStyle(color: Colors.grey, fontSize: 16),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 16,
+                      ),
                     ),
                   );
                 }
@@ -187,7 +203,9 @@ class _LessonVerificationScreenState extends State<LessonVerificationScreen> {
                             Text(
                               '$classId  •  $date',
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 fontSize: 13,
                               ),
                             ),
@@ -209,7 +227,7 @@ class _LessonVerificationScreenState extends State<LessonVerificationScreen> {
                                 _voteChip(
                                   Icons.people,
                                   'Total: $total',
-                                  Colors.blue,
+                                  Theme.of(context).colorScheme.primary,
                                 ),
                               ],
                             ),
