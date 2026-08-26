@@ -93,11 +93,28 @@ class PdfTimetableParser:
             if 'KNPMASTER' not in row0_text.upper():
                 continue
 
-            # Extract time slots from row 2
-            time_slots = self._extract_time_slots(table[2])
+            # Extract time slots from row 2, using row 1 for day detection
+            day_row = table[1] if len(table) > 1 else []
+            time_slots = self._extract_time_slots(table[2], day_row)
             if not time_slots:
                 result.errors.append(f'Page {page_num}: could not parse time slots')
                 continue
+
+            # Determine slots per day from the parsed time slots
+            if time_slots:
+                all_cols = sorted(time_slots.keys())
+                # Find first day boundary by detecting when day changes
+                first_day = time_slots[all_cols[0]][0]
+                slots_per_day = 1
+                for ci in all_cols[1:]:
+                    if time_slots[ci][0] == first_day:
+                        slots_per_day += 1
+                    else:
+                        break
+            else:
+                slots_per_day = 5
+
+            max_col = max(time_slots.keys()) if time_slots else 25
 
             # Parse cohort rows (rows 3+)
             for row_idx in range(3, len(table)):
@@ -111,17 +128,16 @@ class PdfTimetableParser:
                 if class_id not in result.cohorts:
                     result.cohorts.append(class_id)
 
-                # Parse each timeslot cell (cols 1-25)
-                for col_idx in range(1, min(26, len(row))):
+                # Parse each timeslot cell — use actual column count, not hardcoded 25
+                for col_idx in range(1, min(max_col + 1, len(row))):
                     cell_text = str(row[col_idx]).strip() if row[col_idx] else ''
                     if not cell_text:
                         continue
 
-                    slot_num = self._col_to_slot(col_idx)
-                    if slot_num is None or slot_num not in time_slots:
+                    if col_idx not in time_slots:
                         continue
 
-                    day, start_time, end_time = time_slots[slot_num]
+                    day, start_time, end_time = time_slots[col_idx]
                     venue, subject, lecturer = self._parse_cell(cell_text)
 
                     if not subject and not venue:
@@ -138,62 +154,89 @@ class PdfTimetableParser:
                         'color': 4282339765,
                     })
 
-    def _extract_time_slots(self, row: list) -> dict[int, tuple[str, str, str]]:
+    def _extract_time_slots(self, slot_row: list, day_row: list) -> dict[int, tuple[str, str, str]]:
         """Parse time slot header row into {col_index: (day, start, end)}.
 
-        Row 2 looks like:
-          [None, '1\\n07:00\\n09:00AM', '2\\n09:00\\n11:00AM', ..., '5\\n03:00\\n05:00PM',
-           '1\\n07:00\\n09:00AM', ...]  (repeated 5 times for 5 days)
+        Adaptively detects grid structure from the day and time slot header rows.
+        Works with any number of days (3, 4, 5, 6) and any number of time slots
+        per day (3, 4, 5, etc.).
 
         Returns mapping of column index -> (day_name, start_time, end_time).
         """
-        if not row:
+        if not slot_row:
             return {}
 
-        # First figure out the day mapping from row 1
-        # But we can also just use the column position:
-        # cols 1-5 = Monday, 6-10 = Tuesday, 11-15 = Wednesday, 16-20 = Thursday, 21-25 = Friday
-        days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        # Step 1: Parse day boundaries from the day header row (row 1).
+        # Day names appear at the start of each day group; None marks continuation.
+        days_order = []
+        day_boundaries = {}  # col_idx -> day_name
+        for col_idx in range(1, len(day_row)):
+            cell = str(day_row[col_idx]).strip() if day_row[col_idx] else ''
+            if cell and cell.lower() in self.DAY_ABBR:
+                day_name = self.DAY_ABBR[cell.lower()]
+                days_order.append(day_name)
+                day_boundaries[col_idx] = day_name
+            elif cell and cell.capitalize() in [d.capitalize() for d in self.DAYS]:
+                day_name = next(d for d in self.DAYS if d.capitalize() == cell.capitalize())
+                days_order.append(day_name)
+                day_boundaries[col_idx] = day_name
+
+        # Step 2: Determine slots per day from day boundaries
+        if len(days_order) >= 2:
+            day_starts = sorted(day_boundaries.keys())
+            slots_per_day = day_starts[1] - day_starts[0]
+        elif len(days_order) == 1:
+            # Single day — count non-empty slot cells
+            slots_per_day = sum(1 for c in slot_row[1:] if c)
+        else:
+            # No day headers detected — fall back to 5 slots/day
+            slots_per_day = 5
+
+        # Step 3: Parse each time slot cell
+        # AM/PM can appear on start time, end time, or both
+        slot_re = re.compile(
+            r'(\d+)\s*\n\s*(\d{1,2}):(\d{2})\s*(AM|PM)?\s*\n\s*(\d{1,2}):(\d{2})\s*(AM|PM)?',
+            re.IGNORECASE,
+        )
 
         slots = {}
-        slot_re = re.compile(r'(\d)\s*\n\s*(\d{1,2}):(\d{2})\s*\n\s*(\d{1,2}):(\d{2})\s*(AM|PM)?', re.IGNORECASE)
-
-        for col_idx in range(1, min(26, len(row))):
-            cell = str(row[col_idx]) if row[col_idx] else ''
+        for col_idx in range(1, len(slot_row)):
+            cell = str(slot_row[col_idx]) if slot_row[col_idx] else ''
             m = slot_re.search(cell)
-            if m:
-                slot_num = int(m.group(1))
-                start_h = int(m.group(2))
-                start_m = int(m.group(3))
-                end_h = int(m.group(4))
-                end_m = int(m.group(5))
-                ampm = (m.group(6) or '').upper()
+            if not m:
+                continue
 
-                # Convert to 24h if AM/PM present
-                if ampm == 'PM' and start_h < 12:
-                    start_h += 12
-                if ampm == 'PM' and end_h < 12:
-                    end_h += 12
+            start_h, start_m = int(m.group(2)), int(m.group(3))
+            start_ampm = (m.group(4) or '').upper()
+            end_h, end_m = int(m.group(5)), int(m.group(6))
+            end_ampm = (m.group(7) or '').upper()
 
-                start = f'{start_h:02d}:{start_m:02d}'
-                end = f'{end_h:02d}:{end_m:02d}'
+            # Convert to 24h
+            if start_ampm == 'PM' and start_h < 12:
+                start_h += 12
+            if start_ampm == 'AM' and start_h == 12:
+                start_h = 0
+            if end_ampm == 'PM' and end_h < 12:
+                end_h += 12
+            if end_ampm == 'AM' and end_h == 12:
+                end_h = 0
 
-                # Determine day from column position
-                day_idx = (col_idx - 1) // 5
-                if day_idx < len(days_order):
-                    day = days_order[day_idx]
-                else:
-                    day = ''
+            start = f'{start_h:02d}:{start_m:02d}'
+            end = f'{end_h:02d}:{end_m:02d}'
 
-                slots[col_idx] = (day, start, end)
+            # Determine day from column position
+            day_idx = (col_idx - 1) // slots_per_day if slots_per_day > 0 else 0
+            day = days_order[day_idx] if day_idx < len(days_order) else ''
+
+            slots[col_idx] = (day, start, end)
 
         return slots
 
-    def _col_to_slot(self, col_idx: int) -> int | None:
-        """Map column index (1-25) to slot number (1-5) within the day."""
-        if col_idx < 1 or col_idx > 25:
+    def _col_to_slot(self, col_idx: int, slots_per_day: int = 5) -> int | None:
+        """Map column index to slot number within the day."""
+        if col_idx < 1 or slots_per_day < 1:
             return None
-        return ((col_idx - 1) % 5) + 1
+        return ((col_idx - 1) % slots_per_day) + 1
 
     def _parse_cell(self, text: str) -> tuple[str, str, str]:
         """Parse a cell's text into (venue, subject, lecturer).
