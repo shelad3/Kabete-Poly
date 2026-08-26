@@ -5,6 +5,7 @@
 
 import os
 import re
+import threading
 from collections import defaultdict
 
 from PyQt6.QtWidgets import (
@@ -268,8 +269,19 @@ class TimetableUploadTab(QWidget):
         elif self._current_step == 2:
             pass  # parsing auto-advances via _on_parse_complete
         elif self._current_step == 3:
-            # Move to duplicate check
-            self._start_dup_check()
+            if self._clear_existing:
+                # Replace mode: skip duplicate check, go straight to upload
+                self._do_upload()
+                self._current_step = 5
+                self._stack.setCurrentIndex(5)
+                self._progress_bar.setValue(6)
+                self._step_label.setText(f'Step 6 of 6: {self.STEPS[5]}')
+                self._back_btn.setEnabled(False)
+                self._next_btn.setText('Finish')
+                self._next_btn.setEnabled(False)
+                return
+            else:
+                self._start_dup_check()
         elif self._current_step == 4:
             self._do_upload()
 
@@ -522,130 +534,152 @@ class TimetableUploadTab(QWidget):
         QTimer.singleShot(100, self._do_dup_check)
 
     def _do_dup_check(self):
-        try:
-            db = FirestoreClient.get()
-            to_check = self._preview_table.get_selected_entries()
-            all_indices = self._preview_table.get_all_entry_indices()
+        self._next_btn.setEnabled(False)
+        self._dup_progress.setRange(0, 0)
 
-            # For each class group, check each selected entry
-            dup_indices: set[int] = set()
-            checked = 0
+        def _worker():
+            try:
+                db = FirestoreClient.get()
+                dup_indices: set[int] = set()
+                checked = 0
 
-            for group_name, indices in self._class_groups.items():
-                # Determine the Firestore class_id for this group
-                class_id = group_name if group_name != 'All Entries' else (
-                    self._class_override.currentText().strip() or 'Unspecified'
-                )
-                if class_id == 'All Entries' or class_id not in self._available_classes:
-                    # Try to find a matching class
-                    for av_cls in self._available_classes:
-                        if class_id.lower() in av_cls.lower() or av_cls.lower() in class_id.lower():
-                            class_id = av_cls
-                            break
-                    else:
-                        # Can't match — mark all as "can't check" but allow upload
-                        continue
+                for group_name, indices in self._class_groups.items():
+                    class_id = group_name if group_name != 'All Entries' else (
+                        self._class_override.currentText().strip() or 'Unspecified'
+                    )
+                    if class_id == 'All Entries' or class_id not in self._available_classes:
+                        for av_cls in self._available_classes:
+                            if class_id.lower() in av_cls.lower() or av_cls.lower() in class_id.lower():
+                                class_id = av_cls
+                                break
+                        else:
+                            continue
 
-                for idx in indices:
-                    if idx >= len(self._parsed_entries):
-                        continue
-                    entry = self._parsed_entries[idx]
-                    is_dup, _ = db.duplicate_exists(class_id, entry, self._mode)
-                    if is_dup:
-                        dup_indices.add(idx)
-                    checked += 1
+                    for idx in indices:
+                        if idx >= len(self._parsed_entries):
+                            continue
+                        entry = self._parsed_entries[idx]
+                        is_dup, _ = db.duplicate_exists(class_id, entry, self._mode)
+                        if is_dup:
+                            dup_indices.add(idx)
+                        checked += 1
 
-            self._duplicate_indices = dup_indices
-            self._preview_table.set_duplicates(dup_indices)
+                self._dup_result = (dup_indices, checked, None)
+            except Exception as e:
+                self._dup_result = (set(), 0, e)
 
-            # Re-populate to show updated status
-            self._preview_table.populate(self._parsed_entries, duplicates=dup_indices, class_groups=self._class_groups)
+            QTimer.singleShot(0, self._on_dup_check_done)
 
-            dup_count = len(dup_indices)
-            selected = len(self._preview_table.get_selected_entries())
-            self._dup_status.setText(
-                f'Duplicate check complete — {dup_count} duplicates found, {selected} ready to upload'
-            )
-            self._dup_detail.setText(
-                f'{checked} entries checked across {len(self._class_groups)} class group(s)\n'
-                f'Duplicates (same subject+date+time for exams, or day+time+unit for classes) will be skipped.'
-            )
-            self._dup_progress.setVisible(False)
-            self._next_btn.setEnabled(selected > 0)
+        self._dup_result = None
+        threading.Thread(target=_worker, daemon=True).start()
 
-        except Exception as e:
+    def _on_dup_check_done(self):
+        if self._dup_result is None:
+            QTimer.singleShot(50, self._on_dup_check_done)
+            return
+
+        dup_indices, checked, error = self._dup_result
+
+        if error:
             self._dup_status.setText('Duplicate check failed — will upload all selected')
-            self._dup_detail.setText(f'Error: {e}')
+            self._dup_detail.setText(f'Error: {error}')
             self._dup_progress.setVisible(False)
             self._next_btn.setEnabled(True)
+            return
+
+        self._duplicate_indices = dup_indices
+        self._preview_table.set_duplicates(dup_indices)
+        self._preview_table.populate(self._parsed_entries, duplicates=dup_indices, class_groups=self._class_groups)
+
+        dup_count = len(dup_indices)
+        selected = len(self._preview_table.get_selected_entries())
+        self._dup_status.setText(
+            f'Duplicate check complete — {dup_count} duplicates found, {selected} ready to upload'
+        )
+        self._dup_detail.setText(
+            f'{checked} entries checked across {len(self._class_groups)} class group(s)\n'
+            f'Duplicates (same subject+date+time for exams, or day+time+unit for classes) will be skipped.'
+        )
+        self._dup_progress.setVisible(False)
+        self._next_btn.setEnabled(selected > 0)
 
     def _do_upload(self):
-        try:
-            db = FirestoreClient.get()
-            to_upload = self._preview_table.get_selected_entries()
+        to_upload = self._preview_table.get_selected_entries()
 
-            if not to_upload:
-                self._upload_status.setText('Nothing to upload')
-                self._upload_detail.setText('All entries were duplicates or none were selected.')
-                self._next_btn.setEnabled(False)
-                return
+        if not to_upload:
+            self._upload_status.setText('Nothing to upload')
+            self._upload_detail.setText('All entries were duplicates or none were selected.')
+            self._next_btn.setEnabled(False)
+            return
 
-            total = 0
-            by_class: dict[str, int] = {}
-            errors: list[str] = []
+        self._upload_progress.setVisible(True)
+        self._upload_progress.setMaximum(0)
+        self._next_btn.setEnabled(False)
 
-            self._upload_progress.setVisible(True)
-            self._upload_progress.setMaximum(len(to_upload))
-            self._upload_progress.setValue(0)
+        def _worker():
+            try:
+                db = FirestoreClient.get()
+                total = 0
+                by_class: dict[str, int] = {}
+                errors: list[str] = []
 
-            for group_name, indices in self._class_groups.items():
-                class_id = group_name if group_name != 'All Entries' else (
-                    self._class_override.currentText().strip() or 'Unspecified'
-                )
-                if class_id not in self._available_classes:
-                    # Fuzzy match
-                    for av_cls in self._available_classes:
-                        if class_id.lower() in av_cls.lower() or av_cls.lower() in class_id.lower():
-                            class_id = av_cls
-                            break
+                for group_name, indices in self._class_groups.items():
+                    class_id = group_name if group_name != 'All Entries' else (
+                        self._class_override.currentText().strip() or 'Unspecified'
+                    )
+                    if class_id not in self._available_classes:
+                        for av_cls in self._available_classes:
+                            if class_id.lower() in av_cls.lower() or av_cls.lower() in class_id.lower():
+                                class_id = av_cls
+                                break
 
-                group_entries = [
-                    self._parsed_entries[i] for i in indices
-                    if i < len(self._parsed_entries) and i not in self._duplicate_indices
-                ]
-                if not group_entries:
-                    continue
+                    group_entries = [
+                        self._parsed_entries[i] for i in indices
+                        if i < len(self._parsed_entries) and i not in self._duplicate_indices
+                    ]
+                    if not group_entries:
+                        continue
 
-                try:
-                    if self._mode == 'exam':
-                        count = db.upload_exam_timetable_batch(class_id, group_entries, replace=self._clear_existing)
-                    else:
-                        count = db.upload_timetable_batch(class_id, group_entries, replace=self._clear_existing)
-                    by_class[class_id] = by_class.get(class_id, 0) + count
-                    total += count
-                except Exception as e:
-                    errors.append(f'{class_id}: {e}')
+                    try:
+                        if self._mode == 'exam':
+                            count = db.upload_exam_timetable_batch(class_id, group_entries, replace=self._clear_existing)
+                        else:
+                            count = db.upload_timetable_batch(class_id, group_entries, replace=self._clear_existing)
+                        by_class[class_id] = by_class.get(class_id, 0) + count
+                        total += count
+                    except Exception as e:
+                        errors.append(f'{class_id}: {e}')
 
-                self._upload_progress.setValue(total)
+                self._upload_result = (total, by_class, errors, None)
+            except Exception as e:
+                self._upload_result = (0, {}, [str(e)], e)
 
-            self._upload_progress.setVisible(False)
+            QTimer.singleShot(0, self._on_upload_done)
 
-            # Summary
-            parts = [f'{total} entries uploaded']
-            if self._clear_existing:
-                parts.append(' (replaced existing data)')
-            if by_class:
-                parts.append(' (' + ', '.join(f'{k}: {v}' for k, v in by_class.items()) + ')')
-            if errors:
-                err_text = '; '.join(errors[:3])
-                parts.append(f'\nErrors: {err_text}')
+        self._upload_result = None
+        threading.Thread(target=_worker, daemon=True).start()
 
+    def _on_upload_done(self):
+        if self._upload_result is None:
+            QTimer.singleShot(50, self._on_upload_done)
+            return
+
+        total, by_class, errors, exception = self._upload_result
+        self._upload_progress.setVisible(False)
+
+        parts = [f'{total} entries uploaded']
+        if self._clear_existing:
+            parts.append(' (replaced existing data)')
+        if by_class:
+            parts.append(' (' + ', '.join(f'{k}: {v}' for k, v in by_class.items()) + ')')
+        if errors:
+            err_text = '; '.join(errors[:5])
+            parts.append(f'\nErrors: {err_text}')
+
+        if exception:
+            self._upload_status.setText('Upload Failed')
+            self._upload_detail.setText(''.join(parts))
+        else:
             self._upload_status.setText('Upload Complete!')
             self._upload_detail.setText(''.join(parts))
-            self._next_btn.setEnabled(False)
-
-        except Exception as e:
-            self._upload_status.setText('Upload Failed')
-            self._upload_detail.setText(str(e))
-            import traceback
-            self._upload_detail.setText(traceback.format_exc())
+        self._next_btn.setEnabled(False)
