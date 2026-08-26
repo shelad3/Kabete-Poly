@@ -47,16 +47,19 @@ class ClassProvider extends ChangeNotifier {
   }
 
   void setClassContext(String newClass) {
-    if (availableClasses.contains(newClass) && _currentClass != newClass) {
-      _currentClass = newClass;
+    final normalized = _normalizeClassId(newClass);
+    if (availableClasses.contains(normalized) && _currentClass != normalized) {
+      _currentClass = normalized;
       notifyListeners();
     }
   }
 
   /// Set current class from user's enrolled classes. Called after login.
+  /// Normalizes class IDs: replaces slashes/dashes with spaces to match
+  /// Firestore class document IDs (e.g. "ICT/600/M26" → "ICT 600 M26").
   void setFromEnrolled(List<String> enrolledClasses) {
     if (enrolledClasses.isNotEmpty) {
-      final firstClass = enrolledClasses.first;
+      final firstClass = _normalizeClassId(enrolledClasses.first);
       if (!availableClasses.contains(firstClass)) {
         availableClasses.add(firstClass);
       }
@@ -66,5 +69,12 @@ class ClassProvider extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  /// Normalize class ID to match Firestore document IDs.
+  /// Handles slash-separated (ICT/600/M26) and dash-separated (EOP-500-M25)
+  /// formats, converting them to space-separated (ICT 600 M26).
+  static String _normalizeClassId(String id) {
+    return id.replaceAll(RegExp(r'[/\-]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 }

@@ -367,6 +367,9 @@ class FirestoreClient:
         for entry in entries:
             # Strip class_id — it's redundant with the document path
             data = {k: v for k, v in entry.items() if k != 'class_id'}
+            # Normalize field names to match Flutter app expectations
+            if 'venue' in data and 'room' not in data:
+                data['room'] = data.pop('venue')
             ref = self.db.collection('classes').document(class_id).collection('timetable').document()
             batch.set(ref, data)
         batch.commit()

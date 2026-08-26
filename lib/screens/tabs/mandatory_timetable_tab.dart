@@ -27,9 +27,15 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     if (_initialized) return;
     final user = context.read<AuthProvider>().currentUser;
     if (user != null && user.enrolledClasses.isNotEmpty) {
-      _selectedCohort = user.enrolledClasses.first;
+      _selectedCohort = _normalizeClassId(user.enrolledClasses.first);
     }
     _initialized = true;
+  }
+
+  /// Normalize class ID: replace slashes/dashes with spaces to match
+  /// Firestore class document IDs (e.g. "ICT/600/M26" → "ICT 600 M26").
+  static String _normalizeClassId(String id) {
+    return id.replaceAll(RegExp(r'[/\-]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
   @override
