@@ -401,7 +401,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  lesson['time'],
+                                  '${lesson['time']} - ${lesson['endTime']}',
                                   style: TextStyle(
                                     color: stripColor,
                                     fontWeight: FontWeight.bold,
