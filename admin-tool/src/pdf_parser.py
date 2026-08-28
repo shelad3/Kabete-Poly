@@ -211,6 +211,14 @@ class PdfTimetableParser:
             end_h, end_m = int(m.group(5)), int(m.group(6))
             end_ampm = (m.group(7) or '').upper()
 
+            # If AM/PM is only on one of start/end, infer the other from the
+            # slot context. Afternoon slots (13:00-15:00, 15:00-17:00) often
+            # only mark PM on the end time (e.g. "4\n01:00\n03:00PM").
+            if start_ampm and not end_ampm:
+                end_ampm = start_ampm
+            if end_ampm and not start_ampm:
+                start_ampm = end_ampm
+
             # Convert to 24h
             if start_ampm == 'PM' and start_h < 12:
                 start_h += 12
