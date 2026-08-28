@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-or-Later
 // Copyright (C) 2026 Kabete National Polytechnique
 
 import 'package:flutter/material.dart';
@@ -20,6 +20,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   String _selectedCohort = 'EET 600 M24';
   final NotificationService _notificationService = NotificationService();
   bool _initialized = false;
+  bool _remindersScheduled = false;
 
   @override
   void didChangeDependencies() {
@@ -29,13 +30,17 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     if (user != null && user.enrolledClasses.isNotEmpty) {
       _selectedCohort = _normalizeClassId(user.enrolledClasses.first);
     }
+    _notificationService.loadAutoReminderPref();
     _initialized = true;
   }
 
   /// Normalize class ID: replace slashes/dashes with spaces to match
   /// Firestore class document IDs (e.g. "ICT/600/M26" → "ICT 600 M26").
   static String _normalizeClassId(String id) {
-    return id.replaceAll(RegExp(r'[/\-]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+    return id
+        .replaceAll(RegExp(r'[/\-]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 
   @override
@@ -71,17 +76,26 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                 );
               }
 
-              // Build map of Firestore entries by day
               final entriesByDay = <String, List<Map<String, dynamic>>>{};
+              final allLessons = <Map<String, dynamic>>[];
               if (snapshot.hasData) {
                 for (final doc in snapshot.data!.docs) {
                   final data = doc.data() as Map<String, dynamic>;
                   final day = data['day'] as String? ?? '';
                   entriesByDay.putIfAbsent(day, () => []).add(data);
+                  allLessons.add(data);
                 }
               }
 
-              // Sort days by weekday order
+              // Auto-schedule reminders when data first loads
+              if (snapshot.hasData &&
+                  snapshot.data!.docs.isNotEmpty &&
+                  !_remindersScheduled &&
+                  _notificationService.autoRemindersEnabled) {
+                _remindersScheduled = true;
+                _autoScheduleReminders(allLessons);
+              }
+
               final dayOrder = {
                 'Monday': 0,
                 'Tuesday': 1,
@@ -91,7 +105,8 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
               };
               final sortedDays = entriesByDay.keys.toList()
                 ..sort(
-                  (a, b) => (dayOrder[a] ?? 99).compareTo(dayOrder[b] ?? 99),
+                  (a, b) =>
+                      (dayOrder[a] ?? 99).compareTo(dayOrder[b] ?? 99),
                 );
 
               if (sortedDays.isEmpty) {
@@ -108,7 +123,8 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       Text(
                         'No timetable entries yet',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 16,
                         ),
                       ),
@@ -116,7 +132,8 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                       Text(
                         'Entries will appear here once uploaded to the database.',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 13,
                         ),
                       ),
@@ -149,7 +166,8 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                         ),
                       ),
                       ...entries.map(
-                        (lesson) => _buildMandatoryCard(lesson, day, isDark),
+                        (lesson) =>
+                            _buildMandatoryCard(lesson, day, isDark),
                       ),
                       const SizedBox(height: 8),
                     ],
@@ -209,93 +227,126 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
             ],
           ),
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
+              // Auto-reminder toggle
+              if (isStudent && hasEnrolledClass)
+                _buildReminderToggle(isDark),
               if (isTeacher)
                 IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
-                  tooltip: 'Manage timetable',
+                  icon: Icon(
+                    Icons.edit_calendar,
+                    color: isDark
+                        ? Colors.white70
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                  tooltip: 'Manage Timetable',
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            ManageTimetableScreen(className: _selectedCohort),
+                        builder: (_) => ManageTimetableScreen(
+                          className: _selectedCohort,
+                        ),
                       ),
                     );
                   },
                 ),
-              isStudent
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _selectedCohort,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    )
-                  : Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF1A1A2E)
-                            : Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: isDark
-                            ? null
-                            : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedCohort,
-                          icon: Icon(
-                            Icons.arrow_drop_down,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                          items: context
-                              .watch<ClassProvider>()
-                              .availableClasses
-                              .where((c) => c != 'Global / General Assembly')
-                              .map((String cohort) {
-                                return DropdownMenuItem<String>(
-                                  value: cohort,
-                                  child: Text(cohort),
-                                );
-                              })
-                              .toList(),
-                          onChanged: (String? newValue) {
-                            if (newValue != null) {
-                              setState(() => _selectedCohort = newValue);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
+              if (isStudent && hasEnrolledClass)
+                _buildClassDropdown(isDark),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildReminderToggle(bool isDark) {
+    return Tooltip(
+      message: _notificationService.autoRemindersEnabled
+          ? 'Auto-reminders ON (20 min before each class)'
+          : 'Auto-reminders OFF',
+      child: Switch(
+        value: _notificationService.autoRemindersEnabled,
+        onChanged: (val) async {
+          await _notificationService.setAutoRemindersEnabled(val);
+          if (val && mounted) {
+            // Re-trigger scheduling on next stream event
+            _remindersScheduled = false;
+            setState(() {});
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  val
+                      ? 'Auto-reminders enabled — you\'ll be notified 20 min before each class'
+                      : 'Auto-reminders disabled',
+                ),
+                backgroundColor: val ? Colors.green : Colors.orange,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+        activeThumbColor: Colors.green,
+      ),
+    );
+  }
+
+  Widget _buildClassDropdown(bool isDark) {
+    return Consumer<ClassProvider>(
+      builder: (context, classProvider, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white10 : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButton<String>(
+            value: _selectedCohort,
+            underline: const SizedBox.shrink(),
+            isDense: true,
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+            items: classProvider.availableClasses
+                .where((c) => c != 'Global / General Assembly')
+                .map(
+                  (c) => DropdownMenuItem(value: c, child: Text(c)),
+                )
+                .toList(),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _selectedCohort = newValue;
+                  _remindersScheduled = false;
+                });
+              }
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _autoScheduleReminders(List<Map<String, dynamic>> lessons) async {
+    final count = await _notificationService.autoScheduleClassReminders(
+      className: _selectedCohort,
+      lessons: lessons,
+    );
+    if (mounted && count > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Auto-reminders set: $count notifications scheduled (20 min before each class)',
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Widget _buildMandatoryCard(
@@ -415,7 +466,11 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                                   fontSize: 13,
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                            ],
+                          ),
+                          const SizedBox(width: 16),
+                          Row(
+                            children: [
                               Icon(
                                 Icons.person_outline,
                                 size: 14,
@@ -424,16 +479,13 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                                 ).colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  lesson['lecturer'],
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                    fontSize: 13,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                              Text(
+                                lesson['lecturer'],
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontSize: 13,
                                 ),
                               ),
                             ],
@@ -486,7 +538,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          'Reminders Set! You will be alerted at 08:00 AM and 30m before ${lesson['unit']}.',
+          'Reminder set! You\'ll be notified 20 min before ${lesson['unit']}.',
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
