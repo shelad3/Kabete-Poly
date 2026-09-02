@@ -3,11 +3,13 @@
 
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
 import '../models/election.dart';
 
 class VotingService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   /// Gets all elections.
   Stream<List<Election>> getElectionsStream() {
@@ -58,75 +60,62 @@ class VotingService {
   }
 
   /// Checks if a student has already voted for a position in an election.
+  ///
+  /// Delegates to the `hasVoted` Cloud Function so it works with the
+  /// server-side ballot IDs (the client can no longer derive them, since the
+  /// anonymity salt lives only in the server environment).
   Future<bool> hasVoted(
     String electionId,
     String positionId,
     String studentId,
   ) async {
-    final ballotHash = _generateBallotHash(electionId, positionId, studentId);
-    final snap = await _db
-        .collection('elections')
-        .doc(electionId)
-        .collection('ballots')
-        .where('ballotHash', isEqualTo: ballotHash)
-        .limit(1)
-        .get();
-    return snap.docs.isNotEmpty;
+    try {
+      final result = await _functions
+          .httpsCallable('hasVoted')
+          .call({'electionId': electionId, 'positionId': positionId});
+      return (result.data as Map<String, dynamic>?)?['hasVoted'] == true;
+    } on FirebaseFunctionsException {
+      return false;
+    }
   }
 
-  /// Casts a vote. In production, this should be done via a Cloud Function
-  /// for security. This client-side implementation is for prototyping.
+  /// Casts a vote through the authoritative `castVote` Cloud Function.
   ///
-  /// The ballot is stored with a SHA-256 hash instead of the student ID,
-  /// ensuring vote secrecy while maintaining auditability.
+  /// The ballot is created server-side under a deterministic SHA-256 doc id
+  /// derived from `studentId:electionId:positionId:serverSalt`. The salt never
+  /// leaves the server, so the ballot is anonymous (no `studentId` stored) yet
+  /// one-vote-per-position is atomic. Returns a token to identify the vote.
   Future<String> castVote({
     required String electionId,
     required String positionId,
     required String candidateId,
     required String studentId,
   }) async {
-    // Check eligibility
-    final election = await getElection(electionId);
-    if (election == null || !election.isActiveNow) {
-      throw Exception('This election is not currently active.');
+    try {
+      final result = await _functions
+          .httpsCallable('castVote')
+          .call({
+            'electionId': electionId,
+            'positionId': positionId,
+            'candidateId': candidateId,
+          });
+      // Return a meaningful, non-identifiable confirmation token.
+      final input = '$electionId:$positionId:${result.data}';
+      return sha256.convert(utf8.encode(input)).toString();
+    } on FirebaseFunctionsException catch (e) {
+      switch (e.code) {
+        case 'already-exists':
+          throw Exception('You have already voted for this position.');
+        case 'failed-precondition':
+          throw Exception('This election is not currently active.');
+        case 'not-found':
+          throw Exception(e.message ?? 'Election or candidate not found.');
+        case 'unauthenticated':
+          throw Exception('Please log in to vote.');
+        default:
+          throw Exception(e.message ?? 'Unable to cast vote. Please try again.');
+      }
     }
-
-    // Check if already voted
-    final alreadyVoted = await hasVoted(electionId, positionId, studentId);
-    if (alreadyVoted) {
-      throw Exception('You have already voted for this position.');
-    }
-
-    // Generate anonymous ballot hash
-    final ballotHash = _generateBallotHash(electionId, positionId, studentId);
-
-    // Cast vote atomically
-    await _db.runTransaction((transaction) async {
-      // Write anonymous ballot
-      final ballotRef = _db
-          .collection('elections')
-          .doc(electionId)
-          .collection('ballots')
-          .doc();
-      transaction.set(ballotRef, {
-        'ballotHash': ballotHash,
-        'positionId': positionId,
-        'candidateId': candidateId,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      // Increment candidate vote count
-      final candidateRef = _db
-          .collection('elections')
-          .doc(electionId)
-          .collection('positions')
-          .doc(positionId)
-          .collection('candidates')
-          .doc(candidateId);
-      transaction.update(candidateRef, {'voteCount': FieldValue.increment(1)});
-    });
-
-    return ballotHash;
   }
 
   /// Gets election results (only if results are public).
@@ -167,18 +156,6 @@ class VotingService {
         .collection('ballots')
         .get();
     return snap.docs.length;
-  }
-
-  /// Generates a SHA-256 hash of student+election+position+secret.
-  String _generateBallotHash(
-    String electionId,
-    String positionId,
-    String studentId,
-  ) {
-    // In production, the secret salt should be in Cloud Function env vars
-    const secretSalt = 'kabete_poly_voting_salt_2026';
-    final input = '$studentId:$electionId:$positionId:$secretSalt';
-    return sha256.convert(utf8.encode(input)).toString();
   }
 
   // ---- Admin methods ----

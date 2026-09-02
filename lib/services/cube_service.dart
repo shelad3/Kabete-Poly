@@ -46,6 +46,7 @@ class CubeService {
         'houseName': houseName,
         'cubeNumber': i,
         'maxOccupancy': defaultCapacity,
+        'occupied': 0,
         'isActive': true,
       });
     }
@@ -85,13 +86,17 @@ class CubeService {
     int year,
   ) {
     return _db
-        .collection('cube_bookings')
-        .where('cubeId', isEqualTo: cubeId)
-        .where('term', isEqualTo: term)
-        .where('year', isEqualTo: year)
-        .where('status', whereIn: _activeStatuses)
+        .collection('cubes')
+        .doc(cubeId)
         .snapshots()
-        .map((snap) => maxOccupancy - snap.docs.length);
+        .map((snap) {
+          if (!snap.exists) return maxOccupancy;
+          final occupied =
+              ((snap.data()?['occupied'] as num?) ?? 0).toInt();
+          final cap =
+              ((snap.data()?['maxOccupancy'] as num?) ?? maxOccupancy).toInt();
+          return (cap - occupied).clamp(0, cap);
+        });
   }
 
   Future<int> getAvailableSpots(
@@ -100,8 +105,13 @@ class CubeService {
     int term,
     int year,
   ) async {
-    final booked = await getBookedCountForCube(cubeId, term, year);
-    return maxOccupancy - booked;
+    final cubeDoc = await _db.collection('cubes').doc(cubeId).get();
+    if (!cubeDoc.exists) return maxOccupancy;
+    final occupied =
+        ((cubeDoc.data()?['occupied'] as num?) ?? 0).toInt();
+    final cap = ((cubeDoc.data()?['maxOccupancy'] as num?) ?? maxOccupancy)
+        .toInt();
+    return (cap - occupied).clamp(0, cap);
   }
 
   Future<bool> isCubeAvailable(
@@ -114,49 +124,73 @@ class CubeService {
     return available > 0;
   }
 
+  // Deterministic doc that records a student's active booking this term/year.
+  // Used to enforce one-active-booking-per-student atomically inside a
+  // transaction (Firestore transactions can only read/write documents, not
+  // run queries atomically).
+  DocumentReference<Map<String, dynamic>> _activeRef(String studentId) =>
+      _db.collection('cube_bookings').doc('student_active_$studentId');
+
   // ---- Bookings ----
 
   /// Creates a booking atomically using a Firestore transaction.
-  /// Checks both student's existing active bookings AND cube capacity in one
-  /// transaction, preventing race conditions from double-taps or concurrent users.
+  ///
+  /// Enforces both invariants inside the SAME transaction using real
+  /// `transaction.get` document reads (the only reads Firestore guarantees to
+  /// be atomic with the transaction's writes):
+  ///   1. one-active-booking-per-student this term/year
+  ///   2. cube capacity (via the cube doc's `occupied` counter, incremented
+  ///      atomically here and decremented on cancel/checkout)
+  ///
+  /// Throws `BookingConflictException` on any violation.
   Future<CubeBooking> createBooking(CubeBooking booking) async {
     final term = booking.term;
     final year = booking.year;
 
     return await _db.runTransaction((transaction) async {
-      // 1. Check student has no existing active booking this term
-      final existingSnap = await _db
-          .collection('cube_bookings')
-          .where('studentId', isEqualTo: booking.studentId)
-          .where('term', isEqualTo: term)
-          .where('year', isEqualTo: year)
-          .where('status', whereIn: _activeStatuses)
-          .limit(1)
-          .get();
-      if (existingSnap.docs.isNotEmpty) {
-        throw const BookingConflictException(
-          'You already have an active booking this term.',
-        );
+      // 1. One-active-booking per student (atomic doc-based check)
+      final activeRef = _activeRef(booking.studentId);
+      final activeSnap = await transaction.get(activeRef);
+      if (activeSnap.exists) {
+        final activeData = activeSnap.data();
+        final sameTerm =
+            activeData?['term'] == term && activeData?['year'] == year;
+        if (sameTerm) {
+          throw const BookingConflictException(
+            'You already have an active booking this term.',
+          );
+        }
       }
 
-      // 2. Check cube has capacity
-      final cubeDoc = await _db.collection('cubes').doc(booking.cubeId).get();
-      final maxOccupancy =
-          (cubeDoc.data()?['maxOccupancy'] as num?)?.toInt() ?? 4;
-      final cubeBookingsSnap = await _db
-          .collection('cube_bookings')
-          .where('cubeId', isEqualTo: booking.cubeId)
-          .where('term', isEqualTo: term)
-          .where('year', isEqualTo: year)
-          .where('status', whereIn: _activeStatuses)
-          .get();
-      if (cubeBookingsSnap.docs.length >= maxOccupancy) {
+      // 2. Cube capacity (atomic read of the cube's occupancy counter)
+      final cubeRef = _db.collection('cubes').doc(booking.cubeId);
+      final cubeSnap = await transaction.get(cubeRef);
+      if (!cubeSnap.exists) {
+        throw const BookingConflictException('This cubicle no longer exists.');
+      }
+      final cubeData = cubeSnap.data()!;
+      final maxOcc =
+          ((cubeData['maxOccupancy'] as num?) ?? 4).toInt();
+      final occupied = ((cubeData['occupied'] as num?) ?? 0).toInt();
+      if (occupied >= maxOcc) {
         throw const BookingConflictException('This cubicle is fully booked.');
       }
 
-      // 3. Create the booking
+      // 3. Create the booking + increment occupancy + mark student active atomically
       final ref = _db.collection('cube_bookings').doc();
       transaction.set(ref, booking.toJson());
+      transaction.update(cubeRef, {'occupied': FieldValue.increment(1)});
+      transaction.set(
+        activeRef,
+        {
+          'bookingId': ref.id,
+          'term': term,
+          'year': year,
+          'status': booking.status,
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
       return CubeBooking.fromJson({...booking.toJson(), 'id': ref.id}, ref.id);
     });
   }
@@ -164,25 +198,56 @@ class CubeService {
   /// Gets any booking (active or completed) for the student this term.
   /// Used to block re-booking after checkout.
   Future<CubeBooking?> getMyActiveBooking(String studentId) async {
-    final term = TermUtils.getCurrentTerm();
-    final year = TermUtils.getCurrentYear();
-    final snap = await _db
-        .collection('cube_bookings')
-        .where('studentId', isEqualTo: studentId)
-        .where('term', isEqualTo: term)
-        .where('year', isEqualTo: year)
-        .where('status', whereIn: _activeStatuses)
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) return null;
-    return CubeBooking.fromJson(snap.docs.first.data(), snap.docs.first.id);
+    final activeRef = _activeRef(studentId);
+    final activeSnap = await activeRef.get();
+    if (!activeSnap.exists) return null;
+    final bookingId = activeSnap.data()?['bookingId'] as String?;
+    if (bookingId == null) return null;
+    final bSnap = await _db.collection('cube_bookings').doc(bookingId).get();
+    if (!bSnap.exists) return null;
+    return CubeBooking.fromJson(bSnap.data()!, bSnap.id);
   }
 
-  Future<void> cancelBooking(String id) =>
-      _db.collection('cube_bookings').doc(id).update({'status': 'cancelled'});
+  Future<void> cancelBooking(String id, String studentId) async {
+    await _db.runTransaction((transaction) async {
+      final bookingRef = _db.collection('cube_bookings').doc(id);
+      final bSnap = await transaction.get(bookingRef);
+      if (bSnap.exists) {
+        final bookId = bSnap.data()?['cubeId'] as String?;
+        transaction.update(bookingRef, {'status': 'cancelled'});
+        if (bookId != null) {
+          transaction.update(
+            _db.collection('cubes').doc(bookId),
+            {'occupied': FieldValue.increment(-1)},
+          );
+        }
+      }
+      transaction.delete(_activeRef(studentId));
+    });
+  }
 
-  Future<void> updateBookingStatus(String id, String status) =>
-      _db.collection('cube_bookings').doc(id).update({'status': status});
+  Future<void> updateBookingStatus(String id, String status) async {
+    await _db.runTransaction((transaction) async {
+      final bookingRef = _db.collection('cube_bookings').doc(id);
+      final bSnap = await transaction.get(bookingRef);
+      if (!bSnap.exists) return;
+      transaction.update(bookingRef, {'status': status});
+
+      if (status == 'cancelled') {
+        final cubeId = bSnap.data()?['cubeId'] as String?;
+        final studentId = bSnap.data()?['studentId'] as String?;
+        if (cubeId != null) {
+          transaction.update(
+            _db.collection('cubes').doc(cubeId),
+            {'occupied': FieldValue.increment(-1)},
+          );
+        }
+        if (studentId != null) {
+          transaction.delete(_activeRef(studentId));
+        }
+      }
+    });
+  }
 
   Future<void> updatePaymentStatus(String id, String paymentStatus) => _db
       .collection('cube_bookings')
@@ -233,44 +298,32 @@ class CubeService {
     final term = TermUtils.getCurrentTerm();
     final year = TermUtils.getCurrentYear();
 
-    // Check if already on waitlist for this cube this term
-    final existing = await _db
-        .collection('waitlist')
-        .where('studentId', isEqualTo: studentId)
-        .where('cubeId', isEqualTo: cubeId)
-        .where('term', isEqualTo: term)
-        .where('year', isEqualTo: year)
-        .where('status', isEqualTo: 'waiting')
-        .limit(1)
-        .get();
-    if (existing.docs.isNotEmpty) {
-      throw const BookingConflictException(
-        'You are already on the waiting list for this cubicle.',
+    await _db.runTransaction((transaction) async {
+      // Atomic per-cube position counter doc to avoid duplicate positions.
+      final metaRef = _db.collection('waitlist').doc('meta_$cubeId');
+      final metaSnap = await transaction.get(metaRef);
+      final nextPosition =
+          (((metaSnap.data()?['positionSeq'] as num?) ?? 0)).toInt() + 1;
+
+      final ref = _db.collection('waitlist').doc();
+      transaction.set(ref, {
+        'studentId': studentId,
+        'studentName': studentName,
+        'cubeId': cubeId,
+        'houseName': houseName,
+        'cubeNumber': cubeNumber,
+        'term': term,
+        'year': year,
+        'position': nextPosition,
+        'status': 'waiting',
+        'joinedAt': FieldValue.serverTimestamp(),
+        'promotedAt': null,
+      });
+      transaction.set(
+        metaRef,
+        {'positionSeq': nextPosition},
+        SetOptions(merge: true),
       );
-    }
-
-    // Get next position
-    final currentWaitlist = await _db
-        .collection('waitlist')
-        .where('cubeId', isEqualTo: cubeId)
-        .where('term', isEqualTo: term)
-        .where('year', isEqualTo: year)
-        .where('status', isEqualTo: 'waiting')
-        .get();
-    final nextPosition = currentWaitlist.docs.length + 1;
-
-    await _db.collection('waitlist').add({
-      'studentId': studentId,
-      'studentName': studentName,
-      'cubeId': cubeId,
-      'houseName': houseName,
-      'cubeNumber': cubeNumber,
-      'term': term,
-      'year': year,
-      'position': nextPosition,
-      'status': 'waiting',
-      'joinedAt': FieldValue.serverTimestamp(),
-      'promotedAt': null,
     });
   }
 

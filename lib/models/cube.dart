@@ -7,6 +7,7 @@ class Cube {
   final String houseName;
   final int cubeNumber;
   final int maxOccupancy;
+  final int occupied;
   final String? side; // 'left' or 'right' for 6+6 layout
   final bool isActive;
 
@@ -16,11 +17,14 @@ class Cube {
     required this.houseName,
     required this.cubeNumber,
     this.maxOccupancy = 4,
+    this.occupied = 0,
     this.side,
     this.isActive = true,
   });
 
   String get label => 'Cube $cubeNumber';
+
+  int get availableSlots => (maxOccupancy - occupied).clamp(0, maxOccupancy);
 
   factory Cube.fromJson(Map<String, dynamic> json, String docId) => Cube(
     id: docId,
@@ -28,6 +32,7 @@ class Cube {
     houseName: json['houseName'] as String? ?? '',
     cubeNumber: (json['cubeNumber'] as num?)?.toInt() ?? 1,
     maxOccupancy: (json['maxOccupancy'] as num?)?.toInt() ?? 4,
+    occupied: (json['occupied'] as num?)?.toInt() ?? 0,
     side: json['side'] as String?,
     isActive: json['isActive'] as bool? ?? true,
   );

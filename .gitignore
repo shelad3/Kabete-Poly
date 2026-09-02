@@ -66,3 +66,11 @@ admin-tool/src/venv/
 
 # Build artifacts
 android/.kotlin/
+
+# Cloud Functions
+functions/node_modules/
+functions/.env
+functions/.runtimeconfig.json
+
+# Node dependencies (functions + rules tests)
+**/node_modules/

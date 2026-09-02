@@ -41,14 +41,30 @@ class ExamBookingService {
   }
 
   /// Registers a student for an exam atomically.
+  ///
+  /// Uses a deterministic booking document id (`{studentId}_{examId}`) so the
+  /// one-registration-per-student check is enforced by a real `transaction.get`
+  /// (Firestore transactions can only read/write documents, not run queries
+  /// atomically), and the exam doc is read in-transaction for the seat-capacity
+  /// check. Seat capacity and registration-window are both atomic.
   Future<ExamBooking> registerForExam({
     required String studentId,
     required String examId,
     List<String> courseIds = const [],
   }) async {
     return await _db.runTransaction((transaction) async {
-      // Check exam exists and registration is open
-      final examDoc = await _db.collection('exams').doc(examId).get();
+      // Deterministic doc: one registration per (student, exam).
+      final bookingRef = _db
+          .collection('exam_bookings')
+          .doc('${studentId}_$examId');
+      final existingSnap = await transaction.get(bookingRef);
+      if (existingSnap.exists) {
+        throw Exception('You are already registered for this exam.');
+      }
+
+      // Read the exam doc INSIDE the transaction (atomic seat + window check).
+      final examRef = _db.collection('exams').doc(examId);
+      final examDoc = await transaction.get(examRef);
       if (!examDoc.exists) throw Exception('Exam not found.');
       final exam = Exam.fromFirestore(examDoc);
 
@@ -56,36 +72,21 @@ class ExamBookingService {
         throw Exception('Registration is closed for this exam.');
       }
 
-      // Check not already registered
-      final existingBookings = await _db
-          .collection('exam_bookings')
-          .where('studentId', isEqualTo: studentId)
-          .where('examId', isEqualTo: examId)
-          .limit(1)
-          .get();
-      if (existingBookings.docs.isNotEmpty) {
-        throw Exception('You are already registered for this exam.');
-      }
-
-      // Check seats
       if (exam.registeredCount >= exam.maxSeats) {
         throw Exception('No seats available.');
       }
 
-      // Create booking
-      final ref = _db.collection('exam_bookings').doc();
       final booking = ExamBooking(
-        id: ref.id,
+        id: bookingRef.id,
         studentId: studentId,
         examId: examId,
         registeredCourseIds: courseIds,
         status: 'registered',
         registeredAt: DateTime.now(),
       );
-      transaction.set(ref, booking.toJson());
+      transaction.set(bookingRef, booking.toJson());
 
-      // Increment registered count
-      transaction.update(examDoc.reference, {
+      transaction.update(examRef, {
         'registeredCount': FieldValue.increment(1),
       });
 
@@ -93,22 +94,25 @@ class ExamBookingService {
     });
   }
 
-  /// Cancels an exam registration.
-  Future<void> cancelRegistration(String bookingId, String examId) async {
+  /// Cancels an exam registration (atomic: frees a seat and removes the
+  /// deterministic booking doc).
+  Future<void> cancelRegistration(String bookingId, String studentId, String examId) async {
     await _db.runTransaction((transaction) async {
-      final bookingDoc = await _db
+      final bookingRef = _db
           .collection('exam_bookings')
-          .doc(bookingId)
-          .get();
+          .doc('${studentId}_$examId');
+      final bookingDoc = await transaction.get(bookingRef);
       if (!bookingDoc.exists) throw Exception('Booking not found.');
 
-      transaction.delete(bookingDoc.reference);
+      transaction.delete(bookingRef);
 
-      // Decrement registered count
       final examRef = _db.collection('exams').doc(examId);
-      transaction.update(examRef, {
-        'registeredCount': FieldValue.increment(-1),
-      });
+      final examSnap = await transaction.get(examRef);
+      if (examSnap.exists) {
+        transaction.update(examRef, {
+          'registeredCount': FieldValue.increment(-1),
+        });
+      }
     });
   }
 

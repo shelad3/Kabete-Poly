@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../services/unread_badge_provider.dart';
 import 'forum_screen.dart';
 import 'gallery_screen.dart';
+import 'kejani/kejani_tab.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -21,7 +22,7 @@ class _CommunityScreenState extends State<CommunityScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -60,12 +61,16 @@ class _CommunityScreenState extends State<CommunityScreen>
               icon: Icon(Icons.photo_library_outlined),
               text: 'Gallery',
             ),
+            const Tab(
+              icon: Icon(Icons.apartment_outlined),
+              text: 'Kejani',
+            ),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [ForumScreen(), GalleryScreen()],
+        children: const [ForumScreen(), GalleryScreen(), KejaniTab()],
       ),
     );
   }

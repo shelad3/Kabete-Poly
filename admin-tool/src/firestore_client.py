@@ -406,7 +406,10 @@ class FirestoreClient:
                 return True, doc.id
             return False, ''
         except Exception:
-            return False, ''
+            # Do not swallow errors: a failed duplicate check must surface so
+            # the caller knows the result is unreliable rather than silently
+            # treating every entry as "not a duplicate".
+            raise
 
     # ---- Exam Timetable Batch Upload ----
 

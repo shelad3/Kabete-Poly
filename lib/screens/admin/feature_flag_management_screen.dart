@@ -229,7 +229,7 @@ class _FeatureFlagTileState extends State<_FeatureFlagTile> {
       enabled: _enabled,
       autoDisableAt: null,
       autoEnableAt: null,
-      adminUid: authProvider.currentUserId ?? '',
+      adminUid: authProvider.currentUserId,
     );
   }
 

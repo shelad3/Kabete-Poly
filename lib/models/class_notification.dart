@@ -45,6 +45,7 @@ class ClassNotification {
       if (studentId.isNotEmpty) 'studentId': studentId,
       'title': title,
       'message': message,
+      'body': message,
       'type': type,
       'timestamp': timestamp.toIso8601String(),
     };

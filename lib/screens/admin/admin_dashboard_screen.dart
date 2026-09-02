@@ -22,6 +22,8 @@ import 'manage_classes_screen.dart';
 import 'manage_events_screen.dart';
 import 'feature_flag_management_screen.dart';
 import 'manage_exam_timetable_screen.dart';
+import 'manage_forum_moderation_screen.dart';
+import 'manage_listings_screen.dart';
 import 'voting_admin_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -151,7 +153,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               context,
               Icons.confirmation_number,
               'Manage Tickets',
-              'Help requests, errors, feedback',
+              '$_openTickets open · help, errors & feedback',
               Theme.of(context).colorScheme.primary,
               onTap: () => Navigator.push(
                 context,
@@ -162,11 +164,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               context,
               Icons.gavel,
               'Forum Moderation',
-              '$_openTickets pending reports & tickets',
+              'Moderate channels & remove posts',
               Colors.red,
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ManageTicketsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => ManageForumModerationScreen(
+                    classes: _availableAdminClasses(context),
+                  ),
+                ),
               ),
             ),
             _buildActionCard(
@@ -266,6 +272,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const VotingAdminScreen()),
+              ),
+            ),
+            _buildActionCard(
+              context,
+              Icons.apartment,
+              'Kejani Listings',
+              'Add, edit & manage apartment ads',
+              Colors.teal,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ManageListingsScreen(),
+                ),
               ),
             ),
           ],
@@ -632,6 +651,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       },
     );
+  }
+
+  List<String> _availableAdminClasses(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    final user = auth.currentUser;
+    final allClasses = context.read<ClassProvider>().availableClasses;
+    if (user != null && !user.isAdmin && (user.isTeacher || user.isLeader)) {
+      final mine = user.enrolledClasses.where(allClasses.contains).toList();
+      return mine.isNotEmpty ? mine : allClasses;
+    }
+    return allClasses;
   }
 
   void _selectClassAndNavigate(BuildContext context) {

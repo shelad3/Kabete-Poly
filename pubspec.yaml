@@ -1,7 +1,7 @@
 name: kabete2026eiteet
 description: "A platform to store and share lesson materials for an electrical engineering course."
 publish_to: 'none'
-version: 2.10.1+2
+version: 2.10.2+3
 
 environment:
   sdk: ^3.10.0
@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   cloud_firestore: ^6.1.2
+  cloud_functions: ^6.3.2
   file_picker: ^10.3.10
   firebase_auth: ^6.1.4
   firebase_core: ^4.4.0

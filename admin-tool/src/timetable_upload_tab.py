@@ -908,12 +908,16 @@ class TimetableUploadTab(QWidget):
                         self._class_override.currentText().strip() or 'Unspecified'
                     )
                     if class_id == 'All Entries' or class_id not in self._available_classes:
+                        # Try to resolve the group to an available class via fuzzy match.
+                        resolved = None
                         for av_cls in self._available_classes:
                             if class_id.lower() in av_cls.lower() or av_cls.lower() in class_id.lower():
-                                class_id = av_cls
+                                resolved = av_cls
                                 break
-                    else:
-                        continue
+                        if resolved is None:
+                            continue  # Cannot resolve this group to a class -> skip.
+                        class_id = resolved
+                    # else: class_id is already an available class -> check it.
 
                     for idx in indices:
                         if idx >= len(self._parsed_entries):

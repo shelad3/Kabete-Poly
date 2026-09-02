@@ -36,7 +36,16 @@ service cloud.firestore {
     // ---------------------------------------------------- //
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isLeaderOrAbove());
-      allow create, update: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.keys().hasAll(['role', 'name', 'email']);
+      allow update: if isAuthenticated() && isOwner(userId) && (
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['name', 'phone', 'photoUrl', 'regNo', 'enrolledClasses',
+                    'enrolledTerm', 'enrolledYear', 'fcmTokens', 'bio',
+                    'gender', 'nationality', 'address'])
+      );
       allow delete: if isAdmin();
     }
 
@@ -44,7 +53,15 @@ service cloud.firestore {
     // Messages / Forum Collection
     // ---------------------------------------------------- //
     match /messages/{messageId} {
-      allow read, create: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.senderId == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'classId', 'channelId', 'senderId', 'senderName',
+          'senderAvatarUrl', 'text', 'imageUrl', 'timestamp', 'reactions',
+        ]) &&
+        request.resource.data.size() < 100000 &&
+        request.resource.data.text.size() < 5000;
       allow update: if isAuthenticated() && resource.data.senderId == request.auth.uid;
       allow delete: if isAuthenticated() && (resource.data.senderId == request.auth.uid || isAdmin());
     }
@@ -122,7 +139,7 @@ service cloud.firestore {
     // Auth Codes Collection
     // ---------------------------------------------------- //
     match /auth_codes/{codeId} {
-      allow read: if isAuthenticated();
+      allow read: if isAdmin();
       // Only admins can create new codes or delete them
       allow create: if isAdmin();
       allow delete: if isAdmin();
@@ -134,7 +151,15 @@ service cloud.firestore {
     // ---------------------------------------------------- //
     match /help_requests/{requestId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'userId', 'userName', 'userEmail', 'title', 'message',
+          'timestamp', 'status', 'resolvedBy', 'resolvedAt',
+        ]) &&
+        request.resource.data.size() < 100000 &&
+        request.resource.data.message.size() < 10000 &&
+        request.resource.data.title.size() < 500;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -144,7 +169,14 @@ service cloud.firestore {
     // ---------------------------------------------------- //
     match /error_reports/{reportId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'userId', 'userName', 'userEmail', 'title', 'message',
+          'appVersion', 'timestamp', 'status',
+        ]) &&
+        request.resource.data.size() < 100000 &&
+        request.resource.data.message.size() < 10000;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -154,7 +186,14 @@ service cloud.firestore {
     // ---------------------------------------------------- //
     match /feedback/{feedbackId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasOnly([
+          'userId', 'userName', 'userEmail', 'message', 'rating',
+          'timestamp', 'status',
+        ]) &&
+        request.resource.data.size() < 100000 &&
+        request.resource.data.message.size() < 10000;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -194,10 +233,15 @@ service cloud.firestore {
     // Field Indices (Uniqueness Enforcement)
     // ---------------------------------------------------- //
     match /field_indices/{indexId} {
-      // Allow read+create without auth: registration transaction runs BEFORE user is created
-      allow read: if true;
-      allow create: if true;
-      allow update: if isAuthenticated();
+      // Registration transaction runs AFTER the auth user is created, so the
+      // creator is authenticated. Writes are restricted to the owner of the
+      // index; deletes to admins.
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registered']);
       allow delete: if isAdmin();
     }
 
@@ -401,7 +445,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
         request.resource.data.studentId == request.auth.uid &&
         request.resource.data.status == 'pending';  // students may only initiate
-      allow update: if isTeacherOrAbove();  // admin confirms/refunds
+      allow update: if isAdmin();  // admins confirm/refund; students cannot
       allow delete: if false;
     }
 
@@ -438,8 +482,12 @@ service cloud.firestore {
       }
 
       match /ballots/{ballotId} {
-        allow read: if false;  // ballots are write-only for audit
-        allow create: if isAuthenticated();
+        // Readable for turnout/tally display. Writes are NOT permitted from
+        // clients — ballots are created server-side by the `castVote` Cloud
+        // Function (admin SDK bypasses these rules), which enforces
+        // one-vote-per-position via the deterministic ballot doc id.
+        allow read: if isAuthenticated();
+        allow create: if false;
       }
     }
 
@@ -473,6 +521,15 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isAdmin();
       allow delete: if false;
+    }
+
+    // ---------------------------------------------------- //
+    // Listings (Kejani — apartment/rental finder)
+    // Public read so guests can browse; only admins manage.
+    // ---------------------------------------------------- //
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
     }
 
     // ---------------------------------------------------- //

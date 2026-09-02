@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Kabete National Polytechnique
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../models/listing.dart';
+import '../../services/listing_service.dart';
 import '../../utils/campus_map_data.dart';
+import '../kejani/listing_detail_screen.dart';
 
 class CampusMapWidget extends StatefulWidget {
   final String? highlightId;
@@ -24,6 +29,8 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
   bool _locationGranted = false;
   bool _mapReady = false;
   bool _legendOpen = false;
+  final List<Listing> _apartments = [];
+  StreamSubscription<List<Listing>>? _apartmentSub;
 
   static const LatLng _campusCenter = LatLng(-1.264627, 36.727029);
 
@@ -32,6 +39,22 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
     super.initState();
     _rebuildMarkers();
     _checkLocationPermission();
+    _apartmentSub = ListingService()
+        .getActiveListingsStream()
+        .listen((listings) {
+      if (!mounted) return;
+      setState(() {
+        _apartments
+          ..clear()
+          ..addAll(listings);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _apartmentSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkLocationPermission() async {
@@ -97,6 +120,57 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
     if (mounted) setState(() {});
   }
 
+  Set<Marker> _buildApartmentMarkers() {
+    return {
+      for (final listing in _apartments)
+        if (listing.location != null)
+          Marker(
+            markerId: MarkerId('listing-${listing.id}'),
+            position: LatLng(
+              listing.location!.latitude,
+              listing.location!.longitude,
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+            infoWindow: InfoWindow(
+              title: listing.name,
+              snippet: 'From KES ${listing.startingPrice}',
+            ),
+            onTap: () => _showListingInfo(listing),
+          ),
+    };
+  }
+
+  void _showListingInfo(Listing listing) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(listing.name),
+        content: Text(
+          'Area: ${listing.area}\n'
+          'From KES ${listing.startingPrice}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ListingDetailScreen(listing: listing),
+                ),
+              );
+            },
+            child: const Text('View'),
+          ),
+        ],
+      ),
+    );
+  }
+
   double _hueForType(LocationType type) {
     switch (type) {
       case LocationType.adminOffice:
@@ -127,6 +201,8 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
         return BitmapDescriptor.hueYellow;
       case LocationType.washroom:
         return BitmapDescriptor.hueAzure;
+      case LocationType.apartment:
+        return BitmapDescriptor.hueCyan;
       case LocationType.other:
         return BitmapDescriptor.hueBlue;
     }
@@ -204,7 +280,11 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
             bearing: 0.0,
           ),
           onMapCreated: _onMapCreated,
-          markers: {..._markers, ..._highlightMarkers},
+          markers: {
+            ..._markers,
+            ..._highlightMarkers,
+            ..._buildApartmentMarkers(),
+          },
           myLocationEnabled: _locationGranted,
           myLocationButtonEnabled: _locationGranted,
           compassEnabled: true,

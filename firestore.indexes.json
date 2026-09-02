@@ -1,349 +1,521 @@
 {
-    "indexes": [
-        {
-            "collectionGroup": "messages",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "classId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "timestamp",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "notifications",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "classId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "timestamp",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "lessons",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "classId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "date",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "schedules",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "classId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "date",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "auth_codes",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "code",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "isUsed",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "help_requests",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "status",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "timestamp",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "error_reports",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "status",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "timestamp",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "alerts",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "targetType",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "timestamp",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-          "collectionGroup": "timetable",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "day",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "time",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "cubes",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "houseId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "isActive",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "cubeNumber",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "quizzes",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "classId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "createdAt",
-              "order": "DESCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "quiz_submissions",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "quizId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "submittedAt",
-              "order": "DESCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "quiz_submissions",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "quizId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "userId",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "lesson_verifications",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "classId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "date",
-              "order": "DESCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "cube_bookings",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "studentId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "term",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "year",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "houseName",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "cube_bookings",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "term",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "year",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "houseName",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "cubeNumber",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "houses",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "category",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "name",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "cube_bookings",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "cubeId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "term",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "year",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "status",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "cube_bookings",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "studentId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "term",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "year",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "status",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "exam_bookings",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "studentId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "registeredAt",
-              "order": "DESCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "exam_bookings",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "studentId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "examId",
-              "order": "ASCENDING"
-            }
-          ]
-        },
-        {
-          "collectionGroup": "payments",
-          "queryScope": "COLLECTION",
-          "fields": [
-            {
-              "fieldPath": "studentId",
-              "order": "ASCENDING"
-            },
-            {
-              "fieldPath": "initiatedAt",
-              "order": "DESCENDING"
-            }
-          ]
-        }
-    ],
-    "fieldOverrides": []
+ "indexes": [
+  {
+   "collectionGroup": "messages",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "timestamp",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "notifications",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "timestamp",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "lessons",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "date",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "schedules",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "date",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "auth_codes",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "code",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "isUsed",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "help_requests",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "status",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "timestamp",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "error_reports",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "status",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "timestamp",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "alerts",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "targetType",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "timestamp",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "timetable",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "day",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "time",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "cubes",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "houseId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "isActive",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "cubeNumber",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "quizzes",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "createdAt",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "quiz_submissions",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "quizId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "submittedAt",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "quiz_submissions",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "quizId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "userId",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "lesson_verifications",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "date",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "cube_bookings",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "studentId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "term",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "year",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "houseName",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "cube_bookings",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "term",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "year",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "houseName",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "cubeNumber",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "houses",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "category",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "name",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "cube_bookings",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "cubeId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "term",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "year",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "status",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "cube_bookings",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "studentId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "term",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "year",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "status",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "exam_bookings",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "studentId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "registeredAt",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "exam_bookings",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "studentId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "examId",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "payments",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "studentId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "initiatedAt",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "exams",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "startDate",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "attendance",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "studentId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "date",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "active_qr_sessions",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "isActive",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "activatedAt",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "waitlist",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "studentId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "term",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "year",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "position",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "waitlist",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "cubeId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "term",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "year",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "status",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "schedules",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "isDefault",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "lesson_verifications",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "isConfirmed",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "date",
+     "order": "DESCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "grades",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "classId",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "term",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "academicYear",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "exam_timetable",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "date",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "startTime",
+     "order": "ASCENDING"
+    }
+   ]
+  },
+  {
+   "collectionGroup": "listings",
+   "queryScope": "COLLECTION",
+   "fields": [
+    {
+     "fieldPath": "isActive",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "area",
+     "order": "ASCENDING"
+    },
+    {
+     "fieldPath": "createdAt",
+     "order": "DESCENDING"
+    }
+   ]
+  }
+ ],
+ "fieldOverrides": []
 }

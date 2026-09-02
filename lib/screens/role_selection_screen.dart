@@ -266,7 +266,7 @@ class RoleSelectionScreen extends StatelessWidget {
                         children: [
                           const TextSpan(text: 'Contact '),
                           TextSpan(
-                            text: 'sheldonramu8@gmail.com',
+                            text: 'she***@gmail.com',
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                               decoration: TextDecoration.underline,

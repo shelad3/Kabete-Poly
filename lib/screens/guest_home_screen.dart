@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import 'gallery_screen.dart';
+import 'kejani/kejani_tab.dart';
 import 'schedule/campus_map_widget.dart';
 import 'school_info_screen.dart';
 import '../widgets/guest_houses_widget.dart';
@@ -23,7 +24,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -53,6 +54,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen>
             Tab(icon: Icon(Icons.layers), text: 'Legend'),
             Tab(icon: Icon(Icons.photo_library), text: 'Gallery'),
             Tab(icon: Icon(Icons.home_work), text: 'Houses'),
+            Tab(icon: Icon(Icons.apartment), text: 'Kejani'),
             Tab(icon: Icon(Icons.info), text: 'About'),
           ],
         ),
@@ -65,6 +67,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen>
           CampusLegendTab(),
           GalleryScreen(),
           GuestHousesWidget(),
+          KejaniTab(),
           SchoolInfoScreen(),
         ],
       ),

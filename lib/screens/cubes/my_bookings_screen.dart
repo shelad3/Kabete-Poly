@@ -186,7 +186,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       ),
     );
     if (confirm == true) {
-      await _service.cancelBooking(booking.id);
+      final userId = context.read<AuthProvider>().currentUserId;
+      await _service.cancelBooking(booking.id, userId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

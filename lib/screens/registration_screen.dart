@@ -382,7 +382,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     text: 'Missing a class? Email ',
                                   ),
                                   TextSpan(
-                                    text: 's....@gmail.com',
+                                    text: 'she***@gmail.com',
                                     style: TextStyle(
                                       color: Theme.of(
                                         context,

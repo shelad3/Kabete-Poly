@@ -18,6 +18,7 @@ enum LocationType {
   sportsField,
   cafeteria,
   washroom,
+  apartment,
   other,
 }
 
@@ -73,6 +74,8 @@ Color colorForType(LocationType type) {
       return const Color(0xFFF9A825);
     case LocationType.washroom:
       return const Color(0xFF00BCD4);
+    case LocationType.apartment:
+      return const Color(0xFF00838F);
     case LocationType.other:
       return const Color(0xFF757575);
   }
@@ -108,6 +111,8 @@ String labelForType(LocationType type) {
       return 'Cafeteria';
     case LocationType.washroom:
       return 'Washroom';
+    case LocationType.apartment:
+      return 'Apartment';
     case LocationType.other:
       return 'Other';
   }
@@ -143,6 +148,8 @@ IconData iconForType(LocationType type) {
       return Icons.restaurant;
     case LocationType.washroom:
       return Icons.wc;
+    case LocationType.apartment:
+      return Icons.apartment;
     case LocationType.other:
       return Icons.place;
   }

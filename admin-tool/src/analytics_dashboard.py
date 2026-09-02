@@ -228,20 +228,23 @@ class AnalyticsDashboard(QWidget):
             subj_layout.addWidget(QLabel('Avg Score'), 0, 1)
             subj_layout.addWidget(QLabel('Avg %'), 0, 2)
 
-            for row, subj in enumerate(self._subjects, start=1):
-                scores = []
-                for glist in self._grades.values():
-                    for g in glist:
-                        if g.subjectName == subj:
-                            scores.append(g.percentage)
-                avg_pct = sum(scores) / len(scores) if scores else 0
-                avg_score = sum(g.total_score for g in
-                    [g for glist in self._grades.values() for g in glist if g.subjectName == subj]
-                ) / len(scores) if scores else 0
+            for subj in self._subjects:
+                records = [
+                    g
+                    for glist in self._grades.values()
+                    for g in glist
+                    if g.subjectName == subj
+                ]
+                if not records:
+                    continue
+                avg_pct = sum(r.percentage for r in records) / len(records)
+                avg_score = sum(r.total_score for r in records) / len(records)
+                max_total = max(r.total_max for r in records)
 
                 subj_layout.addWidget(QLabel(subj), row, 0)
-                subj_layout.addWidget(QLabel(f'{avg_score:.1f}/{g.total_max:.0f}' if scores else '-'), row, 1)
-                subj_layout.addWidget(QLabel(f'{avg_pct:.1f}%' if scores else '-'), row, 2)
+                subj_layout.addWidget(QLabel(f'{avg_score:.1f}/{max_total:.0f}'), row, 1)
+                subj_layout.addWidget(QLabel(f'{avg_pct:.1f}%'), row, 2)
+                row += 1
 
             self.results_layout.addWidget(subj_group)
 

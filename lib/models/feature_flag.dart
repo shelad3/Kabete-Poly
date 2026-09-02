@@ -47,18 +47,23 @@ class FeatureFlag {
   }
 
   factory FeatureFlag.fromJson(Map<String, dynamic> json, String id) {
+    DateTime? _asDate(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is Timestamp) return value.toDate();
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
+    final schedule = json['schedule'] as Map<String, dynamic>?;
     return FeatureFlag(
       id: id,
       name: json['name'] as String? ?? '',
       displayName: json['displayName'] as String? ?? '',
       enabled: json['enabled'] as bool? ?? true,
       description: json['description'] as String? ?? '',
-      autoDisableAt:
-          (json['schedule'] as Map<String, dynamic>?)?['autoDisableAt']
-              as DateTime?,
-      autoEnableAt:
-          (json['schedule'] as Map<String, dynamic>?)?['autoEnableAt']
-              as DateTime?,
+      autoDisableAt: _asDate(schedule?['autoDisableAt']),
+      autoEnableAt: _asDate(schedule?['autoEnableAt']),
       disabledMessage:
           json['disabledMessage'] as String? ??
           'This feature is currently unavailable.',
@@ -66,8 +71,8 @@ class FeatureFlag {
         (json['allowedRoles'] as List<dynamic>?) ?? [],
       ),
       lastModifiedBy: json['lastModifiedBy'] as String?,
-      lastModifiedAt: json['lastModifiedAt'] as DateTime?,
-      createdAt: json['createdAt'] as DateTime?,
+      lastModifiedAt: _asDate(json['lastModifiedAt']),
+      createdAt: _asDate(json['createdAt']),
     );
   }
 
@@ -219,6 +224,14 @@ const kDefaultFeatureFlags = <Map<String, dynamic>>[
     'enabled': true,
     'description': 'Encrypted student leader election voting',
     'disabledMessage': 'Voting is currently not active.',
+    'allowedRoles': <String>[],
+  },
+  {
+    'name': 'kejani',
+    'displayName': 'Kejani — Rental Finder',
+    'enabled': true,
+    'description': 'Apartment and rental listings near campus',
+    'disabledMessage': 'Rental listings are currently unavailable.',
     'allowedRoles': <String>[],
   },
 ];

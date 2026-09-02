@@ -100,8 +100,8 @@ class NotificationService {
     }
   }
 
-  /// Schedule 20-minute-before reminders for all lessons in a class.
-  /// Each lesson gets a weekly recurring notification.
+  /// Schedule reminders for all lessons in a class.
+  /// Each lesson gets a weekly recurring notification at its scheduled start time.
   /// [lessons] from Firestore timetable subcollection.
   Future<int> autoScheduleClassReminders({
     required String className,
@@ -132,31 +132,22 @@ class NotificationService {
       final dayIndex = days.indexOf(dayStr) + 1;
       if (dayIndex < 1 || dayIndex > 7) continue;
 
-      final cleanTime = timeStr.replaceAll(RegExp(r'[^0-9]'), '');
-      if (cleanTime.length < 4) continue;
-
-      int hour = int.tryParse(cleanTime.substring(0, 2)) ?? 8;
-      int minute = int.tryParse(cleanTime.substring(2, 4)) ?? 0;
-
-      // 20 minutes before
-      int reminderHour = hour;
-      int reminderMinute = minute - 20;
-      if (reminderMinute < 0) {
-        reminderMinute += 60;
-        reminderHour -= 1;
-      }
-      if (reminderHour < 0) reminderHour = 0;
+      // Reminder fires at the scheduled class start time.
+      final start = parseLessonStartTime(timeStr);
+      if (start == null) continue;
+      final int hour = start.$1;
+      final int minute = start.$2;
 
       final uniqueId = _generateReminderId(dayIndex, unit, room);
       reminderIds.add(uniqueId.toString());
 
       await _scheduleWeeklyReminder(
         id: uniqueId,
-        title: '$unit starting in 20 min',
+        title: '$unit starting now',
         body: 'Room: $room — $className',
         dayOfWeek: dayIndex,
-        hour: reminderHour,
-        minute: reminderMinute,
+        hour: hour,
+        minute: minute,
         payload: 'class:$className:$unit:$dayStr',
       );
       scheduled++;
@@ -220,7 +211,7 @@ class NotificationService {
     );
   }
 
-  // ── Manual single-lesson reminder (existing, updated to 20 min) ──
+  // ── Manual single-lesson reminder (scheduled at class start) ──
 
   Future<void> scheduleClassReminder({
     required int id,
@@ -230,21 +221,13 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
-    // 20 minutes before (changed from 30)
-    int reminderHour = hour;
-    int reminderMinute = minute - 20;
-    if (reminderMinute < 0) {
-      reminderMinute += 60;
-      reminderHour -= 1;
-    }
-    if (reminderHour < 0) reminderHour = 0;
-
+    // Fires at the scheduled class start time.
     await _scheduleWeeklyReminder(
       id: id,
-      title: '$className starting in 20 min',
+      title: '$className starting now',
       body: 'Room: $room',
       dayOfWeek: dayOfWeek,
-      hour: reminderHour,
+      hour: hour,
       minute: minute,
       payload: 'class:$className:$className:manual',
     );
@@ -322,6 +305,9 @@ class NotificationService {
 
     if (androidImplementation != null) {
       await androidImplementation.requestNotificationsPermission();
+      // Exact alarm permission is required for `exactAllowWhileIdle` weekly
+      // class reminders (SO 13+).
+      await androidImplementation.requestExactAlarmsPermission();
     }
   }
 
@@ -350,4 +336,15 @@ class NotificationService {
     }
     return scheduledDate;
   }
+}
+
+/// Parses a timetable start time string (e.g. "08:30", "1430") into
+/// `(hour, minute)`, or `null` when it cannot be parsed.
+(int, int)? parseLessonStartTime(String timeStr) {
+  final clean = timeStr.replaceAll(RegExp(r'[^0-9]'), '');
+  if (clean.length < 4) return null;
+  final h = int.tryParse(clean.substring(0, 2));
+  final m = int.tryParse(clean.substring(2, 4));
+  if (h == null || m == null) return null;
+  return (h, m);
 }

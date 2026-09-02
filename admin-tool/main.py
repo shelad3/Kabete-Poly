@@ -32,6 +32,7 @@ from timetable_upload_tab import TimetableUploadTab
 from payment_dashboard import PaymentDashboard
 from exam_timetable_tab import ExamTimetableTab
 from feature_flag_manager import FeatureFlagManager
+from qr_generator import QRGeneratorWidget
 from models import UserProfile
 import config_manager
 
@@ -275,6 +276,7 @@ class MainWindow(QMainWindow):
         self.payment_dashboard = PaymentDashboard()
         self.exam_timetable = ExamTimetableTab()
         self.feature_flags = FeatureFlagManager()
+        self.qr_generator = QRGeneratorWidget()
         self.tabs.addTab(self.grade_editor, 'Grade Entry')
         self.tabs.addTab(self.timetable_editor, 'Timetable Editor')
         self.tabs.addTab(self.timetable_upload, 'Timetable Upload')
@@ -283,6 +285,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.payment_dashboard, 'Payments')
         self.tabs.addTab(self.feature_flags, 'Feature Flags')
         self.tabs.addTab(self.analytics, 'Analytics')
+        self.tabs.addTab(self.qr_generator, 'QR Generator')
         layout.addWidget(self.tabs)
 
         self.setCentralWidget(central)
