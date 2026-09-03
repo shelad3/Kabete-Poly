@@ -49,10 +49,7 @@ class _KejaniBodyState extends State<_KejaniBody> {
 
   @override
   Widget build(BuildContext context) {
-    final isFiltering = _selectedArea != 'All' || _selectedRoomType != null;
-    final stream = isFiltering
-        ? _service.getAllListingsStream()
-        : _service.getListingsStream();
+    final stream = _service.getAllListingsStream();
 
     return Column(
       children: [
@@ -63,7 +60,8 @@ class _KejaniBodyState extends State<_KejaniBody> {
             builder: (context, snap) {
               if (snap.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
-              }              var listings = snap.data ?? const <Listing>[];
+              }
+              var listings = snap.data ?? const <Listing>[];
               if (_selectedArea != 'All') {
                 listings =
                     listings.where((l) => l.area == _selectedArea).toList();

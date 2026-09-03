@@ -234,7 +234,11 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
       _coverUrl = e.coverImage;
       _galleryUrls = List.of(e.images);
       for (final r in e.roomOptions) {
-        _rooms.add(_RoomDraft(type: r.type, price: r.price));
+        _rooms.add(_RoomDraft(
+          type: r.type,
+          price: r.price,
+          amenities: Set.of(r.amenities),
+        ));
       }
     }
   }
@@ -306,7 +310,11 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
 
       final roomOptions = _rooms
           .where((r) => r.price > 0)
-          .map((r) => RoomOption(type: r.type, price: r.price))
+          .map((r) => RoomOption(
+                type: r.type,
+                price: r.price,
+                amenities: r.amenities.toList()..sort(),
+              ))
           .toList();
 
       final now = DateTime.now();
@@ -576,6 +584,37 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Text(
+            'Amenities',
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: kListingAmenities.map((a) {
+              final selected = _rooms[i].amenities.contains(a);
+              return FilterChip(
+                label: Text(
+                  a,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                selected: selected,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                onSelected: (val) {
+                  setState(() {
+                    if (val) {
+                      _rooms[i].amenities.add(a);
+                    } else {
+                      _rooms[i].amenities.remove(a);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
           const SizedBox(height: 8),
         ],
         OutlinedButton.icon(
@@ -591,7 +630,12 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
 class _RoomDraft {
   String type;
   int price;
-  _RoomDraft({required this.type, required this.price});
+  final Set<String> amenities;
+  _RoomDraft({
+    required this.type,
+    required this.price,
+    Set<String>? amenities,
+  }) : amenities = amenities ?? <String>{};
 }
 
 class _MapPinScreen extends StatefulWidget {

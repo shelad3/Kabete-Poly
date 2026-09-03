@@ -26,19 +26,41 @@ const kListingRoomTypes = <String>[
   'Shared',
 ];
 
+/// Amenities a room option may include.
+const kListingAmenities = <String>[
+  'Bathroom',
+  'Kitchen',
+  'Parking',
+  'Wifi',
+  'Water',
+  'Electricity',
+  'Balcony',
+  'Security',
+];
+
 /// A single rentable room option within an apartment listing.
 class RoomOption {
   final String type; // one of kListingRoomTypes
   final int price; // monthly rent in KES
+  final List<String> amenities; // subset of kListingAmenities
 
-  const RoomOption({required this.type, required this.price});
+  const RoomOption({
+    required this.type,
+    required this.price,
+    this.amenities = const [],
+  });
 
   factory RoomOption.fromJson(Map<String, dynamic> json) => RoomOption(
         type: json['type'] as String? ?? '',
         price: (json['price'] as num?)?.toInt() ?? 0,
+        amenities: (json['amenities'] as List?)?.cast<String>() ?? const [],
       );
 
-  Map<String, dynamic> toJson() => {'type': type, 'price': price};
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'price': price,
+        if (amenities.isNotEmpty) 'amenities': amenities,
+      };
 }
 
 /// An apartment / rental listing near campus.

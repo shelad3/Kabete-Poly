@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Kabete National Polytechnique
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/listing.dart';
 import 'kejani_tab.dart' show formatKes;
@@ -35,6 +36,18 @@ class ListingDetailScreen extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+
+  Future<void> _copyContact(BuildContext context) async {
+    if (listing.contactPhone.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: listing.contactPhone));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Contact copied to clipboard'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -138,6 +151,24 @@ class ListingDetailScreen extends StatelessWidget {
                     lat: listing.location!.latitude,
                     lng: listing.location!.longitude,
                     onOpenMaps: _openMaps,
+                  ),
+                ],
+                if (listing.contactPhone.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    'Contact',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _ContactCard(
+                    phone: listing.contactPhone,
+                    onCall: _callContact,
+                    onWhatsApp: _whatsapp,
+                    onCopy: () => _copyContact(context),
                   ),
                 ],
                 const SizedBox(height: 24),
@@ -248,21 +279,50 @@ class _RoomOptionRow extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.king_bed_outlined,
-              size: 18, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(option.type, style: const TextStyle(fontSize: 15)),
+          Row(
+            children: [
+              Icon(Icons.king_bed_outlined,
+                  size: 18, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(option.type, style: const TextStyle(fontSize: 15)),
+              ),
+              Text(
+                formatKes(option.price),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
           ),
-          Text(
-            formatKes(option.price),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
+          if (option.amenities.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: option.amenities.map((a) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    a,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -290,6 +350,67 @@ class _LocationCard extends StatelessWidget {
         subtitle: const Text('Open in Google Maps'),
         trailing: const Icon(Icons.open_in_new),
         onTap: onOpenMaps,
+      ),
+    );
+  }
+}
+
+class _ContactCard extends StatelessWidget {
+  final String phone;
+  final VoidCallback onCall;
+  final VoidCallback onWhatsApp;
+  final VoidCallback onCopy;
+  const _ContactCard({
+    required this.phone,
+    required this.onCall,
+    required this.onWhatsApp,
+    required this.onCopy,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Column(
+        children: [
+          ListTile(
+            leading: Icon(
+              Icons.phone_outlined,
+              color: theme.colorScheme.primary,
+            ),
+            title: SelectableText(
+              phone,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            subtitle: const Text('Tap to call'),
+            trailing: IconButton(
+              tooltip: 'Copy contact',
+              icon: const Icon(Icons.copy_rounded),
+              onPressed: onCopy,
+            ),
+            onTap: onCall,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary.withValues(
+                        alpha: 0.06,
+                      ),
+                    ),
+                    onPressed: onWhatsApp,
+                    icon: const Icon(Icons.chat),
+                    label: const Text('Open in WhatsApp'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
