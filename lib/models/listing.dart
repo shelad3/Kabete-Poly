@@ -7,6 +7,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 const kListingAreas = <String>[
   'Kabete Town',
   'Kwa Chief',
+  'Lower Kabete',
+  'Mwimuto',
+  'Wangige',
+  'Gachie',
+  'Kanyariri',
+  'Ruaka',
+  'Muthiga',
   'Red Soil',
   'Near Gate A',
   'Along Kabete Road',
@@ -16,6 +23,10 @@ const kListingAreas = <String>[
   'Kinoo',
   'Other',
 ];
+
+/// A listing's purpose: monthly rent or outright sale.
+const kListingPurposes = <String>['rent', 'sale'];
+
 
 /// Predefined accommodation/room options for a listing.
 const kListingRoomTypes = <String>[
@@ -72,6 +83,8 @@ class Listing {
   final List<String> images;
   final String area;
   final GeoPoint? location; // lat/lng pin for map sync
+  final String purpose; // one of kListingPurposes ('rent' | 'sale')
+  final int? salePrice; // asking price in KES when purpose == 'sale'
   final List<RoomOption> roomOptions;
   final String contactPhone;
   final bool isActive;
@@ -87,6 +100,8 @@ class Listing {
     this.images = const [],
     required this.area,
     this.location,
+    this.purpose = 'rent',
+    this.salePrice,
     this.roomOptions = const [],
     this.contactPhone = '',
     this.isActive = true,
@@ -94,6 +109,9 @@ class Listing {
     this.createdAt,
     this.updatedAt,
   });
+
+  /// True when the property is listed for outright sale.
+  bool get isForSale => purpose == 'sale';
 
   /// The cheapest monthly rent across all room options (null if none set).
   int? get startingPrice {
@@ -111,6 +129,8 @@ class Listing {
       images: (json['images'] as List?)?.cast<String>() ?? const [],
       area: json['area'] as String? ?? 'Other',
       location: location is GeoPoint ? location : null,
+      purpose: json['purpose'] as String? ?? 'rent',
+      salePrice: (json['salePrice'] as num?)?.toInt(),
       roomOptions: (json['roomOptions'] as List?)
               ?.map((e) => RoomOption.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -130,6 +150,8 @@ class Listing {
         if (images.isNotEmpty) 'images': images,
         'area': area,
         if (location != null) 'location': location,
+        'purpose': purpose,
+        if (salePrice != null) 'salePrice': salePrice,
         if (roomOptions.isNotEmpty)
           'roomOptions': roomOptions.map((r) => r.toJson()).toList(),
         if (contactPhone.isNotEmpty) 'contactPhone': contactPhone,

@@ -206,7 +206,9 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _salePriceCtrl = TextEditingController();
   String _area = kListingAreas.first;
+  String _purpose = 'rent';
   bool _isActive = true;
   bool _isUploading = false;
   GeoPoint? _location;
@@ -229,6 +231,8 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
       _descCtrl.text = e.description;
       _phoneCtrl.text = e.contactPhone;
       _area = e.area;
+      _purpose = e.purpose;
+      _salePriceCtrl.text = e.salePrice?.toString() ?? '';
       _isActive = e.isActive;
       _location = e.location;
       _coverUrl = e.coverImage;
@@ -248,6 +252,7 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _phoneCtrl.dispose();
+    _salePriceCtrl.dispose();
     super.dispose();
   }
 
@@ -318,6 +323,9 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
           .toList();
 
       final now = DateTime.now();
+      final salePrice = _purpose == 'sale'
+          ? int.tryParse(_salePriceCtrl.text.trim())
+          : null;
       final layout = Listing(
         id: _isEdit ? widget.existing!.id : '',
         name: name,
@@ -326,6 +334,8 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
         images: gallery,
         area: _area,
         location: _location,
+        purpose: _purpose,
+        salePrice: salePrice,
         roomOptions: roomOptions,
         contactPhone: _phoneCtrl.text.trim(),
         isActive: _isActive,
@@ -416,6 +426,32 @@ class _ListingFormScreenState extends State<_ListingFormScreen> {
                 .toList(),
             onChanged: (v) => setState(() => _area = v ?? _area),
           ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: _purpose,
+            decoration: const InputDecoration(
+              labelText: 'Purpose',
+              border: OutlineInputBorder(),
+            ),
+            items: kListingPurposes
+                .map((p) => DropdownMenuItem(
+                      value: p,
+                      child: Text(p == 'sale' ? 'For Sale' : 'For Rent'),
+                    ))
+                .toList(),
+            onChanged: (v) => setState(() => _purpose = v ?? _purpose),
+          ),
+          if (_purpose == 'sale') ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _salePriceCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Sale price (KES)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           TextField(
             controller: _phoneCtrl,

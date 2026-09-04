@@ -161,7 +161,8 @@ class _ListingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final price = listing.startingPrice;
+    final forSale = listing.isForSale;
+    final price = forSale ? listing.salePrice : listing.startingPrice;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
@@ -215,16 +216,38 @@ class _ListingCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (price != null)
-                        Text(
-                          'From ${formatKes(price)}',
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: forSale
+                              ? theme.colorScheme.tertiary
+                              : theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          forSale ? 'FOR SALE' : 'FOR RENT',
                           style: TextStyle(
-                            color: theme.colorScheme.primary,
+                            color: theme.colorScheme.onTertiary,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ),
                     ],
                   ),
+                  if (price != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      forSale ? formatKes(price) : 'From ${formatKes(price)}',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 6),
                   Row(
                     children: [

@@ -53,7 +53,8 @@ class ListingDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final price = listing.startingPrice;
+    final forSale = listing.isForSale;
+    final price = forSale ? listing.salePrice : listing.startingPrice;
     final allImages =
         [if (listing.coverImage.isNotEmpty) listing.coverImage, ...listing.images];
 
@@ -80,17 +81,44 @@ class ListingDetailScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (price != null)
-                      Text(
-                        formatKes(price),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: forSale
+                            ? theme.colorScheme.tertiary
+                            : theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        forSale ? 'FOR SALE' : 'FOR RENT',
                         style: TextStyle(
-                          fontSize: 20,
+                          color: forSale
+                              ? theme.colorScheme.onTertiary
+                              : theme.colorScheme.onPrimary,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
                         ),
                       ),
+                    ),
                   ],
                 ),
+                if (price != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    forSale
+                        ? formatKes(price)
+                        : 'From ${formatKes(price)}' +
+                            (listing.roomOptions.length > 1 ? '/mo' : ''),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 Row(
                   children: [
