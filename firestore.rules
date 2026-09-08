@@ -50,7 +50,10 @@ service cloud.firestore {
                     'fcmTokens', 'bio', 'gender', 'nationality', 'address',
                     'isHostelResident'])
       );
-      allow delete: if isAdmin();
+      // Owners may delete their own profile (required for failed-registration
+      // cleanup so the auth account can be removed with no orphaned data);
+      // admins may delete any.
+      allow delete: if isAuthenticated() && isOwner(userId) || isAdmin();
     }
 
     // ---------------------------------------------------- //

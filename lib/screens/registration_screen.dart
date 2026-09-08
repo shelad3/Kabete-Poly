@@ -313,7 +313,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   hint: const Text('Choose your class from the timetable'),
                   items: [
                     ...context
-                        .read<ClassProvider>()
+                        .watch<ClassProvider>()
                         .availableClasses
                         .where((c) => c != 'Global / General Assembly')
                         .map((code) {

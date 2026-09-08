@@ -1,6 +1,6 @@
 # Firestore Rules Matrix — rationale per hardened rule
 
-Project: `kabete-94936` · File: `firestore.rules` · Emulator-tested (15/15 pass)
+Project: `kabete-94936` · File: `firestore.rules` · Emulator-tested (16/16 pass)
 
 Role ladder: `Student` < `Leader` < `Teacher` < `Official` (admin).
 `isAdmin() == isAuthenticated() && role == 'Official'`.
@@ -42,7 +42,7 @@ Role ladder: `Student` < `Leader` < `Teacher` < `Official` (admin).
   `CubeService.createBooking` (client, rule comment documents why).
 - Seats on `exam_bookings` → `ExamBookingService.register` transaction.
 
-## Test coverage (test/rules/rules.test.js, 15 cases)
+## Test coverage (test/rules/rules.test.js, 16 cases)
 1. Student self-promote denied; safe-field (`fullName`/`bio`) update allowed
 2. Student auth_codes read denied
 3. Admin auth_codes read allowed
@@ -58,6 +58,15 @@ Role ladder: `Student` < `Leader` < `Teacher` < `Official` (admin).
 13. Student enrols by appending own uid to class members; can't remove/rename
 14. Student releases own field index; can't delete others'
 15. Unauthenticated can read classes list; timetable stays auth-gated
+16. Full app `register()` flow e2e: field-index reservation transaction + profile create + existing-class enrol + missing-class anchor + cleanup (own profile/index deletes) all succeed for a brand-new user
+
+## Users collection authorisation summary
+| Operation | Allowed to | Notes |
+|---|---|---|
+| read | owner, or Leader+ | Students can't bulk-read the directory |
+| create | owner only | Create set is pre-login; keys pinned to app schema |
+| update | owner only | Safe-field whitelist; self-promotion blocked |
+| delete | owner or admin | Owner delete supports failed-registration cleanup before auth-account removal |
 
 ## Deploy state
 - LIVE: rules + indexes (rules redeployed 2026-09-08 for registration fix).

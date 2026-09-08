@@ -316,4 +316,115 @@ describe('Kabete Poly Firestore rules', () => {
       db.collection('classes').doc('class-public').collection('timetable').doc('tt-1').get()
     );
   });
+
+  test('full app register flow succeeds for a brand-new user', async () => {
+    // A fresh Firebase Auth user has NO users/{uid} doc yet, exactly like
+    // register() right after createUserWithEmailAndPassword.
+    const user = testEnv.authenticatedContext('student-reg-1');
+    const db = user.firestore();
+
+    await seedDoc('classes', 'existing-class', {
+      id: 'existing-class',
+      members: ['teacher-x'],
+      createdBy: 'teacher-x',
+    });
+
+    const regNoKey = 'regNo_EE-2026-777';
+    const phoneKey = 'phone_+254700000777';
+    const emailKey = 'email_student777@kabetepoly.ac.ke';
+
+    // 1) Atomic uniqueness reservation (three indices, one transaction).
+    await assertSucceeds(
+      db.runTransaction(async (t) => {
+        const regNoRef = db.collection('field_indices').doc(regNoKey);
+        const phoneRef = db.collection('field_indices').doc(phoneKey);
+        const emailRef = db.collection('field_indices').doc(emailKey);
+
+        if ((await t.get(regNoRef)).exists) {
+          throw new Error('regNo taken');
+        }
+        if ((await t.get(phoneRef)).exists) {
+          throw new Error('phone taken');
+        }
+        if ((await t.get(emailRef)).exists) {
+          throw new Error('email taken');
+        }
+
+        t.set(regNoRef, {
+          uid: 'student-reg-1',
+          value: 'EE-2026-777',
+          type: 'regNo',
+          createdAt: new Date(),
+        });
+        t.set(phoneRef, {
+          uid: 'student-reg-1',
+          value: '+254700000777',
+          type: 'phone',
+          createdAt: new Date(),
+        });
+        t.set(emailRef, {
+          uid: 'student-reg-1',
+          value: 'student777@kabetepoly.ac.ke',
+          type: 'email',
+          createdAt: new Date(),
+        });
+      })
+    );
+
+    // 2) Own profile create with the app schema.
+    await assertSucceeds(
+      db.collection('users').doc('student-reg-1').set({
+        registrationNumber: 'EE-2026-777',
+        fullName: 'Registering Student',
+        profilePhotoUrl: '',
+        mobileNumber: '+254700000777',
+        email: 'student777@kabetepoly.ac.ke',
+        isHostelResident: false,
+        role: 'Student',
+        designation: null,
+        enrolledClasses: ['existing-class'],
+        classChangeCount: 0,
+        enrolledTerm: 1,
+        enrolledYear: 2026,
+        gender: '',
+        nationality: 'Kenyan',
+      })
+    );
+
+    // 3) Enrol into an existing class (append own uid).
+    await assertSucceeds(
+      db.collection('classes').doc('existing-class').update({
+        members: ['teacher-x', 'student-reg-1'],
+      })
+    );
+
+    // 4) Anchor-create a missing cohort doc (sole member, own uid).
+    await assertSucceeds(
+      db.collection('classes').doc('missing-class').set({
+        id: 'missing-class',
+        createdAt: new Date(),
+        members: ['student-reg-1'],
+        createdBy: 'student-reg-1',
+      })
+    );
+
+    // 5) Owner can now read own profile + release own indices
+    //    (failed-registration cleanup runs before the auth account is
+    //    deleted, so it must still be allowed).
+    await assertSucceeds(
+      db.collection('users').doc('student-reg-1').get()
+    );
+    await assertSucceeds(
+      db.collection('users').doc('student-reg-1').delete()
+    );
+    await assertSucceeds(
+      db.collection('field_indices').doc(regNoKey).delete()
+    );
+    await assertSucceeds(
+      db.collection('field_indices').doc(phoneKey).delete()
+    );
+    await assertSucceeds(
+      db.collection('field_indices').doc(emailKey).delete()
+    );
+  });
 });

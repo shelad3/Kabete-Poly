@@ -36,18 +36,26 @@ class AuthProvider extends ChangeNotifier {
 
   AuthProvider() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {
-      if (user != null) {
-        await _fetchUserProfile(user);
-        if (_isAuthenticated) {
-          await _createSession(user.uid);
+      try {
+        if (user != null) {
+          await _fetchUserProfile(user);
+          if (_isAuthenticated) {
+            await _createSession(user.uid);
+          }
+        } else {
+          _currentUser = null;
+          _isAuthenticated = false;
+          _currentSessionId = null;
         }
-      } else {
-        _currentUser = null;
-        _isAuthenticated = false;
-        _currentSessionId = null;
+      } catch (e) {
+        debugPrint('Auth state change failed (recovered): $e');
+      } finally {
+        // Always resolve the loading gate + propagate state, even if a
+        // Firestore call above hangs on a flaky connection. Without this,
+        // login/logout appear to "do nothing" until the app restarts.
+        _isLoading = false;
+        notifyListeners();
       }
-      _isLoading = false;
-      notifyListeners();
     });
   }
 
@@ -93,7 +101,8 @@ class AuthProvider extends ChangeNotifier {
           .collection('users')
           .doc(userId)
           .collection('sessions')
-          .add(session.toJson());
+          .add(session.toJson())
+          .timeout(const Duration(seconds: 10));
       _currentSessionId = doc.id;
     } catch (e) {
       debugPrint('Session creation failed (non-fatal): $e');
@@ -160,7 +169,8 @@ class AuthProvider extends ChangeNotifier {
       DocumentSnapshot doc = await _firestore
           .collection('users')
           .doc(user.uid)
-          .get();
+          .get(const GetOptions(source: Source.serverAndCache))
+          .timeout(const Duration(seconds: 10));
       if (doc.exists) {
         _currentUser = UserProfile.fromJson(doc.data() as Map<String, dynamic>);
 
@@ -368,12 +378,15 @@ class AuthProvider extends ChangeNotifier {
         await _firestore
             .collection('users')
             .doc(uid)
-            .set(newUserProfile.toJson());
+            .set(newUserProfile.toJson())
+            .timeout(const Duration(seconds: 15));
 
         if (profile.enrolledClasses.isNotEmpty) {
           for (String classId in profile.enrolledClasses) {
             final classRef = _firestore.collection('classes').doc(classId);
-            final classDoc = await classRef.get();
+            final classDoc = await classRef
+                .get()
+                .timeout(const Duration(seconds: 15));
 
             if (!classDoc.exists) {
               await classRef.set({
@@ -381,11 +394,11 @@ class AuthProvider extends ChangeNotifier {
                 'createdAt': FieldValue.serverTimestamp(),
                 'members': [uid],
                 'createdBy': uid,
-              });
+              }).timeout(const Duration(seconds: 15));
             } else {
               await classRef.update({
                 'members': FieldValue.arrayUnion([uid]),
-              });
+              }).timeout(const Duration(seconds: 15));
             }
           }
         }
@@ -394,13 +407,20 @@ class AuthProvider extends ChangeNotifier {
         _isGuest = false;
         AnalyticsService().logSignUp('email');
       } catch (e) {
-        // Cleanup on failure: delete auth user + owned indices
-        try {
-          await credential.user?.delete();
-        } catch (_) {}
+        // Cleanup on failure. ORDER MATTERS: release the field indices and
+        // delete the (possibly half-written) profile WHILE STILL
+        // AUTHENTICATED — deleting the auth user first revokes the token, so
+        // every later delete would be denied and the indices would leak (the
+        // next attempt then fails with "already registered").
         await _releaseField('regNo', regNo);
         await _releaseField('phone', phone);
         await _releaseField('email', email);
+        try {
+          await _firestore.collection('users').doc(uid).delete();
+        } catch (_) {}
+        try {
+          await credential.user?.delete();
+        } catch (_) {}
         rethrow;
       }
     } catch (e) {
