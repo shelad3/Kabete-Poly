@@ -37,14 +37,18 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isLeaderOrAbove());
       allow create: if isAuthenticated() &&
-        request.resource.data.uid == request.auth.uid &&
-        request.resource.data.keys().hasAll(['role', 'name', 'email']);
+        isOwner(userId) &&
+        request.resource.data.keys().hasAll([
+          'fullName', 'email', 'role', 'registrationNumber', 'mobileNumber'
+        ]);
       allow update: if isAuthenticated() && isOwner(userId) && (
         isAdmin() ||
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['name', 'phone', 'photoUrl', 'regNo', 'enrolledClasses',
-                    'enrolledTerm', 'enrolledYear', 'fcmTokens', 'bio',
-                    'gender', 'nationality', 'address'])
+          .hasOnly(['fullName', 'mobileNumber', 'profilePhotoUrl',
+                    'registrationNumber', 'enrolledClasses',
+                    'classChangeCount', 'enrolledTerm', 'enrolledYear',
+                    'fcmTokens', 'bio', 'gender', 'nationality', 'address',
+                    'isHostelResident'])
       );
       allow delete: if isAdmin();
     }
@@ -94,8 +98,30 @@ service cloud.firestore {
     // Classes / Cohorts Collection + Timetable subcollection
     // ---------------------------------------------------- //
     match /classes/{classId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isLeaderOrAbove();
+      // Public read: the cohort list is needed BEFORE login (registration
+      // screen) and by guests (navigation drawer). Docs only contain
+      // createdAt + members uids; timetable subcollection stays auth-gated.
+      allow read: if true;
+      // Creating a class requires Leader+ EXCEPT the anchor case where a
+      // self-registering student creates the doc for a cohort that only
+      // exists as a timetable subcollection (they may only open it with
+      // themselves as the sole member).
+      allow create: if isLeaderOrAbove() || (
+        isAuthenticated() &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.members.size() == 1 &&
+        request.resource.data.members.hasAny([request.auth.uid])
+      );
+      // Updating a class requires Leader+ EXCEPT a student appending their
+      // OWN uid to the members array (enrolment), which is idempotent and
+      // cannot shrink or rewrite membership.
+      allow update: if isLeaderOrAbove() || (
+        isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) &&
+        request.resource.data.members.hasAll(resource.data.members) &&
+        request.resource.data.members.size() >= resource.data.members.size() &&
+        request.resource.data.members.hasAny([request.auth.uid])
+      );
       allow delete: if isAdmin();
 
       match /timetable/{entryId} {
@@ -235,14 +261,17 @@ service cloud.firestore {
     match /field_indices/{indexId} {
       // Registration transaction runs AFTER the auth user is created, so the
       // creator is authenticated. Writes are restricted to the owner of the
-      // index; deletes to admins.
+      // index; owners may also release their own index (Failed-registration
+      // cleanup and profile field changes), admins may delete any.
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
         request.resource.data.uid == request.auth.uid;
       allow update: if isAuthenticated() &&
         resource.data.uid == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registered']);
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (
+        isAuthenticated() && resource.data.uid == request.auth.uid
+      );
     }
 
     // ---------------------------------------------------- //

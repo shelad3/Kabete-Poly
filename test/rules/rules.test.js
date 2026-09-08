@@ -54,13 +54,92 @@ describe('Kabete Poly Firestore rules', () => {
     await seedUser('student-1', 'Student');
 
     await assertSucceeds(
-      db.collection('users').doc('student-1').update({ name: 'New Name' })
+      db.collection('users').doc('student-1').update({ fullName: 'New Name' })
     );
     await assertFails(
       db.collection('users').doc('student-1').update({ role: 'Teacher' })
     );
     await assertSucceeds(
       db.collection('users').doc('student-1').update({ bio: 'hello' })
+    );
+  });
+
+  test('student can create own profile with app schema (fullName-based)', async () => {
+    const student = testEnv.authenticatedContext('student-9');
+    const db = student.firestore();
+
+    await assertSucceeds(
+      db.collection('users').doc('student-9').set({
+        registrationNumber: 'EE-2026-009',
+        fullName: 'New Student',
+        email: 'student9@kabetepoly.ac.ke',
+        role: 'Student',
+        mobileNumber: '+254700000009',
+        isHostelResident: false,
+        enrolledClasses: [],
+      })
+    );
+
+    // Cannot create a profile doc under someone else's uid.
+    await assertFails(
+      db.collection('users').doc('another-user').set({
+        fullName: 'Imposter',
+        email: 'imposter@kabetepoly.ac.ke',
+        role: 'Student',
+        registrationNumber: 'EE-2026-999',
+        mobileNumber: '+254700000999',
+      })
+    );
+  });
+
+  test('student can append own uid to class members (enrol)', async () => {
+    const student = testEnv.authenticatedContext('student-10');
+    const db = student.firestore();
+    await seedUser('student-10', 'Student');
+    await seedDoc('classes', 'class-a', {
+      id: 'class-a',
+      members: ['teacher-1'],
+      createdBy: 'teacher-1',
+    });
+
+    await assertSucceeds(
+      db.collection('classes').doc('class-a').update({
+        members: ['teacher-1', 'student-10'],
+      })
+    );
+
+    // Cannot remove another member or rewrite membership.
+    await assertFails(
+      db.collection('classes').doc('class-a').update({
+        members: ['student-10'],
+      })
+    );
+    // Cannot change anything but members.
+    await assertFails(
+      db.collection('classes').doc('class-a').update({
+        name: 'Hacked',
+      })
+    );
+  });
+
+  test('student can release own field index but not others', async () => {
+    const student = testEnv.authenticatedContext('student-11');
+    const db = student.firestore();
+    await seedUser('student-11', 'Student');
+    await seedDoc('field_indices', 'idx-own', {
+      uid: 'student-11',
+      type: 'regNo',
+      value: 'EE-2026-011',
+    });
+    await seedDoc('field_indices', 'idx-other', {
+      uid: 'student-5',
+      type: 'regNo',
+      value: 'EE-2026-005',
+    });
+
+    await assertSucceeds(db.collection('field_indices').doc('idx-own').delete());
+    await assertFails(
+      db.collection('field_indices').doc('idx-other').delete()
     );
   });
 
@@ -216,5 +295,25 @@ describe('Kabete Poly Firestore rules', () => {
     const anon = testEnv.unauthenticatedContext();
     const db = anon.firestore();
     await assertFails(db.collection('users').doc('student-1').get());
+  });
+
+  test('unauthenticated can read classes list (cohort dropdown before login)', async () => {
+    const anon = testEnv.unauthenticatedContext();
+    const db = anon.firestore();
+    await seedDoc('classes', 'class-public', {
+      id: 'class-public',
+      members: [],
+      createdAt: 'now',
+    });
+    await assertSucceeds(db.collection('classes').doc('class-public').get());
+
+    // ...but the timetable subcollection stays auth-gated.
+    await seedDoc('classes/class-public/timetable', 'tt-1', {
+      classId: 'class-public',
+      day: 'MON',
+    });
+    await assertFails(
+      db.collection('classes').doc('class-public').collection('timetable').doc('tt-1').get()
+    );
   });
 });

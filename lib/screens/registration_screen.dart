@@ -48,6 +48,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final ImagePicker _picker = ImagePicker();
   final StorageService _storageService = StorageService();
 
+  @override
+  void initState() {
+    super.initState();
+    // The cohort dropdown is populated from Firestore classes; refresh now
+    // (the screen can be opened before login, so the startup fetch may not
+    // have run against authenticated rules yet).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<ClassProvider>().refreshClasses();
+    });
+  }
+
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,

@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
+import '../services/update_service.dart';
 import 'gallery_screen.dart';
 import 'kejani/kejani_tab.dart';
 import 'schedule/campus_map_widget.dart';
@@ -39,6 +40,16 @@ class _GuestHomeScreenState extends State<GuestHomeScreen>
       appBar: AppBar(
         title: const Text('KNP - Guest Mode'),
         actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.system_update, size: 18),
+            label: const Text('Update'),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Checking latest release...')),
+              );
+              UpdateService.checkForUpdates(context, showNoUpdateMsg: true);
+            },
+          ),
           TextButton.icon(
             icon: const Icon(Icons.login, size: 18),
             label: const Text('Login'),

@@ -284,70 +284,73 @@ class AuthProvider extends ChangeNotifier {
       if (regNo.isEmpty) throw Exception('Registration number is required');
       if (phone.isEmpty) throw Exception('Mobile number is required');
 
-      // Atomic uniqueness check via field_indices collection
-      final regNoKey = 'regNo_${_docKey(regNo)}';
-      final phoneKey = 'phone_${_docKey(phone)}';
-      final emailKey = 'email_${_docKey(email)}';
-
-      await _firestore.runTransaction((transaction) async {
-        final regNoRef = _firestore.collection('field_indices').doc(regNoKey);
-        final phoneRef = _firestore.collection('field_indices').doc(phoneKey);
-        final emailRef = _firestore.collection('field_indices').doc(emailKey);
-
-        final regNoSnap = await transaction.get(regNoRef);
-        if (regNoSnap.exists) {
-          throw Exception('Registration number "$regNo" is already registered');
-        }
-
-        final phoneSnap = await transaction.get(phoneRef);
-        if (phoneSnap.exists) {
-          throw Exception('Phone number "$phone" is already registered');
-        }
-
-        final emailSnap = await transaction.get(emailRef);
-        if (emailSnap.exists) {
-          throw Exception('Email "$email" is already registered');
-        }
-
-        // Reserve all three in the transaction
-        transaction.set(regNoRef, {
-          'uid': '__pending__',
-          'value': regNo,
-          'type': 'regNo',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        transaction.set(phoneRef, {
-          'uid': '__pending__',
-          'value': phone,
-          'type': 'phone',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        transaction.set(emailRef, {
-          'uid': '__pending__',
-          'value': email,
-          'type': 'email',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      });
-
-      // Create Firebase Auth user
-      UserCredential credential;
+      // Create the Firebase Auth account first so the field-index
+      // reservation below runs as an authenticated user (rules require
+      // the index owner to match the caller).
+      final UserCredential credential;
       try {
         credential = await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
       } catch (e) {
-        // Auth failed — release reserved indices
-        await _releaseField('regNo', regNo);
-        await _releaseField('phone', phone);
-        await _releaseField('email', email);
+        if (e is FirebaseAuthException) {
+          throw Exception(e.message ?? 'Registration failed');
+        }
         rethrow;
       }
 
       final uid = credential.user!.uid;
 
+      // Atomic uniqueness check via field_indices collection
+      final regNoKey = 'regNo_${_docKey(regNo)}';
+      final phoneKey = 'phone_${_docKey(phone)}';
+      final emailKey = 'email_${_docKey(email)}';
+
       try {
+        await _firestore.runTransaction((transaction) async {
+          final regNoRef = _firestore.collection('field_indices').doc(regNoKey);
+          final phoneRef = _firestore.collection('field_indices').doc(phoneKey);
+          final emailRef = _firestore.collection('field_indices').doc(emailKey);
+
+          final regNoSnap = await transaction.get(regNoRef);
+          if (regNoSnap.exists) {
+            throw Exception(
+              'Registration number "$regNo" is already registered',
+            );
+          }
+
+          final phoneSnap = await transaction.get(phoneRef);
+          if (phoneSnap.exists) {
+            throw Exception('Phone number "$phone" is already registered');
+          }
+
+          final emailSnap = await transaction.get(emailRef);
+          if (emailSnap.exists) {
+            throw Exception('Email "$email" is already registered');
+          }
+
+          // Reserve all three in the transaction under the real UID
+          transaction.set(regNoRef, {
+            'uid': uid,
+            'value': regNo,
+            'type': 'regNo',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          transaction.set(phoneRef, {
+            'uid': uid,
+            'value': phone,
+            'type': 'phone',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          transaction.set(emailRef, {
+            'uid': uid,
+            'value': email,
+            'type': 'email',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        });
+
         bool isActuallyAdmin = email == 'sheldonramu8@gmail.com';
 
         final newUserProfile = UserProfile(
@@ -366,17 +369,6 @@ class AuthProvider extends ChangeNotifier {
             .collection('users')
             .doc(uid)
             .set(newUserProfile.toJson());
-
-        // Update reserved indices with actual UID
-        await _firestore.collection('field_indices').doc(regNoKey).update({
-          'uid': uid,
-        });
-        await _firestore.collection('field_indices').doc(phoneKey).update({
-          'uid': uid,
-        });
-        await _firestore.collection('field_indices').doc(emailKey).update({
-          'uid': uid,
-        });
 
         if (profile.enrolledClasses.isNotEmpty) {
           for (String classId in profile.enrolledClasses) {
@@ -402,7 +394,7 @@ class AuthProvider extends ChangeNotifier {
         _isGuest = false;
         AnalyticsService().logSignUp('email');
       } catch (e) {
-        // Cleanup on failure
+        // Cleanup on failure: delete auth user + owned indices
         try {
           await credential.user?.delete();
         } catch (_) {}
