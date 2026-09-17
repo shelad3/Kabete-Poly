@@ -356,21 +356,25 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   }
 
   void _autoScheduleReminders(List<Map<String, dynamic>> lessons) async {
-    final count = await _notificationService.autoScheduleClassReminders(
-      className: _selectedCohort,
-      lessons: lessons,
-    );
-    if (mounted && count > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Auto-reminders set: $count notifications scheduled (20 min before each class)',
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
+    try {
+      final count = await _notificationService.autoScheduleClassReminders(
+        className: _selectedCohort,
+        lessons: lessons,
       );
+      if (mounted && count > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Auto-reminders set: $count notifications scheduled (20 min before each class)',
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Auto-reminder scheduling failed for $_selectedCohort: $e');
     }
   }
 
@@ -550,6 +554,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     final int dayIndex = days.indexOf(dayString) + 1;
     final uniqueId = lesson['unit'].hashCode.abs() % 10000;
 
+    _notificationService.requestPermissions();
     _notificationService.scheduleClassReminder(
       id: uniqueId,
       className: lesson['unit'],

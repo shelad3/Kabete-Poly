@@ -187,6 +187,7 @@ class _AdminTimetableManagerScreenState
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: DropdownButtonFormField<String>(
+            key: ValueKey('target-class-$_currentClassId'),
             value: _currentClassId,
             decoration: const InputDecoration(
               labelText: 'Target Class',

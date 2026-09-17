@@ -143,11 +143,12 @@ class NotificationService {
 
       await _scheduleWeeklyReminder(
         id: uniqueId,
-        title: '$unit starting now',
+        title: '$unit starts in 20 minutes',
         body: 'Room: $room — $className',
         dayOfWeek: dayIndex,
         hour: hour,
         minute: minute,
+        minutesBefore: 20,
         payload: 'class:$className:$unit:$dayStr',
       );
       scheduled++;
@@ -185,30 +186,62 @@ class NotificationService {
     required int dayOfWeek,
     required int hour,
     required int minute,
+    int minutesBefore = 0,
     String? payload,
   }) async {
-    await _flutterLocalNotificationsPlugin.zonedSchedule(
-      title: title,
-      body: body,
-      id: id,
-      scheduledDate: _nextInstanceOfDayAndTime(dayOfWeek, hour, minute),
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          'class_reminders',
-          'Class Reminders',
-          channelDescription: 'Automatic reminders before scheduled classes',
-          importance: Importance.max,
-          priority: Priority.high,
-          enableVibration: true,
-          vibrationPattern: Int64List.fromList([0, 400, 200, 400, 200, 400]),
-          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-          styleInformation: BigTextStyleInformation(body),
-        ),
+    var scheduledDate = _nextInstanceOfDayAndTime(dayOfWeek, hour, minute);
+    if (minutesBefore > 0) {
+      scheduledDate = scheduledDate.subtract(
+        Duration(minutes: minutesBefore),
+      );
+      // Never schedule in the past: bump to the following week if the
+      // lead-time window for this week's occurrence has already passed.
+      while (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
+        scheduledDate = scheduledDate.add(const Duration(days: 7));
+      }
+    }
+
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'class_reminders',
+        'Class Reminders',
+        channelDescription: 'Automatic reminders before scheduled classes',
+        importance: Importance.max,
+        priority: Priority.high,
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 400, 200, 400, 200, 400]),
+        largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+        styleInformation: BigTextStyleInformation(body),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-      payload: payload,
     );
+
+    try {
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        title: title,
+        body: body,
+        id: id,
+        scheduledDate: scheduledDate,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload: payload,
+      );
+    } catch (_) {
+      // Exact-alarm permission denied (Android 13+/OEM): fall back to an
+      // inexact schedule so the reminder still fires (may be deferred a few
+      // minutes by the OS), instead of silently losing it altogether.
+      debugPrint('Exact alarm scheduling unavailable; retrying inexact for #$id');
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
+        title: title,
+        body: body,
+        id: id,
+        scheduledDate: scheduledDate,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload: payload,
+      );
+    }
   }
 
   // ── Manual single-lesson reminder (scheduled at class start) ──
@@ -221,14 +254,15 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
-    // Fires at the scheduled class start time.
+    // Fires 20 minutes before the class start time.
     await _scheduleWeeklyReminder(
       id: id,
-      title: '$className starting now',
+      title: '$className starts in 20 minutes',
       body: 'Room: $room',
       dayOfWeek: dayOfWeek,
       hour: hour,
       minute: minute,
+      minutesBefore: 20,
       payload: 'class:$className:$className:manual',
     );
   }

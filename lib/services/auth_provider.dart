@@ -175,14 +175,22 @@ class AuthProvider extends ChangeNotifier {
         _currentUser = UserProfile.fromJson(doc.data() as Map<String, dynamic>);
 
         if (_currentUser?.email.toLowerCase() == 'sheldonramu8@gmail.com') {
+          final p = _currentUser!;
           _currentUser = UserProfile(
-            registrationNumber: _currentUser!.registrationNumber,
-            fullName: _currentUser!.fullName,
-            profilePhotoUrl: _currentUser!.profilePhotoUrl,
-            mobileNumber: _currentUser!.mobileNumber,
-            email: _currentUser!.email,
-            isHostelResident: _currentUser!.isHostelResident,
+            registrationNumber: p.registrationNumber,
+            fullName: p.fullName,
+            profilePhotoUrl: p.profilePhotoUrl,
+            mobileNumber: p.mobileNumber,
+            email: p.email,
+            isHostelResident: p.isHostelResident,
             role: 'Official',
+            designation: p.designation,
+            enrolledClasses: p.enrolledClasses,
+            classChangeCount: p.classChangeCount,
+            enrolledTerm: p.enrolledTerm,
+            enrolledYear: p.enrolledYear,
+            gender: p.gender,
+            nationality: p.nationality,
           );
         }
       } else {
