@@ -28,10 +28,24 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     if (_initialized) return;
     final user = context.read<AuthProvider>().currentUser;
     if (user != null && user.enrolledClasses.isNotEmpty) {
-      _selectedCohort = _normalizeClassId(user.enrolledClasses.first);
+      final preferred = _preferredClass(user.enrolledClasses);
+      if (preferred != null) _selectedCohort = preferred;
     }
     _notificationService.loadAutoReminderPref();
     _initialized = true;
+  }
+
+  /// Pick the first enrolled class the user actually owns, skipping the
+  /// pseudo-cohort ('Global / General Assembly') that admins/officials carry
+  /// in addition to their real class — otherwise the timetable would always
+  /// auto-select the pseudo-cohort instead of the class they care about.
+  static String? _preferredClass(List<String> enrolledClasses) {
+    final normalized = enrolledClasses.map(_normalizeClassId).toList();
+    final real = normalized
+        .where((c) => c != 'Global / General Assembly')
+        .toList();
+    if (real.isNotEmpty) return real.first;
+    return normalized.isNotEmpty ? normalized.first : null;
   }
 
   /// Normalize class ID: replace slashes/dashes with spaces to match
@@ -226,7 +240,11 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
               ),
             ],
           ),
-          Row(
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               // Auto-reminder toggle
               if (isStudent && hasEnrolledClass)
@@ -251,7 +269,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                     );
                   },
                 ),
-              if (isStudent && hasEnrolledClass)
+              // Admins/officials need the dropdown too, otherwise their
+              // timetable is locked to the auto-selected (pseudo) cohort.
+              if (hasEnrolledClass)
                 _buildClassDropdown(isDark),
             ],
           ),
@@ -296,6 +316,12 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   Widget _buildClassDropdown(bool isDark) {
     return Consumer<ClassProvider>(
       builder: (context, classProvider, _) {
+        final items = classProvider.availableClasses
+            .where((c) => c != 'Global / General Assembly')
+            .toList();
+        if (!items.contains(_selectedCohort)) {
+          return const SizedBox.shrink();
+        }
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
@@ -310,8 +336,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
               fontSize: 13,
               color: isDark ? Colors.white : Colors.black87,
             ),
-            items: classProvider.availableClasses
-                .where((c) => c != 'Global / General Assembly')
+            items: items
                 .map(
                   (c) => DropdownMenuItem(value: c, child: Text(c)),
                 )

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/schedule_item.dart';
 import '../../services/firestore_service.dart';
+import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 
 class AdminTimetableManagerScreen extends StatefulWidget {
@@ -34,9 +35,36 @@ class _AdminTimetableManagerScreenState
   void initState() {
     super.initState();
     final cp = context.read<ClassProvider>();
-    _currentClassId = cp.availableClasses.isNotEmpty
-        ? cp.availableClasses.first
-        : '';
+    final user = context.read<AuthProvider>().currentUser;
+    _currentClassId = _preferredClass(user?.enrolledClasses ?? [], cp);
+  }
+
+  /// Pick the first real cohort to manage: the admin's own enrolled class if
+  /// any (skipping the 'Global / General Assembly' pseudo-cohort), otherwise
+  /// the first non-pseudo class loaded from Firestore, finally any class.
+  static String _preferredClass(
+    List<String> enrolledClasses,
+    ClassProvider cp,
+  ) {
+    final enrolledReal = enrolledClasses
+        .map(_normalizeClassId)
+        .where((c) => c != 'Global / General Assembly')
+        .toList();
+    if (enrolledReal.isNotEmpty) return enrolledReal.first;
+    final nonGlobal = cp.availableClasses
+        .where((c) => c != 'Global / General Assembly')
+        .toList();
+    return nonGlobal.isNotEmpty
+        ? nonGlobal.first
+        : (cp.availableClasses.isNotEmpty ? cp.availableClasses.first : '');
+  }
+
+  /// Normalize class IDs to match Firestore doc IDs ('ICT/600/M26' → 'ICT 600 M26').
+  static String _normalizeClassId(String id) {
+    return id
+        .replaceAll(RegExp(r'[/\-]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 
   @override

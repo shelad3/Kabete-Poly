@@ -122,6 +122,49 @@ describe('Kabete Poly Firestore rules', () => {
     );
   });
 
+  test('student can enrol into a migrated class doc with no members field', async () => {
+    const student = testEnv.authenticatedContext('student-12');
+    const db = student.firestore();
+    await seedUser('student-12', 'Student');
+    // Migrated/legacy class doc: NO members key (like 'EET 500 J26').
+    await seedDoc('classes', 'migrated-class', {
+      id: 'migrated-class',
+      _originalName: 'Migrated',
+    });
+
+    // Mirror the app's enrolment write: the final document gets the student's
+    // uid as a flat string element in `members`.
+    await assertSucceeds(
+      db
+        .collection('classes')
+        .doc('migrated-class')
+        .update({
+          members: ['student-12'],
+        })
+    );
+
+    // A plain full-array set also initialises the missing field for the owner.
+    await seedDoc('classes', 'migrated-class2', {
+      id: 'migrated-class2',
+      _originalName: 'Migrated 2',
+    });
+    await assertSucceeds(
+      db.collection('classes').doc('migrated-class2').update({
+        members: ['student-12'],
+      })
+    );
+    // Shrink protection still applies once the field exists.
+    await seedDoc('classes', 'filled-class', {
+      id: 'filled-class',
+      members: ['teacher-1', 'student-12'],
+    });
+    await assertFails(
+      db.collection('classes').doc('filled-class').update({
+        members: ['student-12'],
+      })
+    );
+  });
+
   test('student can release own field index but not others', async () => {
     const student = testEnv.authenticatedContext('student-11');
     const db = student.firestore();

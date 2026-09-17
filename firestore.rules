@@ -121,9 +121,18 @@ service cloud.firestore {
       allow update: if isLeaderOrAbove() || (
         isAuthenticated() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) &&
-        request.resource.data.members.hasAll(resource.data.members) &&
-        request.resource.data.members.size() >= resource.data.members.size() &&
-        request.resource.data.members.hasAny([request.auth.uid])
+        'members' in request.resource.data &&
+        request.resource.data.members.hasAny([request.auth.uid]) &&
+        (
+          // Migrated/legacy docs may have no members field yet — the first
+          // enrolee may initialise it. Accessing a missing field yields null,
+          // so guard with `in` before chaining list ops.
+          !('members' in resource.data) ||
+          (
+            request.resource.data.members.hasAll(resource.data.members) &&
+            request.resource.data.members.size() >= resource.data.members.size()
+          )
+        )
       );
       allow delete: if isAdmin();
 

@@ -15,7 +15,6 @@ import 'services/notification_service.dart';
 import 'services/push_notification_service.dart';
 import 'services/analytics_service.dart';
 import 'services/crash_reporting.dart';
-import 'services/navigation_service.dart';
 import 'services/unread_badge_provider.dart';
 import 'services/connectivity_provider.dart';
 import 'providers/feature_flag_provider.dart';
@@ -135,7 +134,6 @@ class KabeteApp extends StatelessWidget {
       theme: theme,
       darkTheme: darkTheme,
       themeMode: themeMode,
-      navigatorKey: NavigationService.instance.navigatorKey,
       navigatorObservers: [AnalyticsService().observer],
       home: OfflineBanner(child: home),
       builder: (context, child) {
