@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_provider.dart';
 import '../../services/class_provider.dart';
 import '../../services/notification_service.dart';
@@ -21,6 +22,9 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   final NotificationService _notificationService = NotificationService();
   bool _initialized = false;
   bool _remindersScheduled = false;
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _dayKeys = {};
+  bool _didAutoScrollToToday = false;
 
   @override
   void didChangeDependencies() {
@@ -33,6 +37,12 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     }
     _notificationService.loadAutoReminderPref();
     _initialized = true;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   /// Pick the first enrolled class the user actually owns, skipping the
@@ -72,6 +82,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
         .collection('timetable');
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,35 +167,59 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                 );
               }
 
+              // Open on today's section once data first arrives (Settings >
+              // Timetable Display > Start on Today).
+              if (snapshot.hasData &&
+                  snapshot.data!.docs.isNotEmpty &&
+                  !_didAutoScrollToToday) {
+                _didAutoScrollToToday = true;
+                _maybeScrollToToday();
+              }
+
               return Column(
                 children: sortedDays.map((day) {
                   final entries = entriesByDay[day] ?? [];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 12,
-                          left: 4,
-                          top: 12,
-                        ),
-                        child: Text(
-                          day,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.white70
-                                : Theme.of(context).colorScheme.primary,
+                  entries.sort((a, b) {
+                    final ta = parseLessonStartTime(
+                      a['time'] as String? ?? '',
+                    );
+                    final tb = parseLessonStartTime(
+                      b['time'] as String? ?? '',
+                    );
+                    if (ta == null && tb == null) return 0;
+                    if (ta == null) return 1;
+                    if (tb == null) return -1;
+                    return (ta.$1 * 60 + ta.$2).compareTo(tb.$1 * 60 + tb.$2);
+                  });
+                  return KeyedSubtree(
+                    key: _dayKeys[day] ??= GlobalKey(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 12,
+                            left: 4,
+                            top: 12,
+                          ),
+                          child: Text(
+                            day,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white70
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
-                      ),
-                      ...entries.map(
-                        (lesson) =>
-                            _buildMandatoryCard(lesson, day, isDark),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
+                        ...entries.map(
+                          (lesson) =>
+                              _buildMandatoryCard(lesson, day, isDark),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   );
                 }).toList(),
               );
@@ -353,6 +388,35 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
         );
       },
     );
+  }
+
+  Future<void> _maybeScrollToToday() async {
+    final weekday = DateTime.now().weekday;
+    if (weekday < 1 || weekday > 5) return;
+    const dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+    ];
+    final today = dayNames[weekday - 1];
+    if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('timetable_start_on_today') ?? true)) return;
+    if (!mounted) return;
+    // Wait a frame so the day sections are laid out, then glide to today.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = _dayKeys[today]?.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.0,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   void _autoScheduleReminders(List<Map<String, dynamic>> lessons) async {

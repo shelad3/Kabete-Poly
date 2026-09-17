@@ -318,6 +318,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               ListTile(
                 leading: Icon(
+                  Icons.calendar_view_day_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: const Text(
+                  'Timetable Display',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                onTap: () => _showTimetablePrefs(context),
+              ),
+              ListTile(
+                leading: Icon(
                   Icons.delete_sweep_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
@@ -932,6 +948,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showTimetablePrefs(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDState) {
+          final prefs = SharedPreferences.getInstance();
+          return FutureBuilder<SharedPreferences>(
+            future: prefs,
+            builder: (context, snap) {
+              if (snap.hasError) {
+                return AlertDialog(content: Text('Error: ${snap.error}'));
+              }
+              final sp = snap.data;
+              if (sp == null) {
+                return const AlertDialog(content: CircularProgressIndicator());
+              }
+              bool startOnToday = sp.getBool('timetable_start_on_today') ?? true;
+              return AlertDialog(
+                title: const Text('Timetable Display'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'How the timetable opens on the Schedule tab:',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      title: const Text('Start on Today'),
+                      subtitle: const Text(
+                        'On load, scroll straight to today\'s classes instead of Monday',
+                      ),
+                      value: startOnToday,
+                      onChanged: (v) {
+                        sp.setBool('timetable_start_on_today', v);
+                        setDState(() {});
+                      },
+                      dense: true,
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Done'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
