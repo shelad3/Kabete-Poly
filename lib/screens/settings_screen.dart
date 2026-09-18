@@ -969,30 +969,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return const AlertDialog(content: CircularProgressIndicator());
               }
               bool startOnToday = sp.getBool('timetable_start_on_today') ?? true;
+              String mode =
+                  sp.getString('timetable_display_mode') ?? 'classic';
               return AlertDialog(
                 title: const Text('Timetable Display'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'How the timetable opens on the Schedule tab:',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      title: const Text('Start on Today'),
-                      subtitle: const Text(
-                        'On load, scroll straight to today\'s classes instead of Monday',
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'How the timetable is displayed:',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
-                      value: startOnToday,
-                      onChanged: (v) {
-                        sp.setBool('timetable_start_on_today', v);
-                        setDState(() {});
-                      },
-                      dense: true,
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Layout',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: mode,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'classic',
+                            child: Text('Classic list'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'today_first',
+                            child: Text('Today first'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'grid',
+                            child: Text('Week grid'),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) {
+                            sp.setString('timetable_display_mode', v);
+                            setDState(() {});
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        title: const Text('Start on Today'),
+                        subtitle: const Text(
+                          'On load, open at today\'s classes instead of Monday',
+                        ),
+                        value: startOnToday,
+                        onChanged: (v) {
+                          sp.setBool('timetable_start_on_today', v);
+                          setDState(() {});
+                        },
+                        dense: true,
+                      ),
+                    ],
+                  ),
                 ),
                 actions: [
                   TextButton(

@@ -25,6 +25,7 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _dayKeys = {};
   bool _didAutoScrollToToday = false;
+  String _timetableDisplayMode = 'classic';
 
   @override
   void didChangeDependencies() {
@@ -37,6 +38,14 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
     }
     _notificationService.loadAutoReminderPref();
     _initialized = true;
+    _loadTimetablePrefs();
+  }
+
+  Future<void> _loadTimetablePrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    _timetableDisplayMode =
+        prefs.getString('timetable_display_mode') ?? 'classic';
+    if (mounted) setState(() {});
   }
 
   @override
@@ -176,8 +185,19 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
                 _maybeScrollToToday();
               }
 
+              // Week grid mode: same data, compact table (time rows x day columns,
+              // today's column highlighted).
+              if (_timetableDisplayMode == 'grid') {
+                return _buildWeekGrid(sortedDays, entriesByDay, isDark);
+              }
+
+              // Today-first mode: move today's section to the top.
+              final displayDays = _timetableDisplayMode == 'today_first'
+                  ? _reorderTodayFirst(sortedDays)
+                  : sortedDays;
+
               return Column(
-                children: sortedDays.map((day) {
+                children: displayDays.map((day) {
                   final entries = entriesByDay[day] ?? [];
                   entries.sort((a, b) {
                     final ta = parseLessonStartTime(
@@ -417,6 +437,168 @@ class _MandatoryTimetableTabState extends State<MandatoryTimetableTab> {
         curve: Curves.easeInOut,
       );
     });
+  }
+
+  List<String> _reorderTodayFirst(List<String> sortedDays) {
+    final weekday = DateTime.now().weekday;
+    if (weekday < 1 || weekday > 5) return sortedDays;
+    const dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+    ];
+    final today = dayNames[weekday - 1];
+    if (!sortedDays.contains(today)) return sortedDays;
+    return [today, ...sortedDays.where((d) => d != today)];
+  }
+
+  Widget _buildWeekGrid(
+    List<String> sortedDays,
+    Map<String, List<Map<String, dynamic>>> entriesByDay,
+    bool isDark,
+  ) {
+    final weekday = DateTime.now().weekday;
+    const dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+    ];
+    final today = (weekday >= 1 && weekday <= 5)
+        ? dayNames[weekday - 1]
+        : null;
+
+    final timeSlots = <String>{};
+    for (final day in sortedDays) {
+      for (final lesson in entriesByDay[day] ?? []) {
+        final t = lesson['time'] as String? ?? '';
+        if (t.isNotEmpty) timeSlots.add(t);
+      }
+    }
+    final sortedTimes = timeSlots.toList()
+      ..sort((a, b) {
+        final ta = parseLessonStartTime(a);
+        final tb = parseLessonStartTime(b);
+        if (ta == null && tb == null) return 0;
+        if (ta == null) return 1;
+        if (tb == null) return -1;
+        return (ta.$1 * 60 + ta.$2).compareTo(tb.$1 * 60 + tb.$2);
+      });
+
+    final primary = Theme.of(context).colorScheme.primary;
+
+    Widget headerCell(String label, bool isToday) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        color: isToday ? primary : null,
+        child: Text(
+          isToday ? label.substring(0, 3).toUpperCase() : label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: isToday
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black87),
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Table(
+        border: TableBorder.all(
+          color: isDark ? Colors.white12 : Colors.black12,
+          width: 0.5,
+        ),
+        defaultColumnWidth: const FixedColumnWidth(92),
+        children: [
+          TableRow(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF15152A) : const Color(0xFFE8EEF7),
+            ),
+            children: [
+              headerCell('Time', false),
+              ...sortedDays.map((day) => headerCell(day, day == today)),
+            ],
+          ),
+          ...sortedTimes.map((time) {
+            return TableRow(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ),
+                ...sortedDays.map((day) {
+                  final match = (entriesByDay[day] ?? []).firstWhere(
+                    (l) => (l['time'] as String? ?? '') == time,
+                    orElse: () => const {},
+                  );
+                  if (match.isEmpty) {
+                    return Container(
+                      height: 54,
+                      color: day == today
+                          ? primary.withValues(alpha: 0.08)
+                          : null,
+                    );
+                  }
+                  final Color strip = Color(match['color'] as int);
+                  final unit = match['unit'] as String? ?? '';
+                  final lecturer = match['lecturer'] as String? ?? '';
+                  return Container(
+                    height: 54,
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: day == today
+                          ? strip.withValues(alpha: isDark ? 0.25 : 0.2)
+                          : strip.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          unit,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : strip,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (lecturer.isNotEmpty)
+                          Text(
+                            lecturer,
+                            style: const TextStyle(fontSize: 9),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
   }
 
   void _autoScheduleReminders(List<Map<String, dynamic>> lessons) async {
