@@ -62,6 +62,16 @@ class GradeRecord {
     return 'E';
   }
 
+  // Grade points on the 4.0 scale (aligned with `grade` above).
+  int get points {
+    final pct = percentage;
+    if (pct >= 80) return 4;
+    if (pct >= 70) return 3;
+    if (pct >= 60) return 2;
+    if (pct >= 50) return 1;
+    return 0;
+  }
+
   // Backward-compatible getters
   double get cat1Score => assessments['cat1']?.score ?? 0;
   double get cat1Max => assessments['cat1']?.max ?? 30;

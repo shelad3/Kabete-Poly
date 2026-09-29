@@ -38,6 +38,15 @@ class FeatureFlagProvider extends ChangeNotifier {
     return flag.isEffectivelyEnabled;
   }
 
+  /// Effectively enabled AND allowed for [role] (empty allowedRoles = all).
+  bool isEnabledFor(String flagName, [String? role]) {
+    final flag = _flags[flagName];
+    if (flag == null) return true;
+    if (!flag.isEffectivelyEnabled) return false;
+    if (role != null && !flag.isAllowedForRole(role)) return false;
+    return true;
+  }
+
   /// Returns the disabled message, or null if the feature is enabled.
   String? getDisabledMessage(String flagName) {
     final flag = _flags[flagName];

@@ -18,6 +18,9 @@ class UserProfile {
   final int enrolledYear;
   final String gender;
   final String nationality;
+  final String accountStatus; // 'active' | 'restricted' | 'banned'
+  final String? statusReason;
+  final DateTime? statusUpdatedAt;
 
   UserProfile({
     required this.registrationNumber,
@@ -34,8 +37,15 @@ class UserProfile {
     int? enrolledYear,
     this.gender = '',
     this.nationality = 'Kenyan',
+    this.accountStatus = 'active',
+    this.statusReason,
+    this.statusUpdatedAt,
   }) : enrolledTerm = enrolledTerm ?? TermUtils.getCurrentTerm(),
        enrolledYear = enrolledYear ?? TermUtils.getCurrentYear();
+
+  bool get isAccountActive => accountStatus == 'active';
+  bool get isRestricted => accountStatus == 'restricted';
+  bool get isBanned => accountStatus == 'banned';
 
   bool get isNewStudent {
     final currentTerm = TermUtils.getCurrentTerm();
@@ -59,6 +69,9 @@ class UserProfile {
       enrolledYear: json['enrolledYear'],
       gender: json['gender'] ?? '',
       nationality: json['nationality'] ?? 'Kenyan',
+      accountStatus: json['accountStatus'] ?? 'active',
+      statusReason: json['statusReason'],
+      statusUpdatedAt: (json['statusUpdatedAt'] as dynamic)?.toDate(),
     );
   }
 
@@ -78,6 +91,9 @@ class UserProfile {
       'enrolledYear': enrolledYear,
       'gender': gender,
       'nationality': nationality,
+      'accountStatus': accountStatus,
+      'statusReason': statusReason,
+      'statusUpdatedAt': statusUpdatedAt,
     };
   }
 

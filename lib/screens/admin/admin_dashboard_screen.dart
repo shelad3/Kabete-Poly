@@ -25,6 +25,8 @@ import 'manage_exam_timetable_screen.dart';
 import 'manage_forum_moderation_screen.dart';
 import 'manage_listings_screen.dart';
 import 'voting_admin_screen.dart';
+import 'access_control_screen.dart';
+import 'user_access_control_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -91,6 +93,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageStudentsScreen()),
+              ),
+            ),
+            _buildActionCard(
+              context,
+              Icons.block,
+              'Block / Restrict Users',
+              'Ban, restrict or unblock accounts',
+              Colors.red,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const UserAccessControlScreen(),
+                ),
+              ),
+            ),
+            _buildActionCard(
+              context,
+              Icons.security,
+              'Access Control',
+              'Enable/disable login & registration',
+              Colors.deepPurple,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AccessControlScreen(),
+                ),
               ),
             ),
             _buildActionCard(

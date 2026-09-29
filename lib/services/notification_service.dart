@@ -35,6 +35,48 @@ class NotificationService {
       settings: initializationSettings,
       onDidReceiveNotificationResponse: _onSelectNotification,
     );
+
+    await _requestPermissionAndChannels();
+  }
+
+  /// Android 13+ requires the runtime POST_NOTIFICATIONS permission before any
+  /// notification can reach the system tray / lock screen. Channels must also
+  /// exist (with the right importance/sound) before showing or scheduling.
+  Future<void> _requestPermissionAndChannels() async {
+    final androidImpl = _flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImpl == null) return;
+
+    await androidImpl.requestNotificationsPermission();
+
+    final channels = <AndroidNotificationChannel>[
+      const AndroidNotificationChannel(
+        'class_reminders',
+        'Class Reminders',
+        description: 'Automatic reminders before scheduled classes',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+      ),
+      const AndroidNotificationChannel(
+        'push_notifications',
+        'Push Notifications',
+        description: 'Server push notifications',
+        importance: Importance.high,
+        playSound: true,
+      ),
+      const AndroidNotificationChannel(
+        'apk_downloads',
+        'App Updates',
+        description: 'APK download progress for app updates',
+        importance: Importance.low,
+        playSound: false,
+      ),
+    ];
+    for (final channel in channels) {
+      await androidImpl.createNotificationChannel(channel);
+    }
   }
 
   void _onSelectNotification(NotificationResponse response) {

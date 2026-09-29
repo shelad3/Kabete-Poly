@@ -210,6 +210,72 @@ describe('Kabete Poly Firestore rules', () => {
     await assertSucceeds(db.collection('auth_codes').doc('code-2').get());
   });
 
+  test('unauthenticated can read access_control (guest gating)', async () => {
+    const anon = testEnv.unauthenticatedContext();
+    const db = anon.firestore();
+    await seedDoc('access_control', 'global', {
+      loginEnabled: true,
+      registrationEnabled: true,
+    });
+    await assertSucceeds(db.collection('access_control').doc('global').get());
+  });
+
+  test('student cannot write access_control', async () => {
+    const student = testEnv.authenticatedContext('student-4');
+    const db = student.firestore();
+    await seedUser('student-4', 'Student');
+    await assertFails(
+      db.collection('access_control').doc('global').set({
+        loginEnabled: false,
+        registrationEnabled: false,
+      })
+    );
+  });
+
+  test('admin can write access_control', async () => {
+    const official = testEnv.authenticatedContext('admin-4');
+    const db = official.firestore();
+    await seedUser('admin-4', 'Official');
+    await assertSucceeds(
+      db.collection('access_control').doc('global').set({
+        loginEnabled: false,
+        registrationEnabled: true,
+        updatedBy: 'admin-4',
+      })
+    );
+  });
+
+  test('admin can update another user\\'s account status (block/restrict)', async () => {
+    const official = testEnv.authenticatedContext('admin-5');
+    const studentCtx = testEnv.authenticatedContext('student-5');
+    const db = official.firestore();
+    await seedUser('admin-5', 'Official');
+    await seedUser('student-5', 'Student');
+
+    await assertSucceeds(
+      db.collection('users').doc('student-5').update({
+        accountStatus: 'banned',
+        statusReason: 'violates code of conduct',
+        statusUpdatedAt: new Date(),
+        statusUpdatedBy: 'admin-5',
+      })
+    );
+
+    await assertSucceeds(
+      db.collection('users').doc('student-5').update({
+        accountStatus: 'active',
+        statusReason: 'appeal granted',
+      })
+    );
+
+    const studentDb = studentCtx.firestore();
+    await assertFails(
+      studentDb.collection('users').doc('student-5').update({
+        accountStatus: 'Official',
+      })
+    );
+  });
+
   test('student cannot impersonate another sender in messages', async () => {
     const student = testEnv.authenticatedContext('student-3');
     const db = student.firestore();

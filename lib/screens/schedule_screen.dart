@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/firestore_service.dart';
 import '../services/class_provider.dart';
+import '../services/auth_provider.dart';
+import '../providers/feature_flag_provider.dart';
 import '../models/lesson.dart';
 import '../models/schedule_item.dart';
 import '../widgets/app_drawer.dart';
@@ -16,16 +18,72 @@ import 'schedule/campus_map_widget.dart';
 import 'schedule/lesson_detail_sheet.dart';
 import '../utils/campus_map_data.dart';
 
-class ScheduleScreen extends StatefulWidget {
+enum _ScheduleTabKind { mandatory, timeline, exam, map }
+
+class _ScheduleTabSpec {
+  const _ScheduleTabSpec(this.flag, this.kind, this.label, this.icon);
+  final String flag;
+  final _ScheduleTabKind kind;
+  final String label;
+  final IconData icon;
+}
+
+class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
 
   @override
-  State<ScheduleScreen> createState() => _ScheduleScreenState();
+  Widget build(BuildContext context) {
+    final flags = context.watch<FeatureFlagProvider>();
+    final role = context.watch<AuthProvider>().currentUser?.role;
+    final specs = <_ScheduleTabSpec>[
+      const _ScheduleTabSpec(
+        'timetable',
+        _ScheduleTabKind.mandatory,
+        'Mandatory',
+        Icons.assignment_turned_in,
+      ),
+      if (flags.isEnabledFor('timeline', role))
+        const _ScheduleTabSpec(
+          'timeline',
+          _ScheduleTabKind.timeline,
+          'Target Timeline',
+          Icons.timeline,
+        ),
+      if (flags.isEnabledFor('exam_timetable', role))
+        const _ScheduleTabSpec(
+          'exam_timetable',
+          _ScheduleTabKind.exam,
+          'Exams',
+          Icons.school,
+        ),
+      if (flags.isEnabledFor('campus_map', role))
+        const _ScheduleTabSpec(
+          'campus_map',
+          _ScheduleTabKind.map,
+          'Map',
+          Icons.map,
+        ),
+    ];
+    return _GatedScheduleTabs(
+      key: ValueKey(specs.map((s) => s.flag).join('|')),
+      specs: specs,
+    );
+  }
 }
 
-class _ScheduleScreenState extends State<ScheduleScreen>
+class _GatedScheduleTabs extends StatefulWidget {
+  const _GatedScheduleTabs({super.key, required this.specs});
+
+  final List<_ScheduleTabSpec> specs;
+
+  @override
+  State<_GatedScheduleTabs> createState() => _GatedScheduleTabsState();
+}
+
+class _GatedScheduleTabsState extends State<_GatedScheduleTabs>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  late List<_ScheduleTabSpec> _specs;
 
   String? _highlightId;
   String? _highlightLabel;
@@ -35,7 +93,47 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _specs = widget.specs.isEmpty
+        ? const [
+            _ScheduleTabSpec(
+              'timetable',
+              _ScheduleTabKind.mandatory,
+              'Mandatory',
+              Icons.assignment_turned_in,
+            ),
+          ]
+        : widget.specs;
+    _tabController = TabController(length: _specs.length, vsync: this);
+  }
+
+  @override
+  void didUpdateWidget(covariant _GatedScheduleTabs oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.specs.isEmpty
+        ? const [
+            _ScheduleTabSpec(
+              'timetable',
+              _ScheduleTabKind.mandatory,
+              'Mandatory',
+              Icons.assignment_turned_in,
+            ),
+          ]
+        : widget.specs;
+    final flagsChanged =
+        next.length != _specs.length ||
+        !List.generate(
+          _specs.length,
+          (i) => i < next.length && _specs[i].flag == next[i].flag,
+          growable: false,
+        ).every((same) => same);
+    if (flagsChanged) {
+      _specs = next;
+      _tabController.dispose();
+      _tabController = TabController(length: _specs.length, vsync: this);
+      if (_tabController.index >= _specs.length) {
+        _tabController.index = _specs.length - 1;
+      }
+    }
   }
 
   @override
@@ -44,13 +142,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     super.dispose();
   }
 
-  void switchToMapTab({String? highlightId, String? highlightLabel}) {
-    setState(() {
-      _highlightId = highlightId;
-      _highlightLabel = highlightLabel;
-    });
-    _tabController.animateTo(3);
-  }
+  int _mapIndex() => _specs.indexWhere((s) => s.kind == _ScheduleTabKind.map);
 
   void _showLessonDetail(ScheduleItem lesson) {
     showModalBottomSheet(
@@ -62,6 +154,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       builder: (_) => LessonDetailSheet(
         lesson: lesson,
         onShowMap: ({locationId, teacherName}) {
+          final mapIdx = _mapIndex();
+          if (mapIdx < 0) return;
           setState(() {
             if (locationId != null) {
               _highlightId = locationId;
@@ -72,7 +166,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               _highlightLabel = '$teacherName\'s Office';
             }
           });
-          _tabController.animateTo(3);
+          _tabController.animateTo(mapIdx);
         },
       ),
     );
@@ -98,11 +192,9 @@ class _ScheduleScreenState extends State<ScheduleScreen>
         bottom: TabBar(
           controller: _tabController,
           indicatorWeight: 3,
-          tabs: const [
-            Tab(text: 'Mandatory', icon: Icon(Icons.assignment_turned_in)),
-            Tab(text: 'Target Timeline', icon: Icon(Icons.timeline)),
-            Tab(text: 'Exams', icon: Icon(Icons.school)),
-            Tab(text: 'Map', icon: Icon(Icons.map)),
+          tabs: [
+            for (final spec in _specs)
+              Tab(text: spec.label, icon: Icon(spec.icon)),
           ],
         ),
       ),
@@ -110,10 +202,13 @@ class _ScheduleScreenState extends State<ScheduleScreen>
         controller: _tabController,
         physics: const NeverScrollableScrollPhysics(),
         children: [
-          const MandatoryTimetableTab(),
-          _buildTargetTimelineTab(),
-          const ExamTimetableTab(),
-          _buildMapTab(),
+          for (final spec in _specs)
+            switch (spec.kind) {
+              _ScheduleTabKind.mandatory => const MandatoryTimetableTab(),
+              _ScheduleTabKind.timeline => _buildTargetTimelineTab(),
+              _ScheduleTabKind.exam => const ExamTimetableTab(),
+              _ScheduleTabKind.map => _buildMapTab(),
+            },
         ],
       ),
     );
@@ -304,7 +399,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                 padding: const EdgeInsets.only(left: 4, bottom: 8),
                 child: Row(
                   children: [
-                    Icon(Icons.science, size: 18, color: Colors.purple),
+                    const Icon(Icons.science, size: 18, color: Colors.purple),
                     const SizedBox(width: 6),
                     Text(
                       'Upcoming Practicals (${practicals.length})',
@@ -325,7 +420,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                 padding: const EdgeInsets.only(left: 4, bottom: 8),
                 child: Row(
                   children: [
-                    Icon(Icons.auto_stories, size: 18, color: Colors.orange),
+                    const Icon(Icons.auto_stories, size: 18, color: Colors.orange),
                     const SizedBox(width: 6),
                     Text(
                       'Upcoming Theory (${theory.length})',

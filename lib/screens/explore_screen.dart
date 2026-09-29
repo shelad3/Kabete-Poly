@@ -19,6 +19,7 @@ import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
 import 'exam_booking/exam_booking_screen.dart';
 import 'school_id_card_screen.dart';
+import 'materials/notes_library_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -55,12 +56,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       size: 16,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const IncomingLessonsScreen(),
-                      ),
-                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'timeline')) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const IncomingLessonsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -99,12 +103,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       size: 16,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const FullTimelineScreen(),
-                      ),
-                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'timeline')) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FullTimelineScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -256,12 +263,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       size: 16,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SchoolIDCardScreen(),
-                      ),
-                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'school_id')) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SchoolIDCardScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -287,6 +297,38 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const ExamBookingScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Card(
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.teal.withValues(alpha: 0.1),
+                      child: const Icon(Icons.menu_book, color: Colors.teal),
+                    ),
+                    title: const Text(
+                      'Notes Library',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'Lecture notes, past papers & practicals',
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onTap: () {
+                      if (!checkFeatureEnabled(context, 'notes_library')) {
+                        return;
+                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotesLibraryScreen(),
                         ),
                       );
                     },

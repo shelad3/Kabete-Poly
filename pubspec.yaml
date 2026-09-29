@@ -1,7 +1,7 @@
 name: kabete2026eiteet
 description: "A platform to store and share lesson materials for an electrical engineering course."
 publish_to: 'none'
-version: 2.11.7+12
+version: 2.11.8+13
 
 environment:
   sdk: ^3.10.0
@@ -41,6 +41,7 @@ dependencies:
   connectivity_plus: ^6.1.4
   crypto: ^3.0.3
   vibration: ^3.2.0
+  pdfx: ^2.11.0
 
 dev_dependencies:
   flutter_test:

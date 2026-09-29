@@ -9,6 +9,8 @@ import '../../services/grade_service.dart';
 import '../../models/grade_record.dart';
 import '../../widgets/shimmer_loading.dart';
 
+import 'gpa_tracker_screen.dart';
+
 class GradeReportScreen extends StatelessWidget {
   const GradeReportScreen({super.key});
 
@@ -58,48 +60,108 @@ class GradeReportScreen extends StatelessWidget {
               : grades.map((g) => g.percentage).reduce((a, b) => a + b) /
                     grades.length;
           final overallGrade = _gradeFromPct(overallPct);
+          final overallGpa = grades.isEmpty
+              ? 0.0
+              : grades.map((g) => g.points).reduce((a, b) => a + b) /
+                    grades.length;
 
           return Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
                 color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Overall Average',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              fontSize: 13,
-                            ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Overall Average',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${overallPct.toStringAsFixed(1)}%',
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Grade: $overallGrade',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: _gradeColor(overallGrade),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${overallPct.toStringAsFixed(1)}%',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${grades.length} subjects',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Grade: $overallGrade',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: _gradeColor(overallGrade),
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'GPA',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    overallGpa.toStringAsFixed(2),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ),
-                    Text(
-                      '${grades.length} subjects',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const GpaTrackerScreen(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.insights_outlined, size: 18),
+                        label: const Text('GPA & Progress Tracker'),
+                      ),
                     ),
                   ],
                 ),

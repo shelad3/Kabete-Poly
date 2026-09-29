@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
+import '../providers/feature_flag_provider.dart';
 import '../theme/theme_provider.dart';
 import '../screens/my_devices_screen.dart';
 
@@ -152,6 +153,17 @@ class AppDrawer extends StatelessWidget {
             ),
             title: const Text('My Devices'),
             onTap: () {
+              if (!context.read<FeatureFlagProvider>().isEnabled('my_devices')) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Device management is currently unavailable.',
+                    ),
+                  ),
+                );
+                return;
+              }
               Navigator.pop(context);
               Navigator.push(
                 context,

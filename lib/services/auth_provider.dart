@@ -10,6 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import '../models/user_profile.dart';
 import '../models/user_session.dart';
+import 'access_control_service.dart';
 import 'push_notification_service.dart';
 import 'analytics_service.dart';
 
@@ -26,6 +27,8 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = true;
   bool _isGuest = false;
   String? _currentSessionId;
+  String? _blockStatus; // 'banned' | 'restricted' | 'login_disabled'
+  String? _blockMessage;
 
   UserProfile? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
@@ -33,6 +36,9 @@ class AuthProvider extends ChangeNotifier {
   bool get isGuest => _isGuest;
   String get currentUserId => _auth.currentUser?.uid ?? '';
   String? get currentSessionId => _currentSessionId;
+  bool get isBlocked => _blockStatus != null;
+  String? get blockStatus => _blockStatus;
+  String? get blockMessage => _blockMessage;
 
   AuthProvider() {
     _authSubscription = _auth.authStateChanges().listen((User? user) async {
@@ -164,6 +170,71 @@ class AuthProvider extends ChangeNotifier {
         );
   }
 
+  /// Determines whether the current (authenticated) user may keep using the
+  /// app. Sets [_blockStatus]/[_blockMessage]; fail-open on any error.
+  Future<void> _applyAccessControl() async {
+    final user = _currentUser;
+    if (user == null) return;
+    // The bootstrap/owner account can never be locked out.
+    if (user.email.toLowerCase() == 'sheldonramu8@gmail.com') {
+      _blockStatus = null;
+      _blockMessage = null;
+      return;
+    }
+    try {
+      final config = await AccessControlService().fetchConfig();
+      if (user.isBanned) {
+        _blockStatus = 'banned';
+        _blockMessage = user.statusReason ??
+            'Your account has been blocked by the administration.';
+        return;
+      }
+      if (user.isRestricted) {
+        _blockStatus = 'restricted';
+        _blockMessage = user.statusReason ??
+            'Your account has been restricted. Contact the administration.';
+        return;
+      }
+      if (!config.loginEnabled) {
+        _blockStatus = 'login_disabled';
+        _blockMessage =
+            'Sign-ins are currently disabled by the administration. '
+            'Please try again later.';
+        return;
+      }
+      if (!config.isRoleAllowedForLogin(user.role)) {
+        _blockStatus = 'login_disabled';
+        _blockMessage =
+            'Sign-ins are currently restricted for the ${user.role} role. '
+            'Contact the administration.';
+        return;
+      }
+      _blockStatus = null;
+      _blockMessage = null;
+    } catch (e) {
+      debugPrint('Access control check failed (fail-open): $e');
+      _blockStatus = null;
+      _blockMessage = null;
+    }
+  }
+
+  /// Blocks registration when admin has closed/restricted it.
+  Future<void> _checkRegistrationAllowed(String role, String email) async {
+    if (email.toLowerCase() == 'sheldonramu8@gmail.com') return;
+    final config = await AccessControlService().fetchConfig();
+    if (!config.registrationEnabled) {
+      throw Exception(
+        'Registration is currently closed by the administration.',
+      );
+    }
+    if (!config.isRoleAllowedForRegistration(role)) {
+      throw Exception(
+        'Registration for the $role role is currently restricted '
+        'by the administration.',
+      );
+    }
+  }
+
   Future<void> _fetchUserProfile(User user) async {
     try {
       DocumentSnapshot doc = await _firestore
@@ -207,6 +278,7 @@ class AuthProvider extends ChangeNotifier {
           enrolledClasses: [],
         );
       }
+      await _applyAccessControl();
       _isAuthenticated = true;
       PushNotificationService().saveTokenToFirestore(user.uid);
       notifyListeners();
@@ -298,6 +370,8 @@ class AuthProvider extends ChangeNotifier {
       final regNo = profile.registrationNumber.toUpperCase().trim();
       final phone = profile.mobileNumber.trim();
       final email = profile.email.trim().toLowerCase();
+
+      await _checkRegistrationAllowed(profile.role, email);
 
       if (regNo.isEmpty) throw Exception('Registration number is required');
       if (phone.isEmpty) throw Exception('Mobile number is required');
@@ -460,6 +534,8 @@ class AuthProvider extends ChangeNotifier {
     }
     _currentSessionId = null;
     _isGuest = false;
+    _blockStatus = null;
+    _blockMessage = null;
     await _googleSignIn.signOut();
     await _auth.signOut();
   }

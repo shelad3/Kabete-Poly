@@ -7,6 +7,7 @@ import '../services/auth_provider.dart';
 import '../services/class_provider.dart';
 import '../services/update_service.dart';
 import '../services/unread_badge_provider.dart';
+import '../providers/feature_flag_provider.dart';
 import 'onboarding_screen.dart';
 import 'add_lesson_screen.dart';
 import 'schedule_upcoming_screen.dart';
@@ -22,6 +23,13 @@ class HomeScreen extends StatefulWidget {
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeTab {
+  const _HomeTab(this.flag, this.screen, this.destination);
+  final String flag;
+  final Widget screen;
+  final NavigationDestination destination;
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -73,84 +81,133 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  int get _notifIndex => 3;
-
-  List<Widget> _buildScreens() => [
-    const ExploreScreen(),
-    const ScheduleScreen(),
-    const CommunityScreen(),
-    const NotificationScreen(),
-    const SettingsScreen(),
-  ];
-
-  List<NavigationDestination> _buildNavItems(UnreadBadgeProvider badge) => [
-    const NavigationDestination(
-      icon: Icon(Icons.explore_outlined),
-      selectedIcon: Icon(Icons.explore_rounded),
-      label: 'Explore',
-    ),
-    const NavigationDestination(
-      icon: Icon(Icons.calendar_month_outlined),
-      selectedIcon: Icon(Icons.calendar_month_rounded),
-      label: 'Schedule',
-    ),
-    const NavigationDestination(
-      icon: Icon(Icons.forum_outlined),
-      selectedIcon: Icon(Icons.forum_rounded),
-      label: 'Community',
-    ),
-    NavigationDestination(
-      icon: badge.totalUnread > 0
-          ? Badge(
-              label: Text(
-                badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString(),
-                style: const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-              child: const Icon(Icons.notifications_none_outlined),
-            )
-          : const Icon(Icons.notifications_none_outlined),
-      selectedIcon: badge.totalUnread > 0
-          ? Badge(
-              label: Text(
-                badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString(),
-                style: const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-              child: const Icon(Icons.notifications_rounded),
-            )
-          : const Icon(Icons.notifications_rounded),
-      label: 'Alerts',
-    ),
-    const NavigationDestination(
-      icon: Icon(Icons.settings_outlined),
-      selectedIcon: Icon(Icons.settings_rounded),
-      label: 'Settings',
-    ),
-  ];
-
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
+  List<_HomeTab> _buildTabs(
+    FeatureFlagProvider flags,
+    String? role,
+  ) {
+    const candidates = [
+      _HomeTab(
+        'explore_tab',
+        ExploreScreen(),
+        NavigationDestination(
+          icon: Icon(Icons.explore_outlined),
+          selectedIcon: Icon(Icons.explore_rounded),
+          label: 'Explore',
+        ),
+      ),
+      _HomeTab(
+        'timetable',
+        ScheduleScreen(),
+        NavigationDestination(
+          icon: Icon(Icons.calendar_month_outlined),
+          selectedIcon: Icon(Icons.calendar_month_rounded),
+          label: 'Schedule',
+        ),
+      ),
+      _HomeTab(
+        'forum',
+        CommunityScreen(),
+        NavigationDestination(
+          icon: Icon(Icons.forum_outlined),
+          selectedIcon: Icon(Icons.forum_rounded),
+          label: 'Community',
+        ),
+      ),
+      _HomeTab(
+        'notifications',
+        NotificationScreen(),
+        NavigationDestination(
+          icon: Icon(Icons.notifications_none_outlined),
+          selectedIcon: Icon(Icons.notifications_rounded),
+          label: 'Alerts',
+        ),
+      ),
+      _HomeTab(
+        'settings_tab',
+        SettingsScreen(),
+        NavigationDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings_rounded),
+          label: 'Settings',
+        ),
+      ),
+    ];
+
+    final tabs = <_HomeTab>[
+      for (final tab in candidates)
+        if (flags.isEnabledFor(tab.flag, role)) tab,
+    ];
+    if (tabs.isNotEmpty && tabs.length < 2) tabs.add(candidates.first);
+    return tabs;
+  }
+
+  NavigationDestination _alertsDestination(UnreadBadgeProvider badge) {
+    final unread = badge.totalUnread > 0;
+    final label = badge.totalUnread > 99 ? '99+' : badge.totalUnread.toString();
+    return NavigationDestination(
+      icon: unread
+          ? Badge(
+              label: Text(label, style: const TextStyle(fontSize: 10, color: Colors.white)),
+              child: const Icon(Icons.notifications_none_outlined),
+            )
+          : const Icon(Icons.notifications_none_outlined),
+      selectedIcon: unread
+          ? Badge(
+              label: Text(label, style: const TextStyle(fontSize: 10, color: Colors.white)),
+              child: const Icon(Icons.notifications_rounded),
+            )
+          : const Icon(Icons.notifications_rounded),
+      label: 'Alerts',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final badge = context.watch<UnreadBadgeProvider>();
+    final flags = context.watch<FeatureFlagProvider>();
+    final user = context.watch<AuthProvider>().currentUser;
+    final tabs = _buildTabs(flags, user?.role);
+    final notifIndex = tabs.indexWhere((t) => t.flag == 'notifications');
+
+    var currentIndex = _currentIndex;
+    if (currentIndex >= tabs.length) {
+      currentIndex = tabs.length - 1;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _currentIndex != currentIndex) {
+          setState(() => _currentIndex = currentIndex);
+          _pageController.jumpToPage(currentIndex);
+        }
+      });
+    }
+    final navItems = <NavigationDestination>[
+      for (final t in tabs)
+        if (t.flag == 'notifications')
+          _alertsDestination(badge)
+        else
+          t.destination,
+    ];
+
     return Scaffold(
       body: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
         onPageChanged: (i) {
           setState(() => _currentIndex = i);
-          if (i == _notifIndex) {
+          if (i == notifIndex) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
             context.read<UnreadBadgeProvider>().resetAlertCount();
           }
         },
-        children: _buildScreens(),
+        children: [for (final t in tabs) t.screen],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex.clamp(0, _buildNavItems(badge).length - 1),
+        selectedIndex: currentIndex.clamp(0, navItems.length - 1),
         onDestinationSelected: (index) {
           setState(() => _currentIndex = index);
           _pageController.animateToPage(
@@ -158,12 +215,12 @@ class _HomeScreenState extends State<HomeScreen> {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
           );
-          if (index == _notifIndex) {
+          if (index == notifIndex) {
             context.read<UnreadBadgeProvider>().markNotificationsSeen([]);
             context.read<UnreadBadgeProvider>().resetAlertCount();
           }
         },
-        destinations: _buildNavItems(badge),
+        destinations: navItems,
       ),
       floatingActionButton: Consumer<AuthProvider>(
         builder: (context, auth, _) {

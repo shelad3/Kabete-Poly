@@ -18,12 +18,15 @@ import 'services/crash_reporting.dart';
 import 'services/unread_badge_provider.dart';
 import 'services/connectivity_provider.dart';
 import 'providers/feature_flag_provider.dart';
+import 'providers/access_control_provider.dart';
 import 'widgets/offline_banner.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/admin/admin_home_screen.dart';
 import 'screens/guest_home_screen.dart';
+import 'screens/auth/blocked_screen.dart';
+import 'screens/auth/restricted_home_screen.dart';
 import 'screens/onboarding_screen.dart';
 
 void main() async {
@@ -64,6 +67,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => UnreadBadgeProvider()),
           ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
           ChangeNotifierProvider(create: (_) => FeatureFlagProvider()..init()),
+          ChangeNotifierProvider(create: (_) => AccessControlProvider()..init()),
         ],
         child: const KabeteApp(),
       ),
@@ -118,7 +122,11 @@ class KabeteApp extends StatelessWidget {
       );
     } else {
       final user = auth.currentUser;
-      if (user != null) {
+      if (user != null && auth.isBlocked) {
+        home = auth.blockStatus == 'restricted'
+            ? const RestrictedHomeScreen()
+            : const BlockedScreen();
+      } else if (user != null) {
         home = user.isAdmin ? const AdminHomeScreen() : const HomeScreen();
       } else {
         home = const LoginScreen();

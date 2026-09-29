@@ -112,6 +112,13 @@ class PushNotificationService {
       provisional: false,
     );
     debugPrint('FCM permission: ${settings.authorizationStatus}');
+
+    // Android 13+ runtime permission — without it local notifications are
+    // silently dropped and never reach the system tray / lock screen.
+    await _localNotif
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
   }
 
   Future<void> saveTokenToFirestore(String userId) async {
