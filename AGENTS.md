@@ -1,9 +1,17 @@
 # Agent Context
 
 ## Current Version
-- pubspec: `2.9.0+1`
-- Release: https://github.com/shelad3/Kabete-Poly/releases/tag/v2.9.0%2B1
-- APK: 66.7 MB at `build/app/outputs/flutter-apk/app-release.apk`
+- pubspec: `2.11.8+13`
+- Release: https://github.com/shelad3/Kabete-Poly/releases/tag/v2.11.8%2B13
+- APK: 65.0 MB at `build/app/outputs/flutter-apk/app-release.apk`
+- Windows: `KNP-Management-System-Setup-2.11.8.exe` (17 MB) attached to the same release
+
+## Desktop (Windows)
+- Build: Flutter 3.47.5 + VS2022 `windows-2022`; `flutter build windows --release`
+- Link fix: `windows/runner/avx2_wmem_stub.cpp` defines `_Avx2WmemEnabled`
+- Installer: Inno Setup 7, `installer/installer.iss` → `installer/Output/` (gitignored)
+- Firestore rules: sessions accept optional `platform` (`windows`, `android`, ...) and owner
+  `lastActiveAt` heartbeats; rules are otherwise client-agnostic (same `auth.uid`)
 
 ## Project Stats
 - Dart files: 127 | Dart lines: ~32,700

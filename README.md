@@ -3,10 +3,15 @@
   <p><strong>A Digital Classroom Platform for Kabete National Polytechnique</strong></p>
   <br>
   <p>
-    <img src="https://img.shields.io/badge/version-2.9.0-blue" alt="Version">
-    <img src="https://img.shields.io/badge/platform-Android-brightgreen" alt="Platform">
+    <img src="https://img.shields.io/github/v/release/shelad3/Kabete-Poly?color=818cf8&label=latest%20release" alt="Latest release">
+    <img src="https://img.shields.io/badge/platform-Android%20%7C%20Windows-brightgreen" alt="Platform">
     <img src="https://img.shields.io/badge/Framework-Flutter-02569B?logo=flutter" alt="Flutter">
     <img src="https://img.shields.io/badge/Backend-Firebase-FFCA28?logo=firebase" alt="Firebase">
+  </p>
+  <p>
+    <a href="https://github.com/shelad3/Kabete-Poly/releases/latest"><strong>Download APK</strong></a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://github.com/shelad3/Kabete-Poly/releases/latest"><strong>Windows installer</strong></a>
   </p>
   <br>
 </div>
@@ -15,7 +20,7 @@
 
 ## Overview
 
-KNP Management System is a mobile application built for Kabete National Polytechnique that replaces paper-based lesson distribution, WhatsApp timetable confusion, and scattered grade records with a single, real-time digital platform.
+KNP Management System is a cross-platform application (Android and Windows desktop) built for Kabete National Polytechnique that replaces paper-based lesson distribution, WhatsApp timetable confusion, and scattered grade records with a single, real-time digital platform.
 
 - **Students:** Browse lessons, view timetables, check grades, book hostel cubicles, register for exams, participate in class forums & quizzes, vote in student leader elections
 - **Teachers:** Post lesson materials, schedule classes, manage grades, create quizzes, verify lesson attendance
@@ -204,6 +209,37 @@ flutter build apk --release
 
 ---
 
+## How to Build the Windows App
+
+Tested on Windows 10 22H2 with Flutter 3.47.5 and Visual Studio 2022
+(**Desktop development with C++**).
+
+```powershell
+flutter config --enable-windows-desktop
+flutter pub get
+flutter build windows --release
+```
+
+Output: `build\windows\x64\runner\Release\kabete2026eiteet.exe` (keep the whole
+`Release` folder together). The runner links `windows/runner/avx2_wmem_stub.cpp`
+so MSVC links cleanly against the Firebase C++ SDK (`_Avx2WmemEnabled`). See
+[WINDOWS_BUILD.md](WINDOWS_BUILD.md) for the full toolchain notes and the
+verified install/uninstall checklist.
+
+### Windows installer (Inno Setup)
+
+```powershell
+& "C:\Program Files\Inno Setup 7\ISCC.exe" installer\installer.iss
+# Output: installer\Output\KNP-Management-System-Setup-2.11.8.exe
+```
+
+The installer ships custom wizard artwork, a prerequisites page, Start Menu and
+optional desktop shortcuts, per-user or all-users install, and a clean
+uninstaller. The build is unsigned, so SmartScreen may ask for
+**More info → Run anyway**.
+
+---
+
 ## How the Auto-Update System Works
 
 The app checks for new versions on every launch without using Google Play Store.
@@ -340,6 +376,7 @@ Also includes: **QR Code Generator** → A4 PDF with all student QR cards (8 per
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.11.8+13 | Sep 2026 | Notes Library + in-app PDF reader, access control, Windows desktop build + unsigned installer, notification tray fix |
 | 2.9.0+1 | Jul 2026 | Admin tool overhaul (timetable upload wizard, exam timetable, payments, feature flags), school ID card, feature flags, payments flow, student leader voting, exam booking, exam timetable tab |
 | 2.8.7+1 | Jun 2026 | Notification overhaul, target timeline, explore restructure, house error handling |
 | 2.8.6+1 | Jun 2026 | Firestore auto-update (moved from GitHub API) |

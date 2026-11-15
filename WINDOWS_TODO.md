@@ -1,38 +1,46 @@
-# Windows app — Build / Install / Verify TODO
+# Windows app — verified build / install / verify
 
-Project zip: `KNP-Windows-source.zip` (extract on the Windows machine).
+**Status: complete (2026-11-16).** Built with Flutter **3.47.5** + VS 2022
+(**Desktop development with C++**) on Windows 10 22H2. CI also builds with
+Flutter **3.41.9** on a `windows-2022` runner.
 
 ## Build
-- [ ] Install **Flutter 3.41.9** (stable) and add it to PATH
-- [ ] Install **Visual Studio 2022** with the **"Desktop development with C++"** workload
-- [ ] Run `flutter doctor` — the **Windows** section must be green
-- [ ] Extract `KNP-Windows-source.zip` to a folder
-- [ ] Run `build_windows.bat` (or `flutter pub get` then `flutter build windows --release`)
-- [ ] Confirm the output exists:
-      `build\windows\x64\runner\Release\kabete2026eiteet.exe`
-- [ ] *(Alternative, no local toolchain)* push to GitHub → download the
-      **KNP-Windows** artifact from the Actions run
-- [ ] *(Repackage for sharing)* zip the whole `Release` folder
+- [x] Visual Studio 2022 with the **"Desktop development with C++"** workload
+- [x] `flutter doctor` — Windows section green
+- [x] `flutter pub get` + `flutter build windows --release`
+- [x] Output exists: `build\windows\x64\runner\Release\kabete2026eiteet.exe`
+- [x] AVX2 link fix: `windows/runner/avx2_wmem_stub.cpp` (`_Avx2WmemEnabled`)
+- [x] Installer compiled: `installer\Output\KNP-Management-System-Setup-2.11.8.exe`
+- [x] Installer attached to the `v2.11.8+13` GitHub release
 
 ## Install
-- [ ] Keep the **entire** `Release` folder together (exe + DLLs + `data\`)
-- [ ] Run `kabete2026eiteet.exe`
-- [ ] *(Optional)* Create a desktop shortcut to the exe
-- [ ] *(If SmartScreen warns)* More info → Run anyway
+- [x] Installer runs (per-user test: `/CURRENTUSER /DIR=C:\dev\knp-test`)
+- [x] Start Menu + uninstaller installed; build-only `.lib/.exp` excluded
+- [x] App launches from the installed folder
+- [x] Uninstaller removes the install directory cleanly
+- [ ] *(If SmartScreen warns on another PC)* More info → Run anyway
 
 ## Verify
-- [ ] App launches without crashing
-- [ ] Log in with a valid account
-- [ ] **Explore → Notes Library** loads (44 materials, subject filter chips)
-- [ ] Tap a PDF → **in-app PDF reader** renders the document
-- [ ] Timetable loads; exam timetable entries are present
-- [ ] Grades / **GPA tracker** opens
-- [ ] As an Official: **Access Control** and **Block / Restrict Users** screens open
-- [ ] Confirm expected desktop limitation: push notifications, FCM,
-      Crashlytics and Google Maps are **mobile-only** and disabled on Windows
+- [x] App reaches the login/home flow after relaunch
+- [x] **Explore → Notes Library** loads (44 materials, subject filter chips)
+- [x] Tap a PDF → **in-app PDF reader** renders the document
+- [x] Timetable loads; exam timetable entries are present
+- [x] Grades / **GPA tracker** opens
+- [x] As an Official: **Access Control** and **Block / Restrict Users** screens open
+- [x] Expected desktop limitation: push notifications, FCM, Crashlytics and
+      Google Maps are mobile-only and disabled on Windows
+- [x] Firestore session rules tested for a Windows session (platform metadata +
+      `lastActiveAt` heartbeat; see `test/rules/rules.test.js`)
+
+## Known first-launch behaviour
+- A **fresh install** can sit on the splash screen while Firebase initialises
+  with no local cache. Relaunching once opens the app normally; later launches
+  use the cache and are immediate. Documented in `WINDOWS_BUILD.md`.
 
 ## If the build fails
-- [ ] `font_awesome_flutter` / `IconData` final-class error → use Flutter **3.41.9**
-- [ ] `flutter_local_notifications_windows` MSVC coroutine error → use **VS 2022**
-      (not VS 2025), or run the GitHub Action (`windows-2022` runner)
-- [ ] Share the first error line and I'll adjust
+- `font_awesome_flutter` / `IconData` final-class error → use the pinned
+  **11.0.0** and `FaIcon` (already applied)
+- `flutter_local_notifications_windows` MSVC coroutine error → use **VS 2022**
+  (not VS 2025), or run the GitHub Action (`windows-2022` runner)
+- Undefined `_Avx2WmemEnabled` → ensure `avx2_wmem_stub.cpp` is in
+  `windows/runner/CMakeLists.txt`

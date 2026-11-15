@@ -74,3 +74,7 @@ functions/.runtimeconfig.json
 
 # Node dependencies (functions + rules tests)
 **/node_modules/
+
+# Windows installer output / local packaging
+/installer/Output/
+/KNP-Windows.zip
