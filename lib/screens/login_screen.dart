@@ -131,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(FontAwesomeIcons.google, size: 18),
+                    : const FaIcon(FontAwesomeIcons.google, size: 18),
                 label: const Text('Continue with Google'),
               ),
               const SizedBox(height: 16),
