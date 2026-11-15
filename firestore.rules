@@ -349,10 +349,26 @@ service cloud.firestore {
 
     // ---------------------------------------------------- //
     // User Sessions subcollection
+    // Used by the device list on Android and Windows desktop. Rules are
+    // client-agnostic (a Windows user has the same auth.uid), so the only
+    // platform-specific part is optional `platform` metadata + heartbeats.
     // ---------------------------------------------------- //
     match /users/{userId}/sessions/{sessionId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow create: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() && isOwner(userId) &&
+        request.resource.data.userId == userId &&
+        (!('platform' in request.resource.data) ||
+          request.resource.data.platform in
+            ['android', 'ios', 'web', 'windows', 'linux', 'macos', 'unknown']);
+      allow update: if isAuthenticated() && isOwner(userId) &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'lastActiveAt', 'deviceName', 'deviceType',
+          'ipAddress', 'location', 'isCurrentDevice', 'platform'
+        ]) &&
+        (!('platform' in request.resource.data) ||
+          request.resource.data.platform in
+            ['android', 'ios', 'web', 'windows', 'linux', 'macos', 'unknown']);
       allow delete: if isAuthenticated() && (isOwner(userId) || isAdmin());
     }
 

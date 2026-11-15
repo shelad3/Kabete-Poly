@@ -245,7 +245,7 @@ describe('Kabete Poly Firestore rules', () => {
     );
   });
 
-  test('admin can update another user\\'s account status (block/restrict)', async () => {
+  test('admin can update another user\'s account status (block/restrict)', async () => {
     const official = testEnv.authenticatedContext('admin-5');
     const studentCtx = testEnv.authenticatedContext('student-5');
     const db = official.firestore();
@@ -534,6 +534,63 @@ describe('Kabete Poly Firestore rules', () => {
     );
     await assertSucceeds(
       db.collection('field_indices').doc(emailKey).delete()
+    );
+  });
+
+  test('Windows desktop session: platform metadata + owner heartbeat', async () => {
+    const uid = 'desktop-win-1';
+    await seedUser(uid, 'Student');
+    await seedUser('desktop-other', 'Student');
+
+    const db = testEnv.authenticatedContext(uid).firestore();
+    const sessions = db.collection('users').doc(uid).collection('sessions');
+    const base = {
+      userId: uid,
+      deviceName: 'LAB-PC-01',
+      deviceType: 'Windows 10.0.19045',
+      platform: 'windows',
+      loginAt: new Date().toISOString(),
+      lastActiveAt: new Date().toISOString(),
+      isCurrentDevice: true,
+    };
+
+    await assertSucceeds(sessions.doc('win-1').set(base));
+    await assertSucceeds(
+      sessions.doc('win-1').update({
+        lastActiveAt: new Date().toISOString(),
+      })
+    );
+
+    // Legacy clients that do not send a platform must keep working.
+    await assertSucceeds(
+      sessions.doc('legacy-1').set({
+        userId: uid,
+        deviceName: 'Unknown Device',
+        deviceType: 'Unknown',
+        loginAt: new Date().toISOString(),
+        lastActiveAt: new Date().toISOString(),
+        isCurrentDevice: false,
+      })
+    );
+
+    // An owner cannot re-point a session at another account or spoof a
+    // platform the app does not ship.
+    await assertFails(
+      sessions.doc('win-1').update({ userId: 'someone-else' })
+    );
+    await assertFails(
+      sessions.doc('win-2').set({ ...base, platform: 'playstation' })
+    );
+
+    // Another signed-in user cannot touch this user's sessions.
+    const other = testEnv.authenticatedContext('desktop-other').firestore();
+    await assertFails(
+      other
+        .collection('users')
+        .doc(uid)
+        .collection('sessions')
+        .doc('win-1')
+        .delete()
     );
   });
 });
