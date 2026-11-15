@@ -39,10 +39,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -56,6 +53,17 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDVTZ17g6ci1xjkeHGM1FVtB5uqzPNrh_E',
+    appId: '1:919389680073:web:44b6357c8171bfed05b818',
+    messagingSenderId: '919389680073',
+    projectId: 'kabete-94936',
+    authDomain: 'kabete-94936.firebaseapp.com',
+    storageBucket: 'kabete-94936.firebasestorage.app',
+  );
+
+  // Windows desktop reuses the same project credentials as web. FlutterFire
+  // supports Firestore/Auth/Storage/Functions on Windows desktop.
+  static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyDVTZ17g6ci1xjkeHGM1FVtB5uqzPNrh_E',
     appId: '1:919389680073:web:44b6357c8171bfed05b818',
     messagingSenderId: '919389680073',

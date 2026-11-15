@@ -3,6 +3,8 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -270,6 +272,22 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final mapsSupported = kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    if (!mapsSupported) {
+      return Container(
+        alignment: Alignment.center,
+        color: Colors.grey.shade200,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            'Campus map is available on the mobile app.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
     return Stack(
       children: [
         GoogleMap(

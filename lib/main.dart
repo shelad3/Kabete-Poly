@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Kabete National Polytechnique
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -32,12 +33,22 @@ import 'screens/onboarding_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Mobile-only services (FCM push, Crashlytics, local notifications) are not
+  // available on desktop/web — keep startup safe on every platform.
+  final isMobile = !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
     } else {
-      await Firebase.initializeApp();
-      setupCrashReporting();
+      await Firebase.initializeApp(
+        options: defaultTargetPlatform == TargetPlatform.windows
+            ? DefaultFirebaseOptions.windows
+            : null,
+      );
+      if (isMobile) setupCrashReporting();
     }
 
     if (!kIsWeb) {
@@ -50,12 +61,14 @@ void main() async {
         await FirebaseFirestore.instance.enableNetwork();
       } catch (_) {}
 
-      final NotificationService notificationService = NotificationService();
-      await notificationService.init();
-      await notificationService.requestPermissions();
+      if (isMobile) {
+        final NotificationService notificationService = NotificationService();
+        await notificationService.init();
+        await notificationService.requestPermissions();
 
-      final PushNotificationService pushService = PushNotificationService();
-      await pushService.init();
+        final PushNotificationService pushService = PushNotificationService();
+        await pushService.init();
+      }
     }
 
     runApp(
@@ -142,7 +155,9 @@ class KabeteApp extends StatelessWidget {
       theme: theme,
       darkTheme: darkTheme,
       themeMode: themeMode,
-      navigatorObservers: [AnalyticsService().observer],
+      navigatorObservers: AnalyticsService().isSupported
+          ? [AnalyticsService().observer]
+          : [],
       home: OfflineBanner(child: home),
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
