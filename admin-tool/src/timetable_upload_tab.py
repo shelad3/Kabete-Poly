@@ -41,6 +41,7 @@ class TimetableUploadTab(QWidget):
         self._parsed_entries: list[dict] = []
         self._file_path: str = ''
         self._class_groups: dict[str, list[int]] = {}
+        self._class_metadata: dict[str, dict] = {}
         self._duplicate_indices: set[int] = set()
         self._available_classes: list[str] = []
         self._clear_existing: bool = False
@@ -380,6 +381,7 @@ class TimetableUploadTab(QWidget):
         self._current_step = 0
         self._parsed_entries = []
         self._class_groups = {}
+        self._class_metadata = {}
         self._duplicate_indices.clear()
         self._file_path = ''
         self._clear_existing = False
@@ -467,6 +469,7 @@ class TimetableUploadTab(QWidget):
 
             result = parser.parse(self._file_path)
             self._parsed_entries = result.entries
+            self._class_metadata = getattr(result, 'class_metadata', {})
             errors = result.errors
             detected_class = getattr(result, 'class_id', '')
 
@@ -719,15 +722,27 @@ class TimetableUploadTab(QWidget):
             status_item.setText('❌ Not Found')
             status_item.setBackground(QColor('#FFEBEE'))
 
+    def _class_payload(self, pdf_cohort: str) -> dict:
+        meta = self._class_metadata.get(pdf_cohort, {})
+        payload = {
+            'name': pdf_cohort,
+            'department': meta.get('department') or 'Unknown',
+            'active': True,
+        }
+        for key in ('curriculum', 'level', 'cycle'):
+            if meta.get(key):
+                payload[key] = meta[key]
+        if meta.get('class_size'):
+            payload['classSize'] = meta['class_size']
+        return payload
+
     def _create_single_class(self, row: int, pdf_cohort: str):
         """Create a single missing class in Firestore and update the mapping."""
         try:
             db = FirestoreClient.get()
-            db.db.collection('classes').document(pdf_cohort).set({
-                'name': pdf_cohort,
-                'department': 'Unknown',
-                'active': True,
-            })
+            db.db.collection('classes').document(pdf_cohort).set(
+                self._class_payload(pdf_cohort), merge=True
+            )
             self._available_classes.append(pdf_cohort)
             self._class_mapping[pdf_cohort] = pdf_cohort
             self._newly_created_classes.append(pdf_cohort)
@@ -768,11 +783,9 @@ class TimetableUploadTab(QWidget):
                     pdf_id_item = self._map_table.item(row_idx, 0)
                     if pdf_id_item:
                         pdf_cohort = pdf_id_item.text()
-                        db.db.collection('classes').document(pdf_cohort).set({
-                            'name': pdf_cohort,
-                            'department': 'Unknown',
-                            'active': True,
-                        })
+                        db.db.collection('classes').document(pdf_cohort).set(
+                            self._class_payload(pdf_cohort), merge=True
+                        )
                         self._available_classes.append(pdf_cohort)
                         self._class_mapping[pdf_cohort] = pdf_cohort
                         self._newly_created_classes.append(pdf_cohort)

@@ -40,6 +40,7 @@ These are saved to `~/.config/KabeteAdminTool/settings.json` (Linux) or `%APPDAT
 - Login — Firebase Auth email/password (blocks student accounts)
 - Grade Editor — select class + subject + term, edit student CAT1/CAT2/Exam, batch save
 - Timetable Editor — select class, add/delete entries with day, time, unit, room, lecturer, color
+- Timetable Upload — import weekly or exam timetables from CSV or PDF, including KNP CBET per-day sitting plans
 - Class Manager — add or delete classes
 - Migrate Timetable — upload bulk timetable JSON to Firestore
 

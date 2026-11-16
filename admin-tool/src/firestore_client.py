@@ -431,6 +431,8 @@ class FirestoreClient:
         batch = self.db.batch()
         for entry in entries:
             ref = self.db.collection('classes').document(class_id).collection('exam_timetable').document()
-            batch.set(ref, entry)
+            payload = {k: v for k, v in entry.items() if k != 'class_id'}
+            payload['classId'] = class_id
+            batch.set(ref, payload)
         batch.commit()
         return len(entries)

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Kabete National Polytechnique
 
-"""PDF timetable parser using pdfplumber — handles KNP master-grid format."""
+"""PDF timetable parser using pdfplumber — handles KNP master-grid and CBET sitting-plan formats."""
 
 import re
 from typing import Optional
@@ -18,6 +18,7 @@ class TimetableParseResult:
         self.department: str = ''
         self.semester: str = ''
         self.cohorts: list[str] = []
+        self.class_metadata: dict[str, dict] = {}
 
     @property
     def success_count(self) -> int:
@@ -417,8 +418,336 @@ class PdfTimetableParser:
         return text
 
 
+class PdfSittingPlanParser:
+    """Parse KNP CBET per-day sitting-plan exam timetables.
+
+    Each page is a ruled table with SNO, department, curriculum, level,
+    cycle/code, class size, unit, date, session, type and venue columns.
+    Words are read by coordinates because table extraction merges adjacent
+    columns and overflowing unit text interleaves with the date column.
+    """
+
+    CODE_RE = re.compile(
+        r'\b(?:CBET\s+)?[A-Z]{2,5}\s*/?\s*\d{3}\s*/?\s*[A-Z]\d{2}\b'
+    )
+    DATE_RE = re.compile(r'(\d{1,2})\s*[/-]\s*(\d{1,2})\s*[/-]\s*(\d{4})')
+    TIME_RE = re.compile(r'(\d{1,2})\s*[:.]\s*(\d{2})\s*(AM|PM)', re.IGNORECASE)
+    VENUE_RE = re.compile(
+        r'(MAIN\s+HALL|[A-Z]\s*-\s*[A-Z0-9]{1,3})\s*\(\s*(\d+)\s*\)',
+        re.IGNORECASE,
+    )
+
+    def parse(self, file_path: str) -> TimetableParseResult:
+        result = TimetableParseResult()
+        try:
+            with pdfplumber.open(file_path) as pdf:
+                self.parse_pdf(pdf, result)
+        except Exception as e:
+            result.errors.append(f'Failed to open exam PDF: {e}')
+        return result
+
+    def parse_pdf(self, pdf, result: TimetableParseResult | None = None) -> TimetableParseResult:
+        result = result or TimetableParseResult()
+        current_date = ''
+        current_session = '08:00'
+
+        for page_num, page in enumerate(pdf.pages, 1):
+            words = page.extract_words(keep_blank_chars=False, use_text_flow=False)
+            edges = self._cluster([
+                edge['top'] for edge in page.edges if edge['orientation'] == 'h'
+            ])
+            if len(edges) < 2:
+                result.errors.append(f'Page {page_num}: no table rows detected')
+                continue
+
+            for top, bottom in zip(edges, edges[1:]):
+                band_words = [w for w in words if top <= w['top'] < bottom]
+                if not band_words:
+                    continue
+
+                sno_word, sno_match = self._find_sno(band_words)
+                if not sno_word:
+                    current_date, current_session = self._update_day_header(
+                        band_words, current_date, current_session
+                    )
+                    continue
+
+                entry, meta, current_date, current_session = self._parse_row(
+                    band_words, sno_match, current_date, current_session,
+                    page_num, result,
+                )
+                if not entry:
+                    continue
+                result.entries.append(entry)
+                code = entry['class_id']
+                if code not in result.class_metadata:
+                    result.class_metadata[code] = meta
+                else:
+                    for key, value in meta.items():
+                        if value and not result.class_metadata[code].get(key):
+                            result.class_metadata[code][key] = value
+
+        if not result.entries and not result.errors:
+            result.errors.append('No exam entries found in sitting plan PDF')
+        return result
+
+    @staticmethod
+    def _cluster(values: list[float], tolerance: float = 1.5) -> list[float]:
+        clusters: list[float] = []
+        for value in sorted(values):
+            if not clusters or value - clusters[-1] > tolerance:
+                clusters.append(value)
+            else:
+                clusters[-1] = (clusters[-1] + value) / 2
+        return clusters
+
+    @staticmethod
+    def _join(words: list[dict]) -> str:
+        return re.sub(
+            r'\s+', ' ', ' '.join(w['text'] for w in words if w['text'].strip())
+        ).strip()
+
+    @staticmethod
+    def _find_sno(band_words: list[dict]):
+        for word in band_words:
+            if word['x0'] >= 60 or '/' in word['text']:
+                continue
+            if word['text'].upper().endswith(('TH', 'ST', 'ND', 'RD')):
+                continue
+            match = re.match(r'^(\d+)([A-Z].*)?$', word['text'])
+            if match:
+                return word, match
+        return None, None
+
+    def _update_day_header(self, words: list[dict], current_date: str,
+                           current_session: str) -> tuple[str, str]:
+        text = self._join(words)
+        upper = text.upper()
+        match = self.DATE_RE.search(text)
+        if match:
+            current_date = self._iso_date(match)
+        if 'AFTERNOON' in upper:
+            current_session = '14:00'
+        elif 'MORNING' in upper:
+            current_session = '08:00'
+        return current_date, current_session
+
+    def _parse_row(self, words: list[dict], sno_match, current_date: str,
+                   current_session: str, page_num: int,
+                   result: TimetableParseResult):
+        sno = int(sno_match.group(1))
+        extra_department = (sno_match.group(2) or '').strip()
+
+        def col(low: float, high: float) -> list[dict]:
+            return [w for w in words if low <= w['x0'] < high]
+
+        department = self._join(col(60, 180))
+        if extra_department:
+            department = (extra_department + ' ' + department).strip()
+        curriculum = self._join(col(180, 267))
+        pre_code = self._join(col(267, 394))
+        department, curriculum = self._clean_department_curriculum(
+            department, curriculum
+        )
+
+        code_match = self.CODE_RE.search(pre_code) or self.CODE_RE.search(
+            self._join(words)
+        )
+        if not code_match:
+            result.errors.append(f'Page {page_num}: SNO {sno}: no class code found')
+            return None, {}, current_date, current_session
+        code = self._clean_code(code_match.group(0))
+
+        level = self._extract_level(pre_code)
+        cycle = self._extract_cycle(pre_code + ' ' + curriculum)
+
+        raw_unit = self._join(sorted(
+            col(394, 597), key=lambda w: (w['top'], w['x0'])
+        ))
+        size_match = re.match(r'^\s*(\d+)', raw_unit)
+        size_from_pdf = int(size_match.group(1)) if size_match else 0
+        unit = re.sub(r'^\s*\d+\s*', '', raw_unit)
+        if current_date:
+            unit = self._remove_subsequence(unit, self._date_token(current_date))
+        unit = re.sub(r'^[^A-Za-z]+', '', unit)
+        unit = re.sub(r'\s+', ' ', unit).strip(' -/')
+
+        date_text = self._join(col(555, 597))
+        date_match = self.DATE_RE.search(date_text)
+        date = self._iso_date(date_match) if date_match else current_date
+        if date:
+            current_date = date
+
+        session_text = self._join(col(597, 639))
+        type_text = self._join(col(639, 703))
+        time_match = self.TIME_RE.search(session_text)
+        if time_match:
+            start_time = self._to_24h(*time_match.groups())
+            remainder = session_text[time_match.end():].strip()
+            current_session = start_time
+        else:
+            start_time = current_session
+            remainder = session_text
+        exam_type = self._exam_type((remainder + ' ' + type_text).upper())
+        end_time = self._add_hours(start_time, 3)
+
+        venue_text = self._join(col(703, float('inf')))
+        venues = [
+            (re.sub(r'\s+', ' ', name).strip(), int(capacity))
+            for name, capacity in self.VENUE_RE.findall(venue_text)
+        ]
+        room = ', '.join(name for name, _ in venues)
+        size = sum(capacity for _, capacity in venues) or size_from_pdf
+
+        if not unit:
+            result.errors.append(f'Page {page_num}: SNO {sno}: empty unit name')
+            return None, {}, current_date, current_session
+
+        entry = {
+            'class_id': code,
+            'subject': unit,
+            'date': date,
+            'startTime': start_time,
+            'endTime': end_time,
+            'room': room,
+            'teacher': '',
+            'type': exam_type,
+            'description': self._description(
+                department, curriculum, level, cycle, size, venues, sno
+            ),
+        }
+        meta = {
+            'department': department,
+            'curriculum': curriculum,
+            'level': level,
+            'cycle': cycle,
+            'class_size': size,
+        }
+        return entry, meta, current_date, current_session
+
+    @staticmethod
+    def _clean_department_curriculum(department: str,
+                                     curriculum: str) -> tuple[str, str]:
+        department = re.sub(r'\s+', ' ', department).strip()
+        curriculum = re.sub(r'\s+', ' ', curriculum).strip()
+        if 'ENGINEERINGPRODUCTION' in department:
+            department = department.replace('ENGINEERINGPRODUCTION', 'ENGINEERING')
+            curriculum = ('PRODUCTION ' + curriculum).strip()
+        curriculum = re.sub(r'(?<=[A-Z])LEVEL$', '', curriculum).strip()
+        if re.fullmatch(
+            r'(KNP\s+CBET|MODULAR|MODULE\s*\d+|CYCLE\s*\d*)',
+            curriculum, re.IGNORECASE,
+        ):
+            curriculum = ''
+        return department, curriculum
+
+    @staticmethod
+    def _clean_code(raw: str) -> str:
+        raw = re.sub(r'\s+', ' ', raw).strip().upper()
+        match = re.match(
+            r'^(?:CBET\s+)?([A-Z]{2,5})\s*/?\s*(\d{3})\s*/?\s*([A-Z]\d{2})$',
+            raw,
+        )
+        if match:
+            return f'{match.group(1)} {match.group(2)} {match.group(3)}'
+        raw = re.sub(r'\s*/\s*', ' ', raw)
+        raw = re.sub(r'\s+', ' ', raw).strip()
+        if raw.startswith('CBET '):
+            raw = raw[5:].strip()
+        return raw
+
+    @staticmethod
+    def _extract_level(pre_code: str) -> str:
+        match = re.search(r'LEVEL\s*(\d)', pre_code, re.IGNORECASE)
+        if match:
+            return match.group(1)
+        match = re.search(r'(?:^|\s)(\d)(?=[A-Z])', pre_code)
+        if match:
+            return match.group(1)
+        match = re.search(
+            r'(?:^|\s)(\d)(?=\s+(?:CBET|MODULAR|MODULE|CYCLE)\b)', pre_code
+        )
+        return match.group(1) if match else ''
+
+    @staticmethod
+    def _extract_cycle(text: str) -> str:
+        match = re.search(r'(MODULAR|MODULE\s*\d+|CYCLE\s*\d*)', text, re.IGNORECASE)
+        if not match:
+            return ''
+        return re.sub(r'\s+', ' ', match.group(1).upper()).strip()
+
+    @staticmethod
+    def _remove_subsequence(text: str, token: str) -> str:
+        if not token:
+            return text
+        result = []
+        token_index = 0
+        for char in text:
+            if token_index < len(token) and char == token[token_index]:
+                token_index += 1
+                continue
+            result.append(char)
+        return ''.join(result)
+
+    @staticmethod
+    def _date_token(iso_date: str) -> str:
+        return f'{iso_date[8:10]}/{iso_date[5:7]}/{iso_date[0:4]}'
+
+    @staticmethod
+    def _iso_date(match) -> str:
+        day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+        return f'{year:04d}-{month:02d}-{day:02d}'
+
+    @staticmethod
+    def _to_24h(hour, minute, ampm) -> str:
+        hour = int(hour)
+        if ampm and ampm.upper() == 'PM' and hour < 12:
+            hour += 12
+        if ampm and ampm.upper() == 'AM' and hour == 12:
+            hour = 0
+        return f'{hour:02d}:{int(minute):02d}'
+
+    @staticmethod
+    def _add_hours(time: str, hours: int) -> str:
+        if not time:
+            return ''
+        hour, minute = (int(part) for part in time.split(':'))
+        return f'{(hour + hours) % 24:02d}:{minute:02d}'
+
+    @staticmethod
+    def _exam_type(text: str) -> str:
+        if 'PRACTICAL' in text:
+            return 'practical'
+        if 'MIDTERM' in text or 'MID-TERM' in text:
+            return 'midterm'
+        if re.search(r'\bCAT\b', text):
+            return 'cat'
+        return 'final'
+
+    @staticmethod
+    def _description(department: str, curriculum: str, level: str, cycle: str,
+                     size: int, venues: list[tuple[str, int]], sno: int) -> str:
+        parts = []
+        if department:
+            parts.append(f'Dept: {department}')
+        if curriculum:
+            parts.append(f'Curriculum: {curriculum}')
+        if level:
+            parts.append(f'Level {level}')
+        if cycle:
+            parts.append(f'Cycle: {cycle}')
+        if size:
+            parts.append(f'Class size {size}')
+        if venues:
+            parts.append('Venues: ' + '; '.join(
+                f'{name} ({capacity})' for name, capacity in venues
+            ))
+        parts.append(f'SNO {sno}')
+        return ' | '.join(parts)
+
+
 class PdfExamTimetableParser:
-    """Parse exam timetable PDFs — extracts subject, date, time, room, teacher."""
+    """Parse exam timetable PDFs, delegating per-day CBET sitting plans to PdfSittingPlanParser."""
 
     EXAM_TYPES = ['final', 'midterm', 'cat', 'practical']
 
@@ -426,11 +755,27 @@ class PdfExamTimetableParser:
         result = TimetableParseResult()
         try:
             with pdfplumber.open(file_path) as pdf:
+                if self._is_sitting_plan(pdf):
+                    return PdfSittingPlanParser().parse_pdf(pdf)
                 for page_num, page in enumerate(pdf.pages, 1):
                     self._parse_page(page, page_num, result)
         except Exception as e:
             result.errors.append(f'Failed to open exam PDF: {e}')
         return result
+
+    @staticmethod
+    def _is_sitting_plan(pdf) -> bool:
+        if not pdf.pages:
+            return False
+        try:
+            text = (pdf.pages[0].extract_text() or '').upper()
+        except Exception:
+            return False
+        return (
+            'SITTING PLAN' in text
+            or ('CURRICULUM NAME' in text and 'ASSESSMENT TYPE' in text)
+            or ('SNO' in text and 'UNIT NAME' in text and 'VENUE' in text)
+        )
 
     def _parse_page(self, page, page_num: int, result: TimetableParseResult):
         text = page.extract_text() or ''
